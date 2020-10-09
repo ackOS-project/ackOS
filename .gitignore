@@ -1,0 +1,25 @@
+# Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# Binaries
+*.iso
+*/*.iso
+*.bin
+*/*.bin
+*.o
+*/*.o
+*.tar.gz
+isodir/*
+toolchain/build
+toolchain/gcc
+toolchain/binutils
+toolchain/local
+
+# Misc
+*.old
+*.d
