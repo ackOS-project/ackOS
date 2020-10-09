@@ -110,7 +110,7 @@ namespace vga_terminal {
     static unsigned short int* terminal_buffer;
     static inline uint16_t vga_entry(unsigned char uc, uint8_t colour) 
     {
-	return (uint16_t) uc | (uint16_t) colour << 8;
+		return (uint16_t) uc | (uint16_t) colour << 8;
     }
 
 // Public
@@ -146,7 +146,8 @@ namespace vga_terminal {
     	outb(0x3D5, (unsigned char) ((pos >> 8) & 0xFF));
     }
 
-    void update_cursor(void){
+    void update_cursor(void)
+	{
         set_cursor_pos(terminal_column,terminal_row);
     }
 
@@ -156,14 +157,16 @@ namespace vga_terminal {
     }
 
     // Setup the VGA output
-    void initialize(unsigned char colour) 
+    void initialize(uint8_t colour) 
     {
 	    terminal_row = 0;
 	    terminal_column = 0;
 	    terminal_colour = colour;
-	    terminal_buffer = (unsigned short int*) 0xC03FF000;
-	    for (size_t y = 0; y < VGA_HEIGHT; y++) {
-	    	for (size_t x = 0; x < VGA_WIDTH; x++) {
+	    terminal_buffer = (uint16_t*)0xB8000;
+	    for (size_t y = 0; y < VGA_HEIGHT; y++)
+		{
+	    	for (size_t x = 0; x < VGA_WIDTH; x++)
+			{
 	    		const size_t index = y * VGA_WIDTH + x;
 	    		terminal_buffer[index] = vga_entry(' ', terminal_colour);
 	    	}
@@ -182,7 +185,7 @@ namespace vga_terminal {
     void clear(void){
 	    terminal_row = 0;
 	    terminal_column = 0;
-	    terminal_buffer = (unsigned short int*) 0xB8000;
+
 	    for (size_t y = 0; y < VGA_HEIGHT; y++) {
 	    	for (size_t x = 0; x < VGA_WIDTH; x++) {
 	    		const size_t index = y * VGA_WIDTH + x;

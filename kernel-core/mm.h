@@ -3,12 +3,12 @@
 
 
 typedef struct heap_block
-{  
+{
     struct heap_block* next;
     size_t size;
     bool isfree;
     int x; // for alligment
-}header;
+} header;
 void set_data_to_block(header* block, size_t sz);
 header* to_end_data(header* block);
 
@@ -33,13 +33,13 @@ char* strcpy(char * dest_ptr, const char * src_ptr)
 	  {
 	    *dest_ptr++ = *src_ptr++;
 	  }
-	  /* put NULL termination */
+	  /* NULL termination */
 	  *dest_ptr = NULL;
 	}
 	return strresult;
-	
+
 }
-void* malloc(size_t sz) 
+void* malloc(size_t sz)
 {
     if(sz == 0 || sz > Heap_Capacity)
     {
@@ -69,10 +69,10 @@ template<typename T>
 void free(T* &mem)
 {
     header* block = (header*)mem;
-    block->isfree=1;
-    heap[*mem]=0;
+    block->isfree = true;
+    // heap[(int*)mem] = 0;
     *mem = 0;
-    mem = (T)0x0;
+    mem = (T*)0x0;
 }
 
 void set_data_to_block(header* block, size_t sz)
