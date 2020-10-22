@@ -3,7 +3,7 @@
 The **Cross-compiler toolchain** must be built first
 
 ## Prerequisites
-If you're on ubuntu or an ubuntu based distro, such as mint type this
+If you're on ubuntu or an ubuntu based distro, such as Linux Mint type this
 ```
 sudo apt-get install build-essential gcc g++ bison flex libgmp3-dev libmpc-dev libmpfr-dev texinfo libisl-dev
 ```
@@ -12,14 +12,15 @@ Sorry arch users, I don't have access to an arch machine. If you do know the req
 ## Building the toolchain
 Simply run this in the root of ackOS
 ```
-$ chmod +x ./toolchain/build.sh && ./toolchain/build.sh
+$ ./toolchain/build.sh
 ```
 This should take while so be patient
 
 # Build ackOS
-To build ackOS run
+To build and run ackOS run
 ```
-$ ./compile.sh
+$ make all
+$ make qemu
 ```
 
 Have fun :)

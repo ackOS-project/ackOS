@@ -1,9 +1,15 @@
+<div align="center">
+
 # ackOS
-<p align="center">
+
 <img src="https://github.com/ackOS-project/ackOS/blob/master/logo-ackOS.png" width="100px"></img>
-<p align="center"><b>ackOS</b> is a simple 64-bit operating system</p>
-</p>
-<br>
+
+**ackOS** is a simple 64-bit operating system
+
+</div>
+
+**NOTE**: 
+**ackOS** is in a somewhat broken state since the 64-bit port. Any help would be greatly appreciated 
 
 ## How do I build ackOS?
 just follow the (manual/build.md)[build guide]
