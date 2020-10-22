@@ -1,6 +1,14 @@
 {
     "C_Cpp.errorSquiggles": "Disabled",
     "files.associations": {
-        "random": "cpp"
-    }
+        "random": "cpp",
+        "vector": "cpp",
+        "sstream": "cpp",
+        "regex": "cpp"
+    },
+
+    "search.exclude": {
+        "**/toolchain": true,
+        "**/bin": true
+    },
 }
