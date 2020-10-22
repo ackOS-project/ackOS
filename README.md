@@ -12,7 +12,7 @@
 **ackOS** is in a somewhat broken state since the 64-bit port. Any help would be greatly appreciated 
 
 ## How do I build ackOS?
-just follow the (manual/build.md)[build guide]
+[click here for the build guide](manual/build.md)
 
 ## Screenshots
 ![](https://i.imgur.com/sBRftt4.png)
