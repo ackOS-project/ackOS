@@ -1,0 +1,27 @@
+#pragma once
+#include <stdlib.h>
+
+namespace std
+{
+    class string
+    {
+    private:
+        const char* m_str;
+        size_t m_size;
+
+    public:
+        string()
+        {
+            m_size = 0;
+            m_str = (const char*)malloc(m_size);
+        }
+
+        void operator=(const char* str)
+        {
+            free((void*)m_str);
+
+            m_str = str;
+            m_size = strlen(str);
+        }
+    };
+}

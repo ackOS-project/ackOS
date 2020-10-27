@@ -2,7 +2,7 @@
 
 # ackOS
 
-<img src="https://github.com/ackOS-project/ackOS/blob/master/logo-ackOS.png" width="100px"></img>
+<img src="assets/logo.png" width="100px"></img>
 
 **ackOS** is a simple 64-bit operating system
 

@@ -22,7 +22,7 @@ const char int_to_char(int a)
     /* Convert an integer to a string */
     const char* result[number_of_digits(a)];
     const char* num_count;
-    for(int column;column < number_of_digits(a);column++){
+    for(int column; column < number_of_digits(a); column++){
         switch(get_digit(a,column)){
             case 0:
                 num_count = "0";

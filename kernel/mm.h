@@ -1,13 +1,15 @@
 #pragma once
+#include <string.h>
 // Memory Manager
 
 typedef struct heap_block
 {
-    struct heap_block *next;
+    struct heap_block* next;
     size_t size;
-    bool isfree;
+    bool is_free;
     int x; // for alligment
 } header;
+
 void set_data_to_block(header *block, size_t sz);
 header *to_end_data(header *block);
 
@@ -22,40 +24,6 @@ static char *min_heap = (char *)(&heap[0]);
 static const char* END_CHK = "\xDE\xAD\xC0\xDA";
 header *last_allocated;
 
-void* memcpy(void *dest, const void *src, size_t len)
-{
-    size_t i;
-
-    if ((uintptr_t)dest % sizeof(long) == 0 &&
-        (uintptr_t)src % sizeof(long) == 0 &&
-        len % sizeof(long) == 0)
-    {
-
-        long* d = (long int*)dest;
-        const long *s = (const long int*)src;
-
-        for (i = 0; i < len / sizeof(long); i++)
-        {
-            d[i] = s[i];
-        }
-    }
-    else
-    {
-        char* d = (char*)dest;
-        const char* s = (const char*)src;
-
-        for (i = 0; i < len; i++)
-        {
-            d[i] = s[i];
-        }
-    }
-
-    return dest;
-}
-char* strcpy(char *dest, const char *src)
-{
-    return (char*)memcpy(dest, src, strlen(src) + 1);;
-}
 void *malloc(size_t sz)
 {
     if (sz == 0 || sz > Heap_Capacity)
@@ -82,20 +50,17 @@ void *malloc(size_t sz)
     return (void *)last_allocated;
 }
 
-template <typename T>
-void free(T *&mem)
+// Free a block allocated by malloc, realloc or calloc.
+void free(void* mem)
 {
-    header *block = (header *)mem;
-    block->isfree = true;
-    // heap[(int*)mem] = 0;
-    *mem = 0;
-    mem = (T *)0x0;
+    header* block = (header*)mem;
+    block->is_free = true;
 }
 
 void set_data_to_block(header *block, size_t sz)
 {
     block->size = sz;
-    block->isfree = false;
+    block->is_free = false;
     block->next = NULL;
 
     active_size += sz;

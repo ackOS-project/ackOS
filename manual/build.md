@@ -1,6 +1,6 @@
 # Building ackOS
 
-The **Cross-compiler toolchain** must be built first
+The **cross compiler toolchain** must be built first
 
 ## Prerequisites
 If you're on ubuntu or an ubuntu based distro, such as Linux Mint type this

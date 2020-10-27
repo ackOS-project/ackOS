@@ -10,7 +10,7 @@
 #include <stddef.h>
 
 #if defined(__linux__)
-#error "You are using a standard gcc/clang compiler. You will need a cross compiler for this to compile succesfully."
+#error "You are using a standard gcc/clang compiler. You will need a cross compiler for this to compile successfully."
 #endif
 
 #if !defined(__x86_64__)
@@ -18,7 +18,7 @@
 #endif
 
 #include "kernel.h"
-//#include "stdio.h"
+#include "stdio.h"
 #include <vector>
 
 extern "C" void kmain()
@@ -39,7 +39,6 @@ extern "C" void kmain()
     serial_putc(COM1, 'l');
     serial_putc(COM1, 'd');
     serial_putc(COM1, '\n');
-
 
     vga_terminal::write("Hello");
     vga_terminal::write("Booted ackOS! meow.\n");
