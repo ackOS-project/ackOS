@@ -55,6 +55,7 @@ void shutdown(){
 typedef struct {
 	uint8_t locked;
 } mutex;
+
 typedef struct {
 	uint8_t status;
 	uint32_t size;
@@ -74,9 +75,7 @@ void *sbrk(intptr_t incr)
     current_break += incr;
     return (void*) old_break;
 }
-//extern "C" {
 #include "mm.h"
-//}
 // Genral input/output stuff
 
 enum vga_colour {
@@ -98,9 +97,9 @@ enum vga_colour {
 	VGA_COLOUR_WHITE = 15,
 };
 
-// A text-based terminal session in VGA mode
+// A text-based terminal session in VGA mode (not supported on most hardware)
 namespace vga_terminal {
-// Private (i wish cpp had visability in namespaces). So I use static(it's not the same thing)
+// Private (i wish cpp had visability in namespaces).
 
     const size_t VGA_WIDTH = 80;
     const size_t VGA_HEIGHT = 25;

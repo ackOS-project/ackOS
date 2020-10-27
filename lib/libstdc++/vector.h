@@ -9,59 +9,83 @@ namespace std
   class vector
   {
   private:
-    T *m_Array;
-    size_t m_Capacity = 0;
-    size_t m_Items = 0;
+    T *m_array = nullptr;
+    size_t m_size = 0;
+    size_t m_capacity = 0;
 
   public:
-    void MakeArray(size_t size)
+    vector(size_t capacity)
     {
-      m_Capacity = size;
-      m_Items -= 1;
-      m_Array = (T *)malloc(size * sizeof(T));
+        m_size = 0;
+        m_capacity = capacity;
+        m_array = (T *)malloc(m_capacity * sizeof(T));
     }
-    vector(size_t size)
-    {
-      MakeArray(size);
-    }
+
     vector()
     {
-      MakeArray(1);
+        // Allocates 2 by default to reduce reallocations,
+        // this is not the default behaviour in the C++ standard library (strangely)
+        vector(2);
     }
+
     ~vector()
     {
-      free(m_Array);
+        free((void*)m_array);
     }
+
+    size_t capacity()
+    {
+        return m_capacity;
+    }
+
     size_t size()
     {
-      return m_Capacity;
+        return m_size;
     }
-    T *data() { return m_Array; }
-    T GetAt(int index) { return m_Array[index]; }
-    void SetAt(int index, T data)
+
+    T *data()
     {
-      if (index >= m_Capacity)
-      {
-        int diff = (abs(m_Capacity - index) + 1);
-        T *tmp = (T *)malloc((m_Capacity + diff) * sizeof(T));
-        for (int i = 0; i < m_Capacity; i++)
+        return m_array;
+    }
+
+    T& at(size_t index) { return m_array[index]; }
+
+    T operator[](int index)
+    {
+        return at(index);
+    }
+
+    void resize(size_t count)
+    {
+        T* block = (T*)malloc(count * sizeof(T));
+
+        if(m_capacity < m_size)
         {
-          tmp[i] = m_Array[i];
-        };
-        free(m_Array);
-        m_Array = tmp;
-        m_Capacity += diff;
-      }
-      m_Items += 1;
-      m_Array[index] = data;
+            m_size = count;
+        }
+
+        for(size_t i; i < m_size; i++)
+        {
+            block[i] = m_array[i];
+        }
+
+        m_capacity = count;
     }
-    T operator[](int index) { return GetAt(index); }
-    vector push_back(T data)
+
+    // returning vector& (not standard C++) allows us to do this:
+    // vec.push_back("1").push_back("2") etc...
+    vector& push_back(T data)
     {
-      SetAt(m_Items + 1, data);
-      return *this;
+        resize(m_capacity + 1);
+        at(m_size + 1) = data;
+
+        return *this;
     }
-    vector operator+=(T data) { push_back(data); }
+
+    vector operator+=(T data)
+    {
+        push_back(data);
+    }
   };
 
-} // namespace std
+}

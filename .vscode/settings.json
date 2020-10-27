@@ -4,7 +4,10 @@
         "random": "cpp",
         "vector": "cpp",
         "sstream": "cpp",
-        "regex": "cpp"
+        "regex": "cpp",
+        "cstring": "cpp",
+        "string": "cpp",
+        "cstddef": "cpp"
     },
 
     "search.exclude": {

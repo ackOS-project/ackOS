@@ -1,26 +1,30 @@
 export PATH := $(shell toolchain/path.sh)
 
-CC = x86_64-elf-gcc
-CXX = x86_64-elf-g++
+ARCH = x86_64
+
+CC = $(ARCH)-elf-gcc
+CXX = $(ARCH)-elf-g++
 AS = nasm
-LD = x86_64-elf-ld
+LD = $(ARCH)-elf-ld
 BIN = bin
 
 ISONAME = ackOS
 BOOTLOADER = iso
 
 SOURCES += \
-		$(wildcard kernel/*.cpp)
+		$(wildcard kernel/*.cpp) \
+		$(wildcard arch/$(ARCH)/*.cpp) \
+		$(wildcard arch/$(ARCH)/features/*.cpp)
 
 HEADERS += \
 		$(wildcard kernel/*.h) \
 		$(wildcard lib/*.h) \
-		$(wildcard lib/*/*.h) \
+		$(wildcard lib/*/*.h)
 
 ASSEMBLY += \
 		$(wildcard kernel/*.asm) \
 		$(wildcard kernel/*/*.asm) \
-		$(wildcard arch/*.asm)
+		$(wildcard arch/$(ARCH)/*.asm)
 
 FONTS += \
 		$(wildcard fonts/*.psf)
@@ -31,11 +35,13 @@ CFLAGS += \
 		-I lib/libc \
 		-I lib/libstdc++ \
 		-I lib \
+		-I arch \
 		-I . \
 		-ffreestanding \
 		-fno-exceptions \
-		-fno-rtti \
-		-Ttext 0x8000 \
+		-DackOS_BUILD_ARCH_$(ARCH)
+		-DackOS_BUILD_HOST_ARCH=$(sh uname --machine)
+		-DackOS_BUILD_HOST_OS=$(sh uname --operating-system)
 		-std=c++2a
 
 LFLAGS +=
@@ -44,15 +50,28 @@ QEMU_FLAGS += \
 			-enable-kvm \
 			-serial stdio
 
+# includes
+include lib/lib.mk
+
 $(BIN)/kernel/%.o: kernel/%.cpp $(HEADERS)
 	@mkdir -p $(BIN)/kernel
 	@echo [ compiling target $@ ] C++
 	@$(CXX) -c $< -o $@ $(CFLAGS)
 
-$(BIN)/arch/%.o: arch/%.asm
-	@mkdir -p $(BIN)/arch
+$(BIN)/arch/$(ARCH)/%.o: arch/$(ARCH)/%.asm
+	@mkdir -p $(BIN)/arch/$(ARCH)
 	@echo [ assemling target $@ ] Assembly
 	@$(AS) -f elf64 $< -o $@
+
+$(BIN)/arch/$(ARCH)/%.o: arch/$(ARCH)/%.cpp
+	@mkdir -p $(BIN)/arch/$(ARCH)
+	@echo [ compiling target $@ ] C++
+	@$(CXX) -c $< -o $@ $(CFLAGS)
+
+$(BIN)/arch/$(ARCH)/features/%.o: arch/$(ARCH)/features/%.cpp
+	@mkdir -p $(BIN)/arch/$(ARCH)/features
+	@echo [ compiling target $@ ] C++
+	@$(CXX) -c $< -o $@ $(CFLAGS)
 
 $(BIN)/fonts/%.o: fonts/%.psf
 	@mkdir -p $(BIN)/fonts
