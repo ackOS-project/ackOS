@@ -80,3 +80,5 @@ enum class cpuid_feature {
     EDX_IA64         = 1 << 30,
     EDX_PBE          = 1 << 31
 };
+
+int cpuid_get_model_id();

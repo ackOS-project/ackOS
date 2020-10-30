@@ -1,9 +1,10 @@
 #include "x86_64/features/CPUID.h"
+#include <cpuid.h>
 
-bool cpuid_get_avalibility()
+int cpuid_get_model_id()
 {
-    // W.I.P
-    return true;
+    int ebx, unused;
+    __cpuid(0, unused, ebx, unused, unused);
+
+    return ebx;
 }
-
-
