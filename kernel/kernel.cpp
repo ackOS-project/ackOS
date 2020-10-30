@@ -9,24 +9,16 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#if defined(__linux__)
-#error "You are using a standard gcc/clang compiler. You will need a cross compiler for this to compile successfully."
-#endif
-
-#if !defined(__x86_64__)
-#error "This OS needs to be compiled with a x86_64-elf compiler."
-#endif
-
 #include "kernel.h"
 #include "stdio.h"
 #include <vector>
 
-extern "C" void kmain()
+void kmain()
 {
     vga_terminal::vga_terminal();
 
     serial_port_initialize(COM1, 9600);
-    serial_write(COM1, "This is not working!"); // TODO: for loops are not working!
+    serial_write(COM1, "Hello world!"); // TODO: char arrays are not working!
     serial_putc(COM1, 'H');
     serial_putc(COM1, 'e');
     serial_putc(COM1, 'l');

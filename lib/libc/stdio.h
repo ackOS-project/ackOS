@@ -1,12 +1,14 @@
+#pragma once
+
 #include <stdarg.h>
 #include <vector.h>
 #include "kernel/kernel.h"
 
-char * itoa( int value, char * str, int base )
+char* itoa(int value, char* str, int base)
 {
-    char * rc;
-    char * ptr;
-    char * low;
+    char* rc;
+    char* ptr;
+    char* low;
     // Check for supported base.
     if ( base < 2 || base > 36 )
     {

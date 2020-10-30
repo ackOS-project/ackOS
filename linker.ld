@@ -6,11 +6,27 @@ SECTIONS
  
 	.boot :
 	{
-		*(.multiboot_header)
+		KEEP(*(.multiboot_header))
 	}
 
 	.text :
 	{
 		*(.text)
 	}
+
+	.data :
+	{
+		*(.data)
+	}
+
+	.rodata :
+	{
+		*(.rodata)
+	}
+
+	.bss :
+    {
+		*(COMMON)
+        *(.bss)
+    }
 }

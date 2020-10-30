@@ -1,5 +1,6 @@
 #pragma once
 #include "io.h"
+#include <stdio.h>
 #define COM1 0x3f8
 #define COM2 0x2F8
 #define COM3 0x3E8
@@ -30,14 +31,14 @@ void serial_putc(int port, char a)
    outb(port, a);
 }
 
-void serial_write(int port, const char* data, size_t size = -1)
+void serial_write(int port, const char* data, int size = -1)
 {
    if(size < 0)
    {
       size = strlen(data);
    }
 
-   for(size_t i = 0; i < size; i++)
+   for(int i = 0; i < size; i++)
    {
       serial_putc(port, data[i]);
    }
