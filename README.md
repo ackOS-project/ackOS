@@ -18,4 +18,4 @@
 ![](https://i.imgur.com/sBRftt4.png)
 
 ## Contact
-[Discord](https://discord.gg/m6hvtv)
+[Discord](https://discord.gg/f6WRY6sHqa)
