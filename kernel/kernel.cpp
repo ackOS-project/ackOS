@@ -15,28 +15,16 @@
 
 void kmain()
 {
-    vga_terminal::vga_terminal();
+    vga_terminal::initialize(VGA_COLOUR_LIGHT_GREY);
 
     serial_port_initialize(COM1, 9600);
-    serial_write(COM1, "Hello world!"); // TODO: char arrays are not working!
-    serial_putc(COM1, 'H');
-    serial_putc(COM1, 'e');
-    serial_putc(COM1, 'l');
-    serial_putc(COM1, 'l');
-    serial_putc(COM1, 'o');
-    serial_putc(COM1, ' ');
-    serial_putc(COM1, 'w');
-    serial_putc(COM1, 'o');
-    serial_putc(COM1, 'r');
-    serial_putc(COM1, 'l');
-    serial_putc(COM1, 'd');
-    serial_putc(COM1, '\n');
+    serial_write(COM1, "Hello world!\n"); // TODO: char arrays are not working!
 
     vga_terminal::write("Hello");
     vga_terminal::write("Booted ackOS! meow.\n");
     for(size_t i = 0; i < 10; i++)
     {
-        vga_terminal::set_colour((vga_colour)i, (vga_colour)i);
+        vga_terminal::set_colour(VGA_COLOUR_GREEN, (vga_colour)i);
         vga_terminal::write(" ");
     }
     vga_terminal::write("\n");

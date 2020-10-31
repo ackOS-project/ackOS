@@ -2,12 +2,11 @@
 
 void kmain();
 extern "C" void enable_a20();
+extern "C" void set_up_page_tables();
+extern "C" void enable_paging();
 
 extern "C" int x86_64_init()
 {
-    asm("cli"); // Disable interupts
-    enable_a20();
-
     kmain();
 
     return 0;
