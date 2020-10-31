@@ -8,9 +8,6 @@
 
 </div>
 
-**NOTE**: 
-**ackOS** is in a somewhat broken state since the 64-bit port. Any help would be greatly appreciated 
-
 ## How do I build ackOS?
 [click here for the build guide](manual/build.md)
 
