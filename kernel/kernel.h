@@ -4,6 +4,7 @@
 //#include "kernel/utils.h"
 #include "kernel/serial.h"
 #include "kernel/vga.h"
+#include "kernel/mm.h"
 
 #if defined(__linux__)
 #error "You are using a standard gcc/clang compiler. You will need a cross compiler for ackOS to compile successfully."
