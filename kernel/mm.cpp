@@ -4,86 +4,84 @@ TODO: re-write memory manager
 #include "kernel/mm.h"
 #include <cstring>
 
-typedef struct heap_block
+struct heap_block
 {
-    struct heap_block* next;
-    size_t size;
+    uint64_t size;
+
+    heap_block* next;
+    heap_block* next_free;
+    heap_block* previous;
+    heap_block* previous_free;
+
     bool is_free;
-    int x; // for alligment
-} header;
+};
 
-void set_data_to_block(header *block, size_t sz);
-header *to_end_data(header *block);
+static heap_block* heap_start;
 
-//#define Heap_Capacity 2000000 // Lots
-#define Heap_Capacity 10000     // Not much
-unsigned long long active_size; // bytes in active allocations
-
-static uint64_t heap[Heap_Capacity / sizeof(uint64_t)];
-
-static char *max_heap = (char *)(&heap[0]);
-static char *min_heap = (char *)(&heap[0]);
-static const char* END_CHK = "\xDE\xAD\xC0\xDA";
-header *last_allocated;
-
-void *malloc(size_t sz)
+void merge_blocks(heap_block* a, heap_block* b)
 {
-    if (sz == 0 || sz > Heap_Capacity)
+    if(a == nullptr) return;
+    if(b == nullptr) return;
+
+    if(a < b)
     {
-        return NULL;
-    }
+        a->size += b->size + sizeof(heap_block);
+        a->next = b->next;
+        a->next_free = b->next_free;
 
-    header *block = (header *)heap;
-    if (active_size == 0)
+        b->next->previous = a;
+        b->next->previous_free = a;
+        b->next_free->previous_free = a;
+    }
+    else
     {
-        set_data_to_block(block, sz);
-        return (void *)last_allocated;
+        b->size += a->size + sizeof(heap_block);
+        b->next = a->next;
+        b->next_free = a->next_free;
+
+        a->next->previous = b;
+        a->next->previous_free = b;
+        a->next_free->previous_free = b;
     }
-
-    while (block->next != NULL)
-    {
-        block = block->next;
-    }
-
-    block->next = (header *)((char *)to_end_data(block) + 8);
-    header *new_block = block->next;
-    set_data_to_block(new_block, sz);
-
-    return (void *)last_allocated;
 }
 
-// Free a block allocated by malloc, realloc or calloc.
 void free(void* mem)
 {
-    header* block = (header*)mem;
+    heap_block* block = ((heap_block*)mem) - 1;
     block->is_free = true;
-}
 
-void set_data_to_block(header *block, size_t sz)
-{
-    block->size = sz;
-    block->is_free = false;
-    block->next = NULL;
-
-    active_size += sz;
-    last_allocated = block + 1;
-    char *end_of_data_block = (char *)to_end_data(block);
-
-    if (max_heap < end_of_data_block)
+    if(block < heap_start)
     {
-        max_heap = end_of_data_block;
+        heap_start = block;
     }
-    strcpy(end_of_data_block, END_CHK);
-}
 
-header *to_start_metadata(header *block)
-{
-    return --block;
-}
+    if(block->next_free != nullptr)
+    {
+        if(block->next_free->previous_free < block)
+        {
+            block->next_free->previous_free = block;
+        }
+    }
 
-header *to_end_data(header *block)
-{
-    return (header *)((size_t)(block + 1) + block->size);
+    if(block->next != nullptr)
+    {
+        block->next->previous = block;
+        if(block->next->is_free) merge_blocks(block, block->next);
+    }
+
+    if(block->previous_free != nullptr)
+    {
+        if(block->previous_free->next_free > block)
+        {
+            block->previous_free->next_free = block;
+        }
+    }
+
+    if(block->previous != nullptr)
+    {
+        block->previous->next = block;
+        if(block->previous->is_free) merge_blocks(block, block->previous);
+    }
 }
 
 void *memset(void *ptr, int value, size_t num)
@@ -94,4 +92,84 @@ void *memset(void *ptr, int value, size_t num)
         *p++ = (unsigned char)value;
     }
 	return ptr;
+}
+
+void memory_initalize(uint64_t location, uint64_t size)
+{
+    heap_start = (heap_block*)location;
+    heap_start->size = size - sizeof(heap_block);
+
+    heap_start->next = nullptr;
+    heap_start->next_free = nullptr;
+    heap_start->previous = nullptr;
+    heap_start->previous_free = nullptr;
+
+    heap_start->is_free = true;
+}
+
+void* malloc(size_t size)
+{
+    size -= (size % 8);
+    if((size % 8) != 0) size += 8;
+
+    heap_block* block = heap_start;
+
+    while (true)
+    {
+        if(block->size >= size)
+        {
+            if(block->size > size + sizeof(heap_block))
+            {
+                heap_block* new_block = (heap_block*)block + sizeof(heap_block) + size;
+
+                new_block->is_free = true;
+                new_block->size = block->size - sizeof(heap_block) + size;
+
+                new_block->next_free = block->next_free;
+                new_block->next = block->next;
+                new_block->previous_free = block->previous_free;
+                new_block->previous = block;
+
+                block->next_free = new_block;
+                block->next = new_block;
+                block->size = size;
+            }
+            if(block == heap_start)
+            {
+                heap_start = block->next_free;
+            }
+            block->is_free = false;
+
+            if(block->previous_free != nullptr)
+            {
+                block->previous_free->next_free = block->next_free;
+            }
+
+            if(block->previous != nullptr)
+            {
+                block->previous->next_free = block->next_free;
+            }
+
+            if(block->next_free != nullptr)
+            {
+                block->next_free->previous_free = block->previous_free;
+            }
+
+            if(block->next != nullptr)
+            {
+                block->next->previous_free = block->previous_free;
+            }
+
+            return block + 1;
+        }
+
+        if(block->next_free == nullptr)
+        {
+            // Out of memory
+            return nullptr;
+        }
+
+        block = block->next_free;
+    }
+    return nullptr;
 }
