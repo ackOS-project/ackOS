@@ -1,7 +1,9 @@
 #pragma once
+
 #include "kernel/io.h"
-#include "kernel/utils.h"
+//#include "kernel/utils.h"
 #include "kernel/serial.h"
+#include "kernel/vga.h"
 
 #if defined(__linux__)
 #error "You are using a standard gcc/clang compiler. You will need a cross compiler for this to compile successfully."

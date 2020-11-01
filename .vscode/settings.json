@@ -7,7 +7,9 @@
         "regex": "cpp",
         "cstring": "cpp",
         "string": "cpp",
-        "cstddef": "cpp"
+        "cstddef": "cpp",
+        "*.inc": "cpp",
+        "cstdint": "cpp"
     },
 
     "search.exclude": {

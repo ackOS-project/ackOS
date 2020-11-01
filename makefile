@@ -39,9 +39,9 @@ CFLAGS += \
 		-I . \
 		-ffreestanding \
 		-fno-exceptions \
-		-DackOS_BUILD_ARCH_$(ARCH)
-		-DackOS_BUILD_HOST_ARCH=$(sh uname --machine)
-		-DackOS_BUILD_HOST_OS=$(sh uname --operating-system)
+		-DackOS_BUILD_ARCH_$(ARCH) \
+		-DackOS_BUILD_HOST_ARCH=$(sh uname --machine) \
+		-DackOS_BUILD_HOST_OS=$(sh uname --operating-system) \
 		-std=c++2a
 
 LFLAGS +=
