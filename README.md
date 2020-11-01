@@ -12,7 +12,7 @@
 [click here for the build guide](manual/build.md)
 
 ## Screenshots
-![](https://i.imgur.com/sBRftt4.png)
+![](assets/screenshots/1-november-2020.png)
 
 ## Contact
 [Discord](https://discord.gg/f6WRY6sHqa)

@@ -16,7 +16,7 @@ void ksh_start();
 
 void kmain()
 {
-    vga_terminal::vga_terminal(VGA_COLOUR_BLACK, VGA_COLOUR_WHITE);
+    vga_terminal::vga_terminal(VGA_COLOUR_WHITE, VGA_COLOUR_BLACK);
     serial::port_initialize(COM1, 9600);
 
     serial::write(COM1, "Hello world!\n");
