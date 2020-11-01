@@ -5,11 +5,9 @@
         "vector": "cpp",
         "sstream": "cpp",
         "regex": "cpp",
-        "cstring": "cpp",
         "string": "cpp",
-        "cstddef": "cpp",
         "*.inc": "cpp",
-        "cstdint": "cpp"
+        "c*": "cpp",
     },
 
     "search.exclude": {
