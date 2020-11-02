@@ -1,5 +1,4 @@
 global long_mode_init
-extern rust_main
 
 section .text
 ; We are now in 64-bit long mode!

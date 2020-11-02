@@ -1,19 +1,28 @@
-#include "kernel/vga.h"
+#include "kernel/legacy_vga.h"
 #include "kernel/kb.h"
+#include "kernel/serial.h"
 
 void keyboard_interrupt_handler()
 {
-    vga_terminal::write("x");
+    legacy_vga::write("x");
 }
 
 void ksh_prompt()
 {
-    vga_terminal::write("$ ");
+    legacy_vga::write("$ ");
+    serial::print(COM1, "$ ");
+
+    for(;;)
+    {
+        char c = serial::getc(COM1);
+
+        serial::putc(COM1, c);
+    }
 }
 
 void ksh_start()
 {
-    vga_terminal::write("Started kernel shell\n\n");
+    legacy_vga::write("Started kernel shell\n\n");
 
     ksh_prompt();
 }

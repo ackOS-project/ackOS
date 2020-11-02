@@ -173,3 +173,11 @@ void* malloc(size_t size)
     }
     return nullptr;
 }
+
+void* calloc(size_t size)
+{
+    void* mem = malloc(size);
+    memset(mem, 0, size);
+
+    return mem;
+}

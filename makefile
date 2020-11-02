@@ -86,6 +86,9 @@ all: $(OBJECTS)
 qemu: all
 	@qemu-system-x86_64 $(QEMU_FLAGS) -cdrom $(BIN)/$(ISONAME).iso
 
+qemu-debug: all
+	@qemu-system-x86_64 $(QEMU_FLAGS) -cdrom $(BIN)/$(ISONAME).iso -s -S
+
 check-multiboot2: all
 	@if grub-file --is-x86-multiboot2 $(BOOTLOADER)/$(ISONAME).bin; then \
 		echo multiboot confirmed; \

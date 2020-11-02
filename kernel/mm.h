@@ -4,7 +4,9 @@
 #include <cstdint>
 // Memory Manager
 
-void *malloc(size_t sz);
+void* malloc(size_t sz);
+
+void* calloc(size_t sz);
 
 // Free a block allocated by malloc, realloc or calloc.
 void free(void* mem);

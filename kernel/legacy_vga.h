@@ -24,31 +24,11 @@ enum vga_colour
 };
 
 // A text-based terminal session in VGA mode (not supported on most hardware)
-namespace vga_terminal
+namespace legacy_vga
 {
-    // Private (i wish cpp had visability in namespaces).
+    const size_t get_vga_width();
 
-    const size_t VGA_WIDTH = 80;
-    const size_t VGA_HEIGHT = 25;
-
-    static int terminal_row;
-    static int terminal_column;
-    static unsigned char terminal_colour;
-    static uint16_t *vidmem = (uint16_t *)0xB8000;
-
-    uint16_t vga_entry(unsigned char uc, uint8_t colour);
-
-    // Public
-
-    static const size_t get_vga_width()
-    {
-        return VGA_WIDTH;
-    }
-
-    static const size_t get_vga_height()
-    {
-        return VGA_HEIGHT;
-    }
+    const size_t get_vga_height();
 
     // Enables the cursor in the VGA terminal
     void enable_cursor(unsigned char cursor_start, unsigned char cursor_end);
@@ -66,30 +46,19 @@ namespace vga_terminal
     // Setup the VGA output
     void initialize(uint8_t colour);
 
-    static void vga_terminal()
+    static void initialize()
     {
         initialize(vga_colour(VGA_COLOUR_WHITE, VGA_COLOUR_BLACK));
     };
 
-    static void vga_terminal(enum vga_colour fg, enum vga_colour bg)
+    static void initialize(enum vga_colour fg, enum vga_colour bg)
     {
         initialize(vga_colour(fg, bg));
     }
 
-    static void vga_terminal(unsigned char colour)
-    {
-        initialize(colour);
-    }
+    void set_colour(enum vga_colour fg, enum vga_colour bg);
 
-    static void set_colour(enum vga_colour fg, enum vga_colour bg)
-    {
-        terminal_colour = vga_colour(fg, bg);
-    }
-
-    static void set_colour(enum vga_colour colour)
-    {
-        terminal_colour = colour;
-    }
+    void set_colour(enum vga_colour colour);
 
     // Clears any text on the screen
     void clear();

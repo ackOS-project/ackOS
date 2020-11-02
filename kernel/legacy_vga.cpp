@@ -1,15 +1,33 @@
-#include "kernel/vga.h"
+#include "kernel/legacy_vga.h"
 #include "kernel/io.h"
 #include <cstring>
 
 #include "kernel/serial.h"
 
 // A text-based terminal session in VGA mode (not supported on most hardware)
-namespace vga_terminal
+namespace legacy_vga
 {
+    const size_t VGA_WIDTH = 80;
+    const size_t VGA_HEIGHT = 25;
+
+    static int terminal_row;
+    static int terminal_column;
+    static unsigned char terminal_colour;
+    static uint16_t *vidmem = (uint16_t *)0xB8000;
+
     uint16_t vga_entry(unsigned char uc, uint8_t colour)
     {
         return (uint16_t)uc | (uint16_t)colour << 8;
+    }
+
+    const size_t get_vga_width()
+    {
+        return VGA_WIDTH;
+    }
+
+    const size_t get_vga_height()
+    {
+        return VGA_HEIGHT;
     }
 
     void enable_cursor(unsigned char cursor_start, unsigned char cursor_end)
@@ -109,5 +127,15 @@ namespace vga_terminal
                 putc(c);
             }
         }
+    }
+
+    void set_colour(enum vga_colour fg, enum vga_colour bg)
+    {
+        terminal_colour = vga_colour(fg, bg);
+    }
+
+    void set_colour(enum vga_colour colour)
+    {
+        terminal_colour = colour;
     }
 };
