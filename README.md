@@ -14,5 +14,5 @@
 ## Screenshots
 ![](assets/screenshots/1-november-2020.png)
 
-## Contact
+## Links
 [Discord](https://discord.gg/f6WRY6sHqa)

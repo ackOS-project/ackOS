@@ -8,6 +8,7 @@
         "string": "cpp",
         "*.inc": "cpp",
         "c*": "cpp",
+        "buffer": "cpp"
     },
 
     "search.exclude": {

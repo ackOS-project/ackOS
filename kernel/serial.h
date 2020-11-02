@@ -7,11 +7,15 @@
 
 namespace serial
 {
-   void port_initialize(int port, int baud_rate);
+    void port_initialize(int port, int baud_rate);
 
-   int transmit_empty(int port);
+    int transmit_empty(int port);
 
-   void putc(int port, char a);
+    void putc(int port, char a);
 
-   void write(int port, const char *data, int size = -1);
+    char getc(int port);
+
+    void print(int port, const char *data, int size = -1);
+
+    void print_int(int port, int i);
 }

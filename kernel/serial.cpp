@@ -1,6 +1,7 @@
 #include "kernel/serial.h"
 #include "kernel/io.h"
 #include <cstring>
+#include <cstdio>
 
 namespace serial
 {
@@ -29,7 +30,7 @@ namespace serial
         outb(port, a);
     }
 
-    void write(int port, const char *data, int size)
+    void print(int port, const char *data, int size)
     {
         if (size < 0)
         {
@@ -40,5 +41,21 @@ namespace serial
         {
             putc(port, data[i]);
         }
+    }
+
+    void print_int(int port, int i)
+    {
+        size_t size = i % 10;
+        char buffer[size];
+
+        itoa(i, buffer, 10);
+        print(port, buffer, size - 1);
+    }
+ 
+    char getc(int port)
+    {
+        while ((inb(port + 5) & 1) == 0);
+ 
+        return inb(port);
     }
 } 
