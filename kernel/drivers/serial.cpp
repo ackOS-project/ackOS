@@ -1,4 +1,4 @@
-#include "kernel/serial.h"
+#include "kernel/drivers/serial.h"
 #include "kernel/io.h"
 #include <cstring>
 #include <cstdio>

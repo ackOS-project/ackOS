@@ -1,8 +1,6 @@
-#include "kernel/legacy_vga.h"
+#include "kernel/drivers/legacy_vga.h"
 #include "kernel/io.h"
 #include <cstring>
-
-#include "kernel/serial.h"
 
 // A text-based terminal session in VGA mode (not supported on most hardware)
 namespace legacy_vga

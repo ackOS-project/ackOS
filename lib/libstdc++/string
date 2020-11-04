@@ -1,27 +1,66 @@
 #pragma once
-#include <stdlib.h>
+#include <cstdlib>
+#include <cstring>
+#include "kernel/mm/memory.h"
 
 namespace std
 {
     class string
     {
     private:
-        const char* m_str;
+        char* m_str;
         size_t m_size;
 
     public:
         string()
         {
             m_size = 0;
-            m_str = (const char*)malloc(m_size);
+            m_str = (char*)memory_alloc(sizeof(char) * m_size);
+        }
+
+        string(const char* str)
+        {
+            string();
+            *this = str;
         }
 
         void operator=(const char* str)
         {
-            free((void*)m_str);
-
-            m_str = str;
             m_size = strlen(str);
+            strcpy(m_str, str);
+        }
+
+        char& at(int index)
+        {
+            return m_str[index];
+        }
+
+        char& operator[](int index)
+        {
+            return at(index);
+        }
+
+        const char* c_str()
+        {
+            return m_str;
+        }
+
+        size_t length()
+        {
+            return m_size;
+        }
+
+        size_t size()
+        {
+            return length();
+        }
+
+        ~string()
+        {
+            if(m_str != nullptr)
+            {
+                memory_free((void*)m_str);
+            }
         }
     };
 }

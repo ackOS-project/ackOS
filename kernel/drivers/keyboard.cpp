@@ -1,5 +1,5 @@
 #include "kernel/io.h"
-#include "kernel/kb.h"
+#include "kernel/drivers/keyboard.h"
 
 const char* keyboard_map[(uint32_t)keyboard_key::COUNT] =
 {
