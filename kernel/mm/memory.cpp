@@ -1,7 +1,4 @@
-/*
-TODO: re-write memory manager
-*/
-#include "kernel/mm.h"
+#include "kernel/mm/memory.h"
 #include <cstring>
 
 struct heap_block
@@ -18,7 +15,7 @@ struct heap_block
 
 static heap_block* heap_start;
 
-void merge_blocks(heap_block* a, heap_block* b)
+void memory_merge_blocks(heap_block* a, heap_block* b)
 {
     if(a == nullptr) return;
     if(b == nullptr) return;
@@ -45,7 +42,7 @@ void merge_blocks(heap_block* a, heap_block* b)
     }
 }
 
-void free(void* mem)
+void memory_free(void* mem)
 {
     heap_block* block = ((heap_block*)mem) - 1;
     block->is_free = true;
@@ -66,7 +63,7 @@ void free(void* mem)
     if(block->next != nullptr)
     {
         block->next->previous = block;
-        if(block->next->is_free) merge_blocks(block, block->next);
+        if(block->next->is_free) memory_merge_blocks(block, block->next);
     }
 
     if(block->previous_free != nullptr)
@@ -80,11 +77,11 @@ void free(void* mem)
     if(block->previous != nullptr)
     {
         block->previous->next = block;
-        if(block->previous->is_free) merge_blocks(block, block->previous);
+        if(block->previous->is_free) memory_merge_blocks(block, block->previous);
     }
 }
 
-void *memset(void *ptr, int value, size_t num)
+void *memory_set(void *ptr, int value, size_t num)
 {
 	unsigned char *p = (unsigned char *)ptr;
 	while (num--)
@@ -107,7 +104,7 @@ void memory_initalize(uint64_t location, uint64_t size)
     heap_start->is_free = true;
 }
 
-void* malloc(size_t size)
+void* memory_alloc(size_t size)
 {
     size -= (size % 8);
     if((size % 8) != 0) size += 8;
@@ -174,10 +171,10 @@ void* malloc(size_t size)
     return nullptr;
 }
 
-void* calloc(size_t size)
+void* memory_calloc(size_t size)
 {
-    void* mem = malloc(size);
-    memset(mem, 0, size);
+    void* mem = memory_alloc(size);
+    memory_set(mem, 0, size);
 
     return mem;
 }

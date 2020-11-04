@@ -1,7 +1,7 @@
 /*****************************************
 * Written by Cael Rasmussen
 * Copyright (c) 2020 Cael Rasmussen
-* Under the GPL licence
+* Under the GPL2 licence
 ******************************************/
 #include <stdbool.h>
 #include <stdint.h>
@@ -10,7 +10,7 @@
 #include "kernel/kernel.h"
 #include "kernel/multiboot2.h"
 #include <cstdio>
-#include <vector>
+#include <string>
 
 void ksh_start();
 
@@ -20,7 +20,6 @@ void kmain()
     psf_initialize();
     serial::port_initialize(COM1, 9600);
     memory_initalize(0x1000000, 0x1000000);
-
 
     legacy_vga::write("Hello\n");
     legacy_vga::write("Booted ackOS! meow.\n");

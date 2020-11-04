@@ -1,4 +1,4 @@
-#include "kernel/serial.h"
+#include "kernel/drivers/serial.h"
 #include "kernel/logger.h"
 
 void log_info(const char* module_name, const char* text)

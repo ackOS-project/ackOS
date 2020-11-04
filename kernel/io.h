@@ -30,7 +30,7 @@ struct alloc_t
 	uint32_t size;
 };
 
-#include "mm.h"
+#include "kernel/mm/memory.h"
 // Genral input/output stuff
 
 

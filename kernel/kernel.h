@@ -1,11 +1,10 @@
 #pragma once
 
 #include "kernel/io.h"
-//#include "kernel/utils.h"
-#include "kernel/serial.h"
-#include "kernel/legacy_vga.h"
+#include "kernel/drivers/serial.h"
+#include "kernel/drivers/legacy_vga.h"
 #include "kernel/psf.h"
-#include "kernel/mm.h"
+#include "kernel/mm/memory.h"
 
 #if defined(__linux__)
 #error "You are using a standard gcc/clang compiler. You will need a cross compiler for ackOS to compile successfully."

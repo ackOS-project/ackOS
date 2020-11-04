@@ -13,6 +13,7 @@ BOOTLOADER = iso
 
 SOURCES += \
 		$(wildcard kernel/*.cpp) \
+		$(wildcard kernel/*/*.cpp) \
 		$(wildcard arch/$(ARCH)/*.cpp) \
 		$(wildcard arch/$(ARCH)/features/*.cpp)
 
@@ -40,8 +41,9 @@ CFLAGS += \
 		-ffreestanding \
 		-fno-exceptions \
 		-DackOS_BUILD_ARCH_$(ARCH) \
-		-DackOS_BUILD_HOST_ARCH=$(sh uname --machine) \
-		-DackOS_BUILD_HOST_OS=$(sh uname --operating-system) \
+		-DackOS_BUILD_HOST_ARCH=\"$(shell uname --machine)\" \
+		-DackOS_BUILD_TIME='"$(shell date)"' \
+		-DackOS_BUILD_HOST_OS=\"$(shell uname --operating-system)\" \
 		-std=c++2a
 
 LFLAGS +=
@@ -53,8 +55,8 @@ QEMU_FLAGS += \
 # includes
 include lib/lib.mk
 
-$(BIN)/kernel/%.o: kernel/%.cpp $(HEADERS)
-	@mkdir -p $(BIN)/kernel
+$(BIN)/%.o: %.cpp $(HEADERS)
+	@mkdir -p $(@D)
 	@echo [ compiling target $@ ] C++
 	@$(CXX) -c $< -o $@ $(CFLAGS)
 
@@ -62,16 +64,6 @@ $(BIN)/arch/$(ARCH)/%.o: arch/$(ARCH)/%.asm
 	@mkdir -p $(BIN)/arch/$(ARCH)
 	@echo [ assemling target $@ ] Assembly
 	@$(AS) -f elf64 $< -o $@
-
-$(BIN)/arch/$(ARCH)/%.o: arch/$(ARCH)/%.cpp
-	@mkdir -p $(BIN)/arch/$(ARCH)
-	@echo [ compiling target $@ ] C++
-	@$(CXX) -c $< -o $@ $(CFLAGS)
-
-$(BIN)/arch/$(ARCH)/features/%.o: arch/$(ARCH)/features/%.cpp
-	@mkdir -p $(BIN)/arch/$(ARCH)/features
-	@echo [ compiling target $@ ] C++
-	@$(CXX) -c $< -o $@ $(CFLAGS)
 
 $(BIN)/fonts/%.o: fonts/%.psf
 	@mkdir -p $(BIN)/fonts
