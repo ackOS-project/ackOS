@@ -6,6 +6,8 @@ void kmain();
 
 extern "C" int x86_64_init()
 {
+    idt_initialize();
+
     kmain();
 
     return 0;

@@ -1,6 +1,9 @@
 #pragma once
+
 #include <stdint.h>
 #include <stddef.h>
+
+#define IDT_ENTRIES 256
 
 struct idt64
 {
@@ -12,5 +15,12 @@ struct idt64
     uint32_t offset_high;
     uint32_t zero;
 };
+
+struct idt64_descriptor
+{
+    uint16_t segment;
+    uint64_t offset;
+}
+__attribute((packed));
 
 void idt_initialize();
