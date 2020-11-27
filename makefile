@@ -25,7 +25,8 @@ HEADERS += \
 ASSEMBLY += \
 		$(wildcard kernel/*.asm) \
 		$(wildcard kernel/*/*.asm) \
-		$(wildcard arch/$(ARCH)/*.asm)
+		$(wildcard arch/$(ARCH)/*.asm) \
+		$(wildcard arch/$(ARCH)/*/*.asm)
 
 FONTS += \
 		$(wildcard fonts/*.psf)
@@ -61,7 +62,7 @@ $(BIN)/%.o: %.cpp $(HEADERS)
 	@$(CXX) -c $< -o $@ $(CFLAGS)
 
 $(BIN)/arch/$(ARCH)/%.o: arch/$(ARCH)/%.asm
-	@mkdir -p $(BIN)/arch/$(ARCH)
+	@mkdir -p $(@D)
 	@echo [ assemling target $@ ] Assembly
 	@$(AS) -f elf64 $< -o $@
 
