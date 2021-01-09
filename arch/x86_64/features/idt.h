@@ -5,7 +5,7 @@
 
 #define IDT_ENTRIES 256
 
-struct idt64
+struct idt64_entry
 {
     uint16_t offset_low;
     uint16_t selector;
@@ -22,5 +22,7 @@ struct idt64_descriptor
     uint64_t offset;
 }
 __attribute((packed));
+
+extern "C" void idt_load(idt64_descriptor* descriptor);
 
 void idt_initialize();

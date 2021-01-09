@@ -12,6 +12,12 @@ long_mode_init:
     mov gs, ax
 
     extern x86_64_init
+
+    extern multiboot2_header
+    extern multiboot2_magic
+
+    mov edi, dword multiboot2_header
+    mov esi, dword[multiboot2_magic]
     call x86_64_init
 
     hlt

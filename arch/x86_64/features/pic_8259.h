@@ -1,18 +1,21 @@
 #pragma once
 
-#define PIC1 0x20
-#define PIC1_COMMAND PIC1
-#define PIC1_OFFSET 0x20
-#define PIC1_DATA (PIC1 + 1)
+#define MASTER_PIC 0x20
+#define MASTER_PIC_COMMAND 0x20
+#define MASTER_PIC_DATA (MASTER_PIC + 1)
 
-#define PIC2 0xA0
-#define PIC2_COMMAND PIC2
-#define PIC2_OFFSET 0x28
-#define PIC2_DATA (PIC2 + 1)
+#define SLAVE_PIC 0xA0
+#define SLAVE_PIC_COMMAND 0xA0
+#define SLAVE_PIC_DATA (SLAVE_PIC + 1)
 
-#define ICW1_ICW4 0x01
 #define ICW1_INIT 0x10
+#define ICW1_ICW4 0x01
+#define ICW1_8086 0x01
 
 void pic8259_remap();
+
+void pic8259_mask();
+
+void pic8259_disable();
 
 void pic8259_finish_interrupt();
