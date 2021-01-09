@@ -2,10 +2,10 @@ export PATH := $(shell toolchain/path.sh)
 
 ARCH = x86_64
 
-CC = $(ARCH)-elf-gcc
-CXX = $(ARCH)-elf-g++
+CC = clang
+CXX = clang
 AS = nasm
-LD = $(ARCH)-elf-ld
+LD = ld
 BIN = bin
 
 ISONAME = ackOS
@@ -19,6 +19,8 @@ SOURCES += \
 
 HEADERS += \
 		$(wildcard kernel/*.h) \
+		$(wildcard arch/$(ARCH)/*.h) \
+		$(wildcard arch/$(ARCH)/*/*.h) \
 		$(wildcard lib/*.h) \
 		$(wildcard lib/*/*.h)
 
@@ -34,6 +36,7 @@ FONTS += \
 OBJECTS = $(addprefix $(BIN)/, $(ASSEMBLY:.asm=.o)) $(addprefix $(BIN)/, $(SOURCES:.cpp=.o)) $(addprefix $(BIN)/, $(FONTS:.psf=.o))
 
 CFLAGS += \
+		-g \
 		-I lib/libc \
 		-I lib/libstdc++ \
 		-I lib \
@@ -45,7 +48,8 @@ CFLAGS += \
 		-DackOS_BUILD_HOST_ARCH=\"$(shell uname --machine)\" \
 		-DackOS_BUILD_TIME='"$(shell date)"' \
 		-DackOS_BUILD_HOST_OS=\"$(shell uname --operating-system)\" \
-		-std=c++2a
+		-std=c++2a \
+		-target $(ARCH)-elf
 
 LFLAGS +=
 
@@ -73,13 +77,14 @@ $(BIN)/fonts/%.o: fonts/%.psf
 
 all: $(OBJECTS)
 	@echo [ linking everything ] $(LD)
-	@$(LD) -n -o $(BOOTLOADER)/$(ISONAME).bin -T linker.ld $(OBJECTS) $(LFLAGS)
+	@$(LD) -n -o $(BOOTLOADER)/$(ISONAME).bin -T arch/$(ARCH)/link.ld $(OBJECTS) $(LFLAGS)
 	@sudo grub-mkrescue -o $(BIN)/$(ISONAME).iso $(BOOTLOADER)
 
 qemu: all
 	@qemu-system-x86_64 $(QEMU_FLAGS) -cdrom $(BIN)/$(ISONAME).iso
 
 qemu-debug: all
+	@objcopy --only-keep-debug iso/$(ISONAME).bin $(BIN)/ackOS.sym
 	@qemu-system-x86_64 $(QEMU_FLAGS) -cdrom $(BIN)/$(ISONAME).iso -s -S
 
 check-multiboot2: all

@@ -11,6 +11,8 @@ void outb(unsigned short int port, unsigned char data);
 
 void outw(unsigned short int port, unsigned short int data);
 
+void io_wait();
+
 // Power management functions
 
 void reboot();

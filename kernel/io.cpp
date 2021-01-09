@@ -20,3 +20,10 @@ void outw(unsigned short int port, unsigned short int data)
                  :
                  : "d"(port), "a"(data));
 }
+
+void io_wait()
+{
+    asm volatile ( "jmp 1f\n\t"
+                   "1:jmp 2f\n\t"
+                   "2:" );
+}

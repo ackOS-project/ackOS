@@ -4,6 +4,10 @@ global _start
 section .text
 bits 32
 _start:
+    ; Move the multiboot information into variables that we can access in long mode
+    mov dword[multiboot2_header], eax
+    mov dword[multiboot2_magic], ebx
+
     ; Initalize before loading the kernel
     mov esp, stack_top
 
@@ -15,12 +19,8 @@ _start:
     call enable_paging
 
     ; Load gdt
-    lgdt [gdt64.pointer]
-    jmp gdt64.code:long_mode_init
-
-    ; Check if it's an error. more than 0
-    ; cmp eax, 0
-    ; jg .loader_error
+    lgdt [_gdt_descriptor]
+    jmp _gdt.code:long_mode_init
 
 .loader_error:
     mov al, "9" ; temporarily
@@ -136,11 +136,38 @@ stack_bottom:
     resb 64
 stack_top:
 
-section .rodata
-gdt64:
-    dq 0 ; zero entry
-.code: equ $ - gdt64
-    dq (1 << 43) | (1 << 44) | (1 << 47) | (1 << 53) ; code segment
-.pointer:
-    dw $ - gdt64 - 1
-    dq gdt64
+section .data
+_gdt:
+    .zero: equ $ - _gdt
+        dq 0 ; zero entry
+
+    .code: equ $ - _gdt
+        dw 0x0000       ; limit
+        dw 0x0000       ; base (low 16 bits)
+        db 0x00         ; base (mid 8 bits)
+        db 10011010b    ; access
+        db 00100000b    ; granularity
+        db 0x00         ; base (high 8 bits)
+
+    .data: equ $ - _gdt
+        dw 0            ; limit
+        dw 0            ; base (low 16 bits)
+        db 0            ; base (mid 8 bits)
+        db 10010010b    ; access
+        db 00000000b    ; granularity
+        db 0            ; base (high 8 bits)
+
+    .task: equ $ - _gdt
+        dq 0
+        dq 0
+
+        dw 0
+
+_gdt_descriptor:
+    dw $ - _gdt - 1
+    dq _gdt
+
+global multiboot2_header
+global multiboot2_magic
+multiboot2_header: dq 0
+multiboot2_magic: dq 0

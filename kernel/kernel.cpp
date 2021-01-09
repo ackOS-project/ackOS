@@ -11,10 +11,11 @@
 #include "kernel/multiboot2.h"
 #include <cstdio>
 #include <string>
+#include "x86_64/features/CPUID.h"
 
 void ksh_start();
 
-void kmain()
+void kmain(multiboot_header* header)
 {
     legacy_vga::initialize(VGA_COLOUR_WHITE, VGA_COLOUR_BLACK);
     psf_initialize();
@@ -24,7 +25,7 @@ void kmain()
     legacy_vga::write("Hello\n");
     legacy_vga::write("Booted ackOS! meow.\n");
 
-    ksh_start();
+    // ksh_start();
     
     serial::putc(COM1, '\n'); // leave a new line at the end
 }

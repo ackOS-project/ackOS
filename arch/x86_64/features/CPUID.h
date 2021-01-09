@@ -1,3 +1,8 @@
+#pragma once
+
+#include <stdint.h>
+#include <stddef.h>
+
 /* CPU Vendor strings. */
 #define CPUID_VENDOR_OLDAMD       "AMDisbetter!"
 #define CPUID_VENDOR_AMD          "AuthenticAMD"
@@ -21,7 +26,8 @@
 #define CPUID_VENDOR_MICROSOFT_HV "Microsoft Hv"
 #define CPUID_VENDOR_PARALLELS    " lrpepyh vr"
 
-enum class cpuid_feature {
+enum class cpuid_feature : uint32_t
+{
     ECX_SSE3         = 1 << 0, 
     ECX_PCLMUL       = 1 << 1,
     ECX_DTES64       = 1 << 2,
@@ -77,8 +83,8 @@ enum class cpuid_feature {
     EDX_SS           = 1 << 27, 
     EDX_HTT          = 1 << 28, 
     EDX_TM1          = 1 << 29, 
-    EDX_IA64         = 1 << 30,
-    EDX_PBE          = 1 << 31
+    EDX_IA64         = 1 << 30 /*,
+    EDX_PBE          = 1 << 31 -- Commented out because `enumerator value evaluates to -2147483648, which cannot be narrowed to type 'uint32_t'` */
 };
 
 int cpuid_get_model_id();
