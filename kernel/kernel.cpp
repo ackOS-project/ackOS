@@ -22,8 +22,8 @@ void kmain(multiboot_header* header)
     serial::port_initialize(COM1, 9600);
     memory_initalize(0x1000000, 0x1000000);
 
-    legacy_vga::write("Hello\n");
-    legacy_vga::write("Booted ackOS! meow.\n");
+    legacy_vga::write("ackOS v0.1\n");
+    legacy_vga::write("Greetings, \n");
 
     // ksh_start();
     
