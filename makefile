@@ -2,8 +2,8 @@ export PATH := $(shell toolchain/path.sh)
 
 ARCH = x86_64
 
-CC = clang
-CXX = clang
+CC = $(ARCH)-elf-gcc
+CXX = $(ARCH)-elf-g++
 AS = nasm
 LD = ld
 BIN = bin
@@ -44,12 +44,12 @@ CFLAGS += \
 		-I . \
 		-ffreestanding \
 		-fno-exceptions \
+		-mno-red-zone \
 		-DackOS_BUILD_ARCH_$(ARCH) \
 		-DackOS_BUILD_HOST_ARCH=\"$(shell uname --machine)\" \
 		-DackOS_BUILD_TIME='"$(shell date)"' \
 		-DackOS_BUILD_HOST_OS=\"$(shell uname --operating-system)\" \
 		-std=c++2a \
-		-target $(ARCH)-elf
 
 LFLAGS +=
 

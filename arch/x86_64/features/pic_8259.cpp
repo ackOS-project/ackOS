@@ -9,39 +9,58 @@ pic_8259.cpp: For legacy PIC controllers
 
 void pic8259_remap()
 { 
-    uint8_t a1 = inb(MASTER_PIC_DATA), a2 = inb(SLAVE_PIC_DATA);
- 
-    outb(MASTER_PIC_COMMAND, ICW1_INIT | ICW1_ICW4);
-    outb(SLAVE_PIC_COMMAND, ICW1_INIT | ICW1_ICW4);
+    uint8_t a1, a2;
 
-    outb(MASTER_PIC_DATA, 0);
-    outb(SLAVE_PIC_DATA, 8);
+    a1 = inb(PIC_MASTER_DATA);
+    io_wait();
+    a2 = inb(PIC_SLAVE_DATA);
+    io_wait();
 
-    outb(MASTER_PIC_DATA, 4);
-    outb(SLAVE_PIC_DATA, 2);
+    outb(PIC_MASTER_COMMAND, ICW1_INIT | ICW1_ICW4);
+    io_wait();
+    outb(PIC_SLAVE_COMMAND, ICW1_INIT | ICW1_ICW4);
+    io_wait();
 
-    outb(MASTER_PIC_DATA, ICW1_8086);
-    outb(SLAVE_PIC_DATA, ICW1_8086);
+    outb(PIC_MASTER_DATA, 0x20);
+    io_wait();
+    outb(PIC_SLAVE_DATA, 0x28);
+    io_wait();
 
+    outb(PIC_MASTER_DATA, 4);
+    io_wait();
+    outb(PIC_SLAVE_DATA, 2);
+    io_wait();
 
-    outb(MASTER_PIC_DATA, a1);
-    outb(SLAVE_PIC_DATA, a2);
+    outb(PIC_MASTER_DATA, ICW1_8086);
+    io_wait();
+    outb(PIC_SLAVE_DATA, ICW1_8086);
+    io_wait();
+
+    outb(PIC_MASTER_DATA, a1);
+    io_wait();
+    outb(PIC_SLAVE_DATA, a2);
+    io_wait();
 }
 
 void pic8259_mask()
 {
-    outb(MASTER_PIC_DATA, 0xfd);
-    outb(SLAVE_PIC_DATA, 0xff);
+    outb(PIC_MASTER_DATA, 0xfd);
+    outb(PIC_SLAVE_DATA, 0xff);
 }
 
 void pic8259_disable()
 {
-    outb(MASTER_PIC_DATA, 0xff);
-    outb(SLAVE_PIC_DATA, 0xff);
+    outb(PIC_MASTER_DATA, 0xff);
+    outb(PIC_SLAVE_DATA, 0xff);
 }
 
-void pic8259_finish_interrupt()
+void pic8259_master_eoi()
 {
-    outb(MASTER_PIC, MASTER_PIC);
-    outb(SLAVE_PIC, MASTER_PIC);
+    outb(PIC_MASTER_COMMAND, PIC_EOI);
+}
+
+void pic8259_slave_eoi()
+{
+    outb(PIC_SLAVE_COMMAND, PIC_EOI);
+    outb(PIC_MASTER_COMMAND, PIC_EOI);
 }
