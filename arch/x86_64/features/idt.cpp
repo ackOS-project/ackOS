@@ -5,9 +5,8 @@
 #include "kernel/io.h"
 #include "kernel/drivers/serial.h"
 
-#define INTERRUPT_GATE32 0xE
-#define TASK_GATE32 0x5
-#define TRAP_GATE32 0xF
+#define INTERRUPT_GATE32 0x8E
+#define TRAP_GATE32 0xEF
 
 idt64_entry _idt[IDT_ENTRIES];
 
