@@ -5,7 +5,7 @@ ARCH = x86_64
 CC = $(ARCH)-elf-gcc
 CXX = $(ARCH)-elf-g++
 AS = nasm
-LD = ld
+LD = $(ARCH)-elf-ld
 BIN = bin
 
 ISONAME = ackOS
@@ -54,7 +54,6 @@ CFLAGS += \
 LFLAGS +=
 
 QEMU_FLAGS += \
-			-enable-kvm \
 			-serial stdio
 
 # includes
@@ -81,11 +80,11 @@ all: $(OBJECTS)
 	@sudo grub-mkrescue -o $(BIN)/$(ISONAME).iso $(BOOTLOADER)
 
 qemu: all
-	@qemu-system-x86_64 $(QEMU_FLAGS) -cdrom $(BIN)/$(ISONAME).iso
+	@qemu-system-x86_64 $(QEMU_FLAGS) -enable-kvm -cdrom $(BIN)/$(ISONAME).iso
 
 qemu-debug: all
 	@objcopy --only-keep-debug iso/$(ISONAME).bin $(BIN)/ackOS.sym
-	@qemu-system-x86_64 $(QEMU_FLAGS) -cdrom $(BIN)/$(ISONAME).iso -s -S
+	@sudo qemu-system-x86_64 $(QEMU_FLAGS) -cdrom $(BIN)/$(ISONAME).iso -d int -no-reboot -monitor telnet:127.0.0.1:55555,server,nowait;
 
 check-multiboot2: all
 	@if grub-file --is-x86-multiboot2 $(BOOTLOADER)/$(ISONAME).bin; then \
