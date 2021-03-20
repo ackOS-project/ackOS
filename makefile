@@ -49,7 +49,7 @@ CFLAGS += \
 		-DackOS_BUILD_HOST_ARCH=\"$(shell uname --machine)\" \
 		-DackOS_BUILD_TIME='"$(shell date)"' \
 		-DackOS_BUILD_HOST_OS=\"$(shell uname --operating-system)\" \
-		-std=c++2a \
+		-std=c++2a
 
 LFLAGS +=
 

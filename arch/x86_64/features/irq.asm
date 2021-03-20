@@ -43,25 +43,26 @@ extern protection_fault_handler
 global interrupt_irq1
 interrupt_irq1:
     pusha
+    mov rdi, rsp
     call irq1_handler
     popa
+    mov rsp, 16 ; cleanup stack
     iretq
 
 global interrupt_double_fault
 interrupt_double_fault:
     pusha
+    mov rdi, rsp
     call double_fault_handler
     popa
+    mov rsp, 16 ; cleanup stack
     iretq
 
 global interrupt_protection_fault
 interrupt_protection_fault:
     pusha
+    mov rdi, rsp
     call protection_fault_handler
     popa
+    mov rsp, 16 ; cleanup stack
     iretq
-
-global idt_load
-idt_load:
-    lidt [rdi]
-    ret
