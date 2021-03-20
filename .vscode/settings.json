@@ -10,7 +10,9 @@
         "c*": "cpp",
         "buffer": "cpp",
         "cstdio": "cpp",
-        "cstring": "cpp"
+        "cstring": "cpp",
+        "executor": "cpp",
+        "functional": "cpp"
     },
 
     "search.exclude": {

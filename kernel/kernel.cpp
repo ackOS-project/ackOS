@@ -26,6 +26,15 @@ void kmain(multiboot_header* header)
     legacy_vga::write("Greetings, \n");
 
     // ksh_start();
-    
+
+    // double fault -
+    // int i = 0 / 0;
+
+    // GP fault -
+    // asm volatile("int $3"); 
+
     serial::putc(COM1, '\n'); // leave a new line at the end
+
+
+    return;
 }

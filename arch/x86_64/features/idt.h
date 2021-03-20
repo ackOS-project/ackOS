@@ -23,6 +23,6 @@ struct idt64_descriptor
 }
 __attribute((packed));
 
-extern "C" void idt_load(idt64_descriptor* descriptor);
+void idt_load(idt64_descriptor descriptor);
 
 void idt_initialize();
