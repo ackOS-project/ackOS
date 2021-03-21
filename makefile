@@ -86,6 +86,9 @@ qemu-debug: all
 	@objcopy --only-keep-debug iso/$(ISONAME).bin $(BIN)/ackOS.sym
 	@sudo qemu-system-x86_64 $(QEMU_FLAGS) -cdrom $(BIN)/$(ISONAME).iso -d int -no-reboot -monitor telnet:127.0.0.1:55555,server,nowait;
 
+bochs: all
+	@bochs -q -f assets/bochsrc.bxrc
+
 check-multiboot2: all
 	@if grub-file --is-x86-multiboot2 $(BOOTLOADER)/$(ISONAME).bin; then \
 		echo multiboot confirmed; \

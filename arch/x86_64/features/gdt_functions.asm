@@ -6,7 +6,7 @@ gdt_load:
     lgdt [rdi]
 
     ; flush the registers
-    mov ax, 0x10
+    mov ax, 0x10 ; kernel data selector
     mov ds, ax
     mov es, ax
     mov fs, ax
@@ -15,7 +15,7 @@ gdt_load:
 
     pop rdi
 
-    mov rax, 0x08
+    mov rax, 0x08 ; kernel code selector
     push rax
     push rdi
 

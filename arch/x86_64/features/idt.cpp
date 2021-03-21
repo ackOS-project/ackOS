@@ -7,6 +7,7 @@
 
 #define INTERRUPT_GATE32 0x8E
 #define TRAP_GATE32 0xEF
+#define INTERRUPT_USER 0x60
 
 idt64_entry _idt[IDT_ENTRIES];
 
