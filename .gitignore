@@ -24,3 +24,4 @@ toolchain/local
 # Misc
 *.old
 *.d
+*.log
