@@ -1,7 +1,7 @@
 #include "kernel/drivers/serial.h"
 #include "kernel/io.h"
 #include <cstring>
-#include <cstdio>
+#include <cstdlib>
 
 namespace serial
 {
@@ -32,12 +32,12 @@ namespace serial
 
     void print(int port, const char *data, int size)
     {
-        if (size < 0)
+        if(size < 0)
         {
             size = strlen(data);
         }
 
-        for (int i = 0; i < size; i++)
+        for(int i = 0; i < size; i++)
         {
             putc(port, data[i]);
         }

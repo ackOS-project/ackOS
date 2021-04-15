@@ -20,8 +20,10 @@ toolchain/build
 toolchain/gcc
 toolchain/binutils
 toolchain/local
+sysroot
 
 # Misc
 *.old
 *.d
 *.log
+bx_enh_dbg.ini

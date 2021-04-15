@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-enum class keyboard_key : uint32_t
+enum class keyboard_scancode : uint32_t
 {
     INVALID = 0x0,
     ESC = 0x01,
@@ -140,4 +140,4 @@ enum class keyboard_key : uint32_t
     COUNT
 };
 
-keyboard_key keyboard_get_keycode();
+keyboard_scancode keyboard_get_keycode();

@@ -23,7 +23,7 @@ namespace std
 
     vector()
     {
-        // Allocates 2 by default to reduce reallocations,
+        // allocates 2 by default to reduce reallocations,
         // this is not the default behaviour in the C++ standard library (strangely)
         vector(2);
     }

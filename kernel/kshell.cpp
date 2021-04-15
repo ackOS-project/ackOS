@@ -3,7 +3,7 @@
 #include "kernel/drivers/serial.h"
 #include <cstring>
 
-#define PORT COM1
+#define PORT SERIAL_COM1
 #define COMMAND_MAX 255
 #define ALPHA "abcdefghijklmnopqrsuvwxyzABCDEFGHIJKLMNOPQRSUVWXYZ$"
 

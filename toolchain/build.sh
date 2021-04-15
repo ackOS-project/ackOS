@@ -1,9 +1,9 @@
 #!/bin/bash
 set -e
 
-COMPILER_TARGET=x86_64-elf
+COMPILER_TARGET=x86_64-ackos
 COMPILER_PREFIX="local"
-# COMPILER_SYSROOT="../sysroot"
+COMPILER_SYSROOT="../sysroot"
 
 BINUTILS_VERSION=2.35
 BINUTILS_WGET_LOC=binutils.tar.gz
@@ -13,7 +13,7 @@ GCC_VERSION=10.2.0
 GCC_WGET_LOC=gcc.tar.gz
 GCC_DIR=gcc
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+DIR="$(dirname $(readlink -f $0))"
 
 cd $DIR
 
@@ -33,19 +33,25 @@ fi
 
 if [ ! -e $BINUTILS_DIR ]; then
 	echo Extracting binutils
-	mkdir "$BINUTILS_DIR"
-	tar -xf binutils.tar.gz -C "$BINUTILS_DIR"
+	tar -xvzf binutils.tar.gz
+	mv binutils-$BINUTILS_VERSION binutils
 else
 	echo "binutils has already been extracted, skipping"
 fi
 
 if [ ! -e $GCC_DIR ]; then
 	echo Extracting GCC
-	mkdir "$GCC_DIR"
-	tar xvzf gcc.tar.gz -C "$GCC_DIR"
+	tar -xvzf gcc.tar.gz
+	mv gcc-$GCC_VERSION gcc
 else
 	echo "GCC has already been extracted, skipping"
 fi
+
+echo Patching binutils -
+./patches/patch.sh --source_directory=$BINUTILS_DIR --patch_directory=patches/binutils
+
+echo Patching GCC -
+./patches/patch.sh --source_directory=$GCC_DIR --patch_directory=patches/gcc
 
 mkdir -p $COMPILER_PREFIX
 
@@ -62,13 +68,12 @@ if [ ! -d "build/binutils" ]; then
 	mkdir -p "build/binutils"
 	pushd "build/binutils"
 		echo "Configuring binutils"
-		"$DIR/$BINUTILS_DIR/binutils-$BINUTILS_VERSION/configure" \
+		"$DIR/$BINUTILS_DIR/configure" \
 			--target=$COMPILER_TARGET \
 			--prefix="$DIR/$COMPILER_PREFIX" \
 			--disable-werror \
 			--disable-nls \
-			--with-sysroot || exit 1
-			# --with-sysroot="$DIR/$COMPILER_SYSROOT" \
+			--with-sysroot="$DIR/$COMPILER_SYSROOT" || exit 1
 
 		echo "Running make on binutils"
 		make
@@ -85,7 +90,7 @@ if [ ! -d "build/gcc" ]; then
 	pushd "build/gcc"
 		echo "Configuring GCC"
 		# You must provide the full path when using the configure script
-		"$DIR/$GCC_DIR/gcc-$GCC_VERSION/configure" \
+		"$DIR/$GCC_DIR/configure" \
 				--target=$COMPILER_TARGET \
 				--prefix="$DIR/$COMPILER_PREFIX" \
 				--disable-nls \
@@ -93,8 +98,7 @@ if [ ! -d "build/gcc" ]; then
 				--enable-languages=c,c++ \
 				--disable-bootstrap \
 				--with-newlib \
-				--with-sysroot \
-				--with-gmp=/usr --with-mpc=/opt/local --with-mpfr=/opt/local
+				--with-sysroot=$DIR/$COMPILER_SYSROOT
 		# make -C "$DIR/../" install-headers || exit 1
 
 		echo "Running make all-gcc on GCC"
@@ -105,6 +109,7 @@ if [ ! -d "build/gcc" ]; then
 
 		echo "Running make install-gcc on GCC"
 		make install-gcc
+
 		echo "Running make install-target-libgcc on GCC"
 		make install-target-libgcc
 
