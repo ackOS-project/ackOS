@@ -10,6 +10,8 @@ void kmain(multiboot_header* header);
 
 extern "C" int x86_64_init(multiboot_header* header, unsigned int magic)
 {
+    serial::port_initialize(SERIAL_COM1, 9600);
+
     gdt_initialize();
     idt_initialize();
 

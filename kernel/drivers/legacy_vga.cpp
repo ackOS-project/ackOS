@@ -99,10 +99,10 @@ namespace legacy_vga
         const size_t index = terminal_row * VGA_WIDTH + terminal_column;
         vidmem[index] = vga_entry(c, terminal_colour);
 
-        if (++terminal_column == VGA_WIDTH)
+        if(++terminal_column == VGA_WIDTH)
         {
             terminal_column = 0;
-            if (++terminal_row == VGA_HEIGHT)
+            if(++terminal_row == VGA_HEIGHT)
             {
                 terminal_row = 0;
             }

@@ -1,4 +1,3 @@
-extern _idt
 extern irq1_handler
 extern double_fault_handler
 extern protection_fault_handler
@@ -46,7 +45,6 @@ interrupt_irq1:
     mov rdi, rsp
     call irq1_handler
     popa
-    add rsp, 16 ; cleanup stack
     iretq
 
 global interrupt_double_fault
@@ -55,7 +53,6 @@ interrupt_double_fault:
     mov rdi, rsp
     call double_fault_handler
     popa
-    add rsp, 16 ; cleanup stack
     iretq
 
 global interrupt_protection_fault
@@ -64,5 +61,4 @@ interrupt_protection_fault:
     mov rdi, rsp
     call protection_fault_handler
     popa
-    add rsp, 16 ; cleanup stack
     iretq

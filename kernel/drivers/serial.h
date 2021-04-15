@@ -1,9 +1,9 @@
 #pragma once
 
-#define COM1 0x3f8
-#define COM2 0x2F8
-#define COM3 0x3E8
-#define COM4 0x2E8
+#define SERIAL_COM1 0x3f8
+#define SERIAL_COM2 0x2F8
+#define SERIAL_COM3 0x3E8
+#define SERIAL_COM4 0x2E8
 
 namespace serial
 {

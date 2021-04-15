@@ -42,59 +42,10 @@ void memory_merge_blocks(heap_block* a, heap_block* b)
     }
 }
 
-void memory_free(void* mem)
+void memory_initalize(uint64_t start, uint64_t end)
 {
-    heap_block* block = ((heap_block*)mem) - 1;
-    block->is_free = true;
-
-    if(block < heap_start)
-    {
-        heap_start = block;
-    }
-
-    if(block->next_free != nullptr)
-    {
-        if(block->next_free->previous_free < block)
-        {
-            block->next_free->previous_free = block;
-        }
-    }
-
-    if(block->next != nullptr)
-    {
-        block->next->previous = block;
-        if(block->next->is_free) memory_merge_blocks(block, block->next);
-    }
-
-    if(block->previous_free != nullptr)
-    {
-        if(block->previous_free->next_free > block)
-        {
-            block->previous_free->next_free = block;
-        }
-    }
-
-    if(block->previous != nullptr)
-    {
-        block->previous->next = block;
-        if(block->previous->is_free) memory_merge_blocks(block, block->previous);
-    }
-}
-
-void *memory_set(void *ptr, int value, size_t num)
-{
-	unsigned char *p = (unsigned char *)ptr;
-	while (num--)
-    {
-        *p++ = (unsigned char)value;
-    }
-	return ptr;
-}
-
-void memory_initalize(uint64_t location, uint64_t size)
-{
-    heap_start = (heap_block*)location;
-    heap_start->size = size - sizeof(heap_block);
+    heap_start = (heap_block*)start;
+    heap_start->size = end - sizeof(heap_block);
 
     heap_start->next = nullptr;
     heap_start->next_free = nullptr;
@@ -106,8 +57,16 @@ void memory_initalize(uint64_t location, uint64_t size)
 
 void* memory_alloc(size_t size)
 {
-    size -= (size % 8);
-    if((size % 8) != 0) size += 8;
+    if(size < 1)
+    {
+        return NULL;
+    }
+
+    size -= size % 8;
+    if((size % 8) != 0)
+    {
+        size += 8;
+    }
 
     heap_block* block = heap_start;
 
@@ -162,7 +121,7 @@ void* memory_alloc(size_t size)
 
         if(block->next_free == nullptr)
         {
-            // Out of memory
+            // out of memory
             return nullptr;
         }
 
@@ -171,10 +130,41 @@ void* memory_alloc(size_t size)
     return nullptr;
 }
 
-void* memory_calloc(size_t size)
+void memory_free(void* mem)
 {
-    void* mem = memory_alloc(size);
-    memory_set(mem, 0, size);
+    heap_block* block = ((heap_block*)mem) - 1;
+    block->is_free = true;
 
-    return mem;
+    if(block < heap_start)
+    {
+        heap_start = block;
+    }
+
+    if(block->next_free != nullptr)
+    {
+        if(block->next_free->previous_free < block)
+        {
+            block->next_free->previous_free = block;
+        }
+    }
+
+    if(block->next != nullptr)
+    {
+        block->next->previous = block;
+        if(block->next->is_free) memory_merge_blocks(block, block->next);
+    }
+
+    if(block->previous_free != nullptr)
+    {
+        if(block->previous_free->next_free > block)
+        {
+            block->previous_free->next_free = block;
+        }
+    }
+
+    if(block->previous != nullptr)
+    {
+        block->previous->next = block;
+        if(block->previous->is_free) memory_merge_blocks(block, block->previous);
+    }
 }

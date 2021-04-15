@@ -12,11 +12,38 @@
         "cstdio": "cpp",
         "cstring": "cpp",
         "executor": "cpp",
-        "functional": "cpp"
+        "functional": "cpp",
+        "*.tcc": "cpp",
+        "cstdarg": "cpp",
+        "cstddef": "cpp",
+        "cstdlib": "cpp",
+        "hash_map": "cpp",
+        "hash_set": "cpp",
+        "array": "cpp",
+        "internet": "cpp",
+        "socket": "cpp",
+        "string_view": "cpp",
+        "rope": "cpp",
+        "slist": "cpp",
+        "bitset": "cpp",
+        "ranges": "cpp",
+        "span": "cpp",
+        "utility": "cpp",
+        "valarray": "cpp",
+        "dynamic_bitset": "cpp",
+        "initializer_list": "cpp",
+        "interception-malloc-test-1.C": "cpp",
+        "*.x": "cpp",
+        "*.tgt": "cpp"
     },
 
     "search.exclude": {
         "**/toolchain": true,
         "**/bin": true
     },
+
+    "files.watcherExclude": {
+        "**/toolchain": true,
+        "**/bin": true
+    }
 }

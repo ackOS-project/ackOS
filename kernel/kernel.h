@@ -6,14 +6,6 @@
 #include "kernel/psf.h"
 #include "kernel/mm/memory.h"
 
-#if defined(__linux__)
-#error "You are using a standard gcc/clang compiler. You will need a cross compiler for ackOS to compile successfully."
-#endif
-
-#if !defined(__x86_64__)
-#error "ackOS needs to be compiled with a x86_64-elf compiler."
-#endif
-
 extern "C" char _binary_fonts_zap_vga16_psf_start;
 extern "C" char _binary_fonts_zap_vga16_psf_end;
 

@@ -4,6 +4,7 @@
 
 #include "kernel/io.h"
 #include "kernel/drivers/serial.h"
+#include "kernel/logger.h"
 
 #define INTERRUPT_GATE32 0x8E
 #define TRAP_GATE32 0xEF
@@ -33,6 +34,11 @@ void idt_entry_create(uint8_t index, uint64_t handler, uint8_t ist, uint8_t type
         .offset_high = (uint32_t)(handler >> 32),
         .zero = 0
     };
+
+/*
+    log_info("idt", "new idt entry for 0x%x - offset_low=0x%x offset_mid=0x%x offset_high=0x%x, selector=0x%x, ist=0x%x", 
+            index, _idt[index].offset_low, _idt[index].offset_mid, _idt[index].offset_high, _idt[index].selector, _idt[index].ist);
+*/
 }
 
 void idt_load(idt64_descriptor descriptor)

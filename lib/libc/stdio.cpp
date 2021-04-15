@@ -1,115 +1,244 @@
-#include <stdarg.h>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/types.h>
+
+#include <liback/syscalls.h>
 #include "kernel/io.h"
 #include "kernel/kernel.h"
 
-char* itoa(int value, char* str, int base)
+struct FILE
 {
-    char* rc;
-    char* ptr;
-    char* low;
-    // Check for supported base.
-    if ( base < 2 || base > 36 )
+    int flags;
+    off_t offset;
+    char* buff;
+    int buff_size;
+    int fd;
+    int status;
+};
+
+FILE _stdin = { .flags = O_RDONLY, .offset = 0, .buff = nullptr, .buff_size = 0, .fd = STDIN_FILENO, .status = 0 };
+FILE _stdout = { .flags = O_WRONLY, .offset = 0, .buff = nullptr, .buff_size = 0, .fd = STDOUT_FILENO, .status = 0 };
+FILE _stderr = { .flags = O_WRONLY, .offset = 0, .buff = nullptr, .buff_size = 0, .fd = STDERR_FILENO, .status = 0  };
+
+FILE* stdin = &_stdin;
+FILE* stdout = &_stdout;
+FILE* stderr = &_stderr;
+
+size_t fwrite(const void* buff, size_t size, size_t count, FILE* file)
+{
+    size_t bytes = count * size;
+    size_t bytes_written = write(file->fd, buff, bytes);
+
+    if(bytes == bytes_written)
     {
-        *str = '\0';
-        return str;
+        return count;
     }
-    rc = ptr = str;
-    // Set '-' for negative decimals.
-    if ( value < 0 && base == 10 )
-    {
-        *ptr++ = '-';
-    }
-    // Remember where the numbers start.
-    low = ptr;
-    // The actual conversion.
-    do
-    {
-        // Modulo is negative for negative value. This trick makes abs() unnecessary.
-        *ptr++ = "zyxwvutsrqponmlkjihgfedcba9876543210123456789abcdefghijklmnopqrstuvwxyz"[35 + value % base];
-        value /= base;
-    } while ( value );
-    // Terminating the string.
-    *ptr-- = '\0';
-    // Invert the numbers.
-    while ( low < ptr )
-    {
-        char tmp = *low;
-        *low++ = *ptr;
-        *ptr-- = tmp;
-    }
-    return rc;
+
+    return 0;
 }
 
-int sqrt(int x)
+int fputc(int c, FILE* file)
 {
-    int quotient = 0;
-    int i = 0;
+    fwrite((const void*)&c, 1, 1, file);
 
-    bool resultfound = false;
-    while (resultfound == false) {
-        if (i*i == x) {
-          quotient = i;
-          resultfound = true;
-        }
-        i++;
-    }
-    return quotient;
+    return c;
 }
 
-void printf(const char* str)
+int fputs(const char* str, FILE* file)
 {
-    // vga_terminal::write(str);
+    fwrite(str, 1, strlen(str), file);
+
+    return 0;
 }
 
-void printf(const char* string, ...) 
+int putc(int c, FILE* file)
 {
-    /*
-    size_t format_length;
-    size_t string_length = strlen(string);
+    return fputc(c, file);
+}
 
-    for(int i = 0; i < string_length; i++)
+int putchar(int c)
+{
+    return fputc(c, stdout);
+}
+
+int puts(const char* str)
+{
+    int r = 0;
+
+    for(r = 0; r < strlen(str); r++)
     {
-        if(string[i] == '%')
+        putchar(str[r]);
+    }
+
+    if(r > 0)
+    {
+        putchar('\n');
+
+        r++;
+    }
+
+    return r;
+}
+
+int vsnprintf(char* buff, size_t n, const char* fmt, va_list args)
+{
+    int length = 0;
+
+    while(char ch = *fmt++)
+    {
+        if(n != 0 && length == n)
         {
-            format_length++;
+            break;
         }
-    }
 
-    va_list vl;
-    va_start(vl, format_length);
-    
-    auto look_ahead = [&](size_t inc = 1) 
-    {
-        int total = string_length + inc;
-        if(total < string_length)
+        if(ch == '%')
         {
-            return string[total];
+            switch(ch = *fmt++)
+            {
+                case '%':
+                {
+                    buff[length] = '%';
+                    length++;
+                    break;
+                }
+                case 'c':
+                {
+                    char c = va_arg(args, int);
+
+                    buff[length] = c;
+                    length++;
+
+                    break;
+                }
+                case 's':
+                {
+                    char* str = va_arg(args, char*);
+
+                    for(int i = 0; i < strlen(str); i++)
+                    {
+                        buff[length + i] = str[i];
+                    }
+                    length += strlen(str);
+
+                    break;
+                }
+                case 'd':
+                {
+                    int interger = va_arg(args, int);
+
+                    char itoa_buff[128];
+                    itoa(interger, itoa_buff, 10);
+
+                    for(int i = 0; i < strlen(itoa_buff); i++)
+                    {
+                        buff[length + i] = itoa_buff[i];
+                    }
+                    length += strlen(itoa_buff);
+
+                    break;
+                }
+                case 'x':
+                {
+                    int interger = va_arg(args, int);
+
+                    char itoa_buff[128];
+                    itoa(interger, itoa_buff, 16);
+
+                    for(int i = 0; i < strlen(itoa_buff); i++)
+                    {
+                        buff[length + i] = itoa_buff[i];
+                    }
+                    length += strlen(itoa_buff);
+
+                    break;
+                }
+                default:
+                {
+                    buff[length] = '?';
+                    length++;
+                }
+            }
+
         }
         else
         {
-            return ' ';
-        }
-        
-    };
-
-    std::vector<const char*> tokens;
-    int current_format = 0;
-    for(int i = 0; i < string_length; i++)
-    {
-        if(string[i] == '%')
-        {
-            if(look_ahead() == 's')
-            {
-                tokens.push_back(va_arg(vl, const char*));
-                vga_terminal::write(tokens[current_format]);
-
-                current_format++;
-            }
+            buff[length] = ch;
+            length++;
         }
     }
 
-    va_end(vl);
-    */
+    buff[length] = '\0';
+
+    return length;
 }
 
+int vsprintf(char* buff, const char* fmt, va_list args)
+{
+    return vsnprintf(buff, 0, fmt, args);
+}
+
+int snprintf(char* buff, size_t n, const char* fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+
+    int length = vsnprintf(buff, 0, fmt, args);
+
+    va_end(args);
+
+    return length;
+}
+
+int sprintf(char* buff, const char* fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+
+    int length = vsprintf(buff, fmt, args);
+
+    va_end(args);
+
+    return length;
+}
+
+int vfprintf(FILE* file, const char* fmt, va_list args) 
+{
+    char buff[512];
+    int length = vsnprintf(buff, 512, fmt, args);
+
+    fputs(buff, file);
+
+    return length;
+}
+
+int fprintf(FILE* file, const char* fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+
+    int length = vfprintf(file, fmt, args);
+
+    va_end(args);
+
+    return length;
+}
+
+int vprintf(const char* fmt, va_list args) 
+{
+    return vfprintf(stdout, fmt, args);
+}
+
+int printf(const char* fmt, ...) 
+{
+    va_list args;
+    va_start(args, fmt);
+
+    int length = vprintf(fmt, args);
+
+    va_end(args);
+
+    return length;
+}
