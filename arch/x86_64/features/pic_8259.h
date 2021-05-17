@@ -10,7 +10,7 @@
 
 #define ICW1_INIT 0x10
 #define ICW1_ICW4 0x01
-#define ICW1_8086 0x01
+#define ICW4_8086 0x01
 
 void pic8259_remap();
 

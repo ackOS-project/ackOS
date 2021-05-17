@@ -1,4 +1,4 @@
-#include "kernel/mm/memory.h"
+#include "kernel/mm/heap.h"
 #include <cstring>
 
 struct heap_block
@@ -15,7 +15,7 @@ struct heap_block
 
 static heap_block* heap_start;
 
-void memory_merge_blocks(heap_block* a, heap_block* b)
+void heap_merge_blocks(heap_block* a, heap_block* b)
 {
     if(a == nullptr) return;
     if(b == nullptr) return;
@@ -42,7 +42,7 @@ void memory_merge_blocks(heap_block* a, heap_block* b)
     }
 }
 
-void memory_initalize(uint64_t start, uint64_t end)
+void heap_initialise(uint64_t start, uint64_t end)
 {
     heap_start = (heap_block*)start;
     heap_start->size = end - sizeof(heap_block);
@@ -55,7 +55,7 @@ void memory_initalize(uint64_t start, uint64_t end)
     heap_start->is_free = true;
 }
 
-void* memory_alloc(size_t size)
+void* heap_allocate(size_t size)
 {
     if(size < 1)
     {
@@ -130,7 +130,7 @@ void* memory_alloc(size_t size)
     return nullptr;
 }
 
-void memory_free(void* mem)
+void heap_deallocate(void* mem)
 {
     heap_block* block = ((heap_block*)mem) - 1;
     block->is_free = true;
@@ -151,7 +151,10 @@ void memory_free(void* mem)
     if(block->next != nullptr)
     {
         block->next->previous = block;
-        if(block->next->is_free) memory_merge_blocks(block, block->next);
+        if(block->next->is_free)
+        {
+            heap_merge_blocks(block, block->next);
+        }
     }
 
     if(block->previous_free != nullptr)
@@ -165,6 +168,9 @@ void memory_free(void* mem)
     if(block->previous != nullptr)
     {
         block->previous->next = block;
-        if(block->previous->is_free) memory_merge_blocks(block, block->previous);
+        if(block->previous->is_free)
+        {
+            heap_merge_blocks(block, block->previous);
+        }
     }
 }

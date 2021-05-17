@@ -1,6 +1,5 @@
-#include "x86_64/features/gdt.h"
+#include "arch/x86_64/features/gdt.h"
 #include "kernel/logger.h"
-#include "kernel/drivers/serial.h"
 #include <cstdio>
 
 #define GDT_LONG_MODE_GRANULARITY 0x2
@@ -34,7 +33,7 @@ gdt64_entry gdt_create_entry(uint32_t base, uint32_t limit, uint8_t granularity,
     return entry;
 }
 
-void gdt_initialize()
+void gdt_initialise()
 {
     _gdt[0] = gdt_create_entry(0, 0, 0, 0);
     _gdt[1] = gdt_create_entry(0, 0, 0x20, GDT_PRESENT | GDT_SEGMENT | GDT_READ_WRITE | GDT_EXECUTABLE);

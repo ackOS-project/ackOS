@@ -4,7 +4,7 @@ pic_8259.cpp: For legacy PIC controllers
 #include <stdint.h>
 #include <stddef.h>
 
-#include "x86_64/features/pic_8259.h"
+#include "arch/x86_64/features/pic_8259.h"
 #include "kernel/io.h"
 
 void pic8259_remap()
@@ -31,9 +31,9 @@ void pic8259_remap()
     outb(PIC_SLAVE_DATA, 2);
     io_wait();
 
-    outb(PIC_MASTER_DATA, ICW1_8086);
+    outb(PIC_MASTER_DATA, ICW4_8086);
     io_wait();
-    outb(PIC_SLAVE_DATA, ICW1_8086);
+    outb(PIC_SLAVE_DATA, ICW4_8086);
     io_wait();
 
     outb(PIC_MASTER_DATA, a1);

@@ -1,38 +1,12 @@
 #pragma once
-// Headers
-//#include "utils.h"
+
 #include <cstdint>
 #include <cstddef>
 
-// Hardware comunication
-unsigned char inb(unsigned short int port);
+uint8_t inb(uint16_t port);
 
-void outb(unsigned short int port, unsigned char data);
+void outb(uint16_t port, uint8_t data);
 
-void outw(unsigned short int port, unsigned short int data);
+void outw(uint16_t port, uint16_t data);
 
 void io_wait();
-
-// Power management functions
-
-void reboot();
-
-void shutdown();
-
-// Memory
-
-struct mutex
-{
-	uint8_t locked;
-};
-
-struct alloc_t
-{
-	uint8_t status;
-	uint32_t size;
-};
-
-#include "kernel/mm/memory.h"
-// Genral input/output stuff
-
-

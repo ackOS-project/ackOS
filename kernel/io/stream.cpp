@@ -1,4 +1,4 @@
-#include "kernel/drivers/serial.h"
+#include "arch/x86_64/features/serial.h"
 #include "kernel/io/stream.h"
 
 stream::stream()

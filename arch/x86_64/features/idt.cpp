@@ -1,28 +1,24 @@
-#include "x86_64/features/idt.h"
-#include "x86_64/features/gdt.h"
-#include "x86_64/features/pic_8259.h"
+#include "arch/x86_64/features/idt.h"
+#include "arch/x86_64/features/gdt.h"
+#include "arch/x86_64/features/pic_8259.h"
 
 #include "kernel/io.h"
-#include "kernel/drivers/serial.h"
 #include "kernel/logger.h"
 
 #define INTERRUPT_GATE32 0x8E
 #define TRAP_GATE32 0xEF
 #define INTERRUPT_USER 0x60
 
+extern uint64_t _interrupt_vt[];
+
 idt64_entry _idt[IDT_ENTRIES];
-
-extern uint64_t interrupt_irq1;
-extern uint64_t interrupt_double_fault;
-extern uint64_t interrupt_protection_fault;
-
 idt64_descriptor _idt_descriptor =
 {
-    .segment = (sizeof(idt64_entry) * IDT_ENTRIES) - 1,
+    .limit = (sizeof(idt64_entry) * IDT_ENTRIES) - 1,
     .offset = (uint64_t)&_idt,
 };
 
-void idt_entry_create(uint8_t index, uint64_t handler, uint8_t ist, uint8_t types_atrr)
+void idt64_entry_create(uint8_t index, uint64_t handler, uint8_t ist, uint8_t types_atrr)
 {
     _idt[index] =
     {
@@ -41,16 +37,17 @@ void idt_entry_create(uint8_t index, uint64_t handler, uint8_t ist, uint8_t type
 */
 }
 
-void idt_load(idt64_descriptor descriptor)
+void idt64_load(idt64_descriptor descriptor)
 {
     asm volatile("lidtq %0" :: "m" (descriptor));
 }
 
-void idt_initialize()
+void idt_initialise()
 {
-    idt_entry_create(0x8, (uint64_t)&interrupt_double_fault, 0, INTERRUPT_GATE32);
-    idt_entry_create(0xD, (uint64_t)&interrupt_protection_fault, 0, INTERRUPT_GATE32);
-    idt_entry_create(0x21, (uint64_t)&interrupt_irq1, 0, INTERRUPT_GATE32);
+    for(int i = 0; i < 48; i++)
+    {
+        idt64_entry_create(i, _interrupt_vt[i], 0, INTERRUPT_GATE32);
+    }
 
-    idt_load(_idt_descriptor);
+    idt64_load(_idt_descriptor);
 }

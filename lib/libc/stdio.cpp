@@ -6,8 +6,6 @@
 #include <sys/types.h>
 
 #include <liback/syscalls.h>
-#include "kernel/io.h"
-#include "kernel/kernel.h"
 
 struct FILE
 {
@@ -86,6 +84,7 @@ int puts(const char* str)
 int vsnprintf(char* buff, size_t n, const char* fmt, va_list args)
 {
     int length = 0;
+    size_t fmt_len = strlen(fmt);
 
     while(char ch = *fmt++)
     {
@@ -102,14 +101,18 @@ int vsnprintf(char* buff, size_t n, const char* fmt, va_list args)
                 {
                     buff[length] = '%';
                     length++;
+
                     break;
                 }
                 case 'c':
                 {
                     char c = va_arg(args, int);
 
-                    buff[length] = c;
-                    length++;
+                    if(c != 0)
+                    {
+                        buff[length] = c;
+                        length++;
+                    }
 
                     break;
                 }
@@ -142,16 +145,42 @@ int vsnprintf(char* buff, size_t n, const char* fmt, va_list args)
                 }
                 case 'x':
                 {
-                    int interger = va_arg(args, int);
+                    int interger = va_arg(args, uint32_t);
 
                     char itoa_buff[128];
-                    itoa(interger, itoa_buff, 16);
+                    utoa(interger, itoa_buff, 16);
 
                     for(int i = 0; i < strlen(itoa_buff); i++)
                     {
                         buff[length + i] = itoa_buff[i];
                     }
                     length += strlen(itoa_buff);
+
+                    break;
+                }
+                case 'l':
+                {
+                    if((fmt_len - strlen(fmt)) < fmt_len)
+                    {
+                        ch = *fmt++;
+
+                        switch(ch)
+                        {
+                            default:
+                            {
+                                buff[length] = '?';
+                                length++;
+                                ch = *fmt--;
+
+                                break;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        buff[length] = '?';
+                        length++;
+                    }
 
                     break;
                 }

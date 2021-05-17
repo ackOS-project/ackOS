@@ -11,7 +11,7 @@ namespace fdm
     handle* _handles[HANDLE_LIMIT];
     int _used_file_descs;
 
-    int new_handle(int fd, device_node* node, int flags)
+    int set_handle_at(int fd, device_node* node, int flags)
     {
         _handles[fd] = new handle(fd, flags, node);;
 
@@ -20,9 +20,9 @@ namespace fdm
         return fd;
     }
 
-    int new_handle(device_node* node, int flags)
+    int append_handle(device_node* node, int flags)
     {
-       return new_handle(_used_file_descs + 1, node, flags); 
+       return set_handle_at(_used_file_descs + 1, node, flags); 
     }
 
     void delete_handle(int fd)
@@ -30,19 +30,20 @@ namespace fdm
         if(_handles[fd] != nullptr)
         {
             delete _handles[fd];
+            _handles[fd] = NULL;
         }
     }
 
     void init()
     {
-        device_node* stdin_node = new device_node;
-        new_handle(0, stdin_node, O_RDONLY);
+        stream* stdin_node = new stream;
+        set_handle_at(0, stdin_node, O_RDONLY);
 
         stream* stdout_node = new stream;
-        new_handle(1, stdout_node, O_WRONLY);
+        set_handle_at(1, stdout_node, O_WRONLY);
 
         stream* stderr_node = new stream;
-        new_handle(2, stderr_node, O_WRONLY);
+        set_handle_at(2, stderr_node, O_WRONLY);
     }
 
     utils::result read(int fd, void* buff, size_t size, size_t* total_read)

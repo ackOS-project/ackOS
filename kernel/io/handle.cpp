@@ -1,7 +1,6 @@
 #include <fcntl.h>
 #include <cerrno>
 #include "kernel/io/handle.h"
-#include "kernel/drivers/serial.h"
 
 handle::handle(int fd, int flags, device_node* node)
 {

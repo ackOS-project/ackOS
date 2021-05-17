@@ -1,24 +1,28 @@
 export PATH := $(shell toolchain/path.sh)
 
 ARCH = x86_64
+BOOTLOADER = limine
+DIST = ackos-$(ARCH)-$(BOOTLOADER)
+ISONAME = $(DIST).iso
 
 CC = $(ARCH)-ackos-gcc
 CXX = $(ARCH)-ackos-g++
-AS = nasm
+AS = $(ARCH)-ackos-as
+NASM = nasm
 LD = $(ARCH)-ackos-ld
 
 BIN_FOLDER = bin
 SYSROOT_FOLDER = sysroot
 LIBS_FOLDER = sysroot/usr/lib/static
 
-ISONAME = ackOS
-BOOTLOADER = iso
+DIST_FOLDER = config/dist/$(DIST)
 
 SOURCES += \
 		$(wildcard kernel/*.cpp) \
 		$(wildcard kernel/*/*.cpp) \
+		$(wildcard arch/*.cpp) \
 		$(wildcard arch/$(ARCH)/*.cpp) \
-		$(wildcard arch/$(ARCH)/features/*.cpp)
+		$(wildcard arch/$(ARCH)/*/*.cpp)
 
 HEADERS += \
 		$(wildcard kernel/*.h) \
@@ -44,7 +48,6 @@ CFLAGS += \
 		-I lib/libc \
 		-I lib/libstdc++ \
 		-I lib \
-		-I arch \
 		-I . \
 		-ffreestanding \
 		-fno-exceptions \
@@ -54,6 +57,7 @@ CFLAGS += \
 		-DBUILD_HOST_ARCH=\"$(shell uname --machine)\" \
 		-DBUILD_TIME='"$(shell date)"' \
 		-DBUILD_HOST_OS=\"$(shell uname --operating-system)\" \
+		-mgeneral-regs-only \
 		-std=c++20
 
 LFLAGS += \
@@ -66,26 +70,19 @@ LFLAGS += \
 QEMU_FLAGS += \
 			-serial stdio
 
-.PHONY: all qemu qemu-debug bochs check-multiboot2 clean
+.PHONY: all qemu qemu-debug bochs check-multiboot2 strip-symbols clean
 
-all: $(BIN_FOLDER)/$(ISONAME).iso
-
-qemu: all
-	@qemu-system-x86_64 $(QEMU_FLAGS) -enable-kvm -cdrom $(BIN_FOLDER)/$(ISONAME).iso
-
-qemu-debug: all
-	@objcopy --only-keep-debug iso/$(ISONAME).bin $(BIN_FOLDER)/ackOS.sym
-	@sudo qemu-system-x86_64 $(QEMU_FLAGS) -cdrom $(BIN_FOLDER)/$(ISONAME).iso -s -S -d int -no-reboot -monitor telnet:127.0.0.1:55555,server,nowait;
-
-bochs: all
-	@bochs -q -f assets/bochsrc.bxrc
+all: $(BIN_FOLDER)/$(ISONAME)
 
 check-multiboot2: all
-	@if grub-file --is-x86-multiboot2 $(BOOTLOADER)/$(ISONAME).bin; then \
+	@if grub-file --is-x86-multiboot2 $(BIN_FOLDER)/ackos.elf; then \
 		echo multiboot confirmed; \
 	else \
 		echo not multiboot2 compliant :\(; \
 	fi
+
+strip-symbols:
+	@objcopy --only-keep-debug $(BIN_FOLDER)/ackos.elf $(BIN_FOLDER)/ackos.sym
 
 clean:
 	@rm -rf $(BIN_FOLDER)
@@ -96,11 +93,14 @@ clean-sysroot:
 
 # includes
 include lib/lib.mk
+include config/emulators/qemu.mk
+include config/emulators/bochs.mk
+include $(DIST_FOLDER)/build.mk
 
-$(BIN_FOLDER)/$(ISONAME).iso: $(OBJECTS) $(TARGETS)
+$(BIN_FOLDER)/ackos.elf: $(OBJECTS) $(TARGETS)
+	@mkdir -p $(@D)
 	@echo [ linking everything ] $(LD)
-	@$(LD) -n -o $(BOOTLOADER)/$(ISONAME).bin -T arch/$(ARCH)/link.ld $(OBJECTS) $(LFLAGS)
-	@sudo grub-mkrescue -o $(BIN_FOLDER)/$(ISONAME).iso $(BOOTLOADER)
+	@$(LD) -n -o $@ -T arch/$(ARCH)/link.ld $(OBJECTS) $(LFLAGS)
 
 $(BIN_FOLDER)/%.o: %.cpp $(HEADERS)
 	@mkdir -p $(@D)
@@ -110,7 +110,7 @@ $(BIN_FOLDER)/%.o: %.cpp $(HEADERS)
 $(BIN_FOLDER)/arch/$(ARCH)/%.asm.o: arch/$(ARCH)/%.asm
 	@mkdir -p $(@D)
 	@echo [ assemling target $@ ] Assembly
-	@$(AS) -f elf64 $< -o $@
+	@$(NASM) -f elf64 $< -o $@
 
 $(BIN_FOLDER)/fonts/%.o: fonts/%.psf
 	@mkdir -p $(BIN_FOLDER)/fonts

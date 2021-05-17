@@ -25,4 +25,4 @@ __attribute((packed));
 
 extern "C" void gdt_load(gdt64_descriptor* descriptor);
 
-void gdt_initialize();
+void gdt_initialise();

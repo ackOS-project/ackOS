@@ -1,5 +1,5 @@
-#include "x86_64/features/apic.h"
-#include "x86_64/features/CPUID.h"
+#include "arch/x86_64/features/apic.h"
+#include "arch/x86_64/features/CPUID.h"
 
 #include <cpuid.h> // GCC header
 

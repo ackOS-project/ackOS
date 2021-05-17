@@ -17,7 +17,7 @@ enum class keyboard_scancode : uint32_t
     NUM8 = 0x09,
     NUM9 = 0x0A,
     NUM0 = 0x0B,
-    
+
     SYM1 = 0x0C,
     SYM2 = 0x0D,
 
@@ -108,36 +108,21 @@ enum class keyboard_scancode : uint32_t
     SYM15 = 0x53,
     ALTSYSRQ = 0x54,
 
-    NO_STANDARD_MEANING_1 = 0x55,
-    NO_STANDARD_MEANING_2 = 0x56,
+    SYM16 = 0x55,
+    SYM17 = 0x56,
 
     F11 = 0x57,
     F12 = 0x58,
 
-    KPADENTER = (0x80 + 0x1C),
-    CTRL_RIGHT = (0x80 + 0x1D),
-    SYM16 = (0x80 + 0x35),
-    FAKERSHIFT = (0x80 + 0x36),
-    CTRLPRINTSCRN = (0x80 + 0x37),
-    ALT_RIGHT = (0x80 + 0x38),
-    CTRLBREAK = (0x80 + 0x46),
-
-    HOME = (0x80 + 0x47),
-    UP = (0x80 + 0x48),
-    PGUP = (0x80 + 0x49),
-    LEFT = (0x80 + 0x4B),
-    RIGHT = (0x80 + 0x4D),
-    END = (0x80 + 0x4F),
-    DOWN = (0x80 + 0x50),
-    PGDOWN = (0x80 + 0x51),
-    INSERT = (0x80 + 0x52),
-    DELETE = (0x80 + 0x53),
-
-    SUPER_LEFT = (0x80 + 0x5B),
-    SUPER_RIGHT = (0x80 + 0x5C),
-    MENU = (0x80 + 0x5D),
-
     COUNT
 };
 
-keyboard_scancode keyboard_get_keycode();
+enum class key_state
+{
+    DOWN,
+    RELEASED
+};
+
+keyboard_scancode kbps2_get_scancode();
+char kbps2_scancode_to_ascii(keyboard_scancode scancode);
+key_state kbps2_get_key_state(keyboard_scancode scancode);

@@ -1,4 +1,3 @@
-#include "kernel/drivers/serial.h"
 #include "kernel/logger.h"
 #include <cstdio>
 

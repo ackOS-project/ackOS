@@ -1,6 +1,6 @@
 #include <liback/syscalls.h>
-#include "kernel/mm/memory.h"
-#include "kernel/drivers/serial.h"
+#include "kernel/mm/heap.h"
+#include "arch/x86_64/features/serial.h"
 #include "kernel/io/fdm.h"
 
 namespace ackos
@@ -9,12 +9,33 @@ namespace ackos
     {
         utils::result result = utils::result::ERR_INVALID_ARGUMENT;
 
-        if(call == SYSCALL_MEMORY_ALLOC)
+        if(call == SYSCALL_STREAM_READ)
+        {
+            result = utils::result::ERR_UNIMPLEMENTED;
+        }
+        else if(call == SYSCALL_STREAM_WRITE)
+        {
+            int fd = *(int*)arg1;
+            const void* buff = *(const void**)arg2;
+            size_t size = *(size_t*)arg3;
+            size_t* total_written = *(size_t**)arg4;
+
+            result = fdm::write(fd, buff, size, total_written);
+        }
+        else if(call == SYSCALL_STREAM_OPEN)
+        {
+            result = utils::result::ERR_UNIMPLEMENTED;
+        }
+        else if(call == SYSCALL_STREAM_CLOSE)
+        {
+            result = utils::result::ERR_UNIMPLEMENTED;
+        }
+        else if(call == SYSCALL_MEMORY_ALLOC)
         {
             void** addr = *(void***)arg1;
             size_t size = *(size_t*)arg2;
 
-            *addr = memory_alloc(size);
+            *addr = heap_allocate(size);
             if(addr == nullptr)
             {
                 result = utils::result::ERR_OUT_OF_MEMORY;
@@ -34,27 +55,10 @@ namespace ackos
             }
             else
             {
-                memory_free(addr);
+                heap_deallocate(addr);
 
                 result = utils::result::SUCCESS;
             }
-        }
-        else if(call == SYSCALL_STREAM_OPEN)
-        {
-            result = utils::result::ERR_UNIMPLEMENTED;
-        }
-        else if(call == SYSCALL_STREAM_READ)
-        {
-            result = utils::result::ERR_UNIMPLEMENTED;
-        }
-        else if(call == SYSCALL_STREAM_WRITE)
-        {
-            int fd = *(int*)arg1;
-            const void* buff = *(const void**)arg2;
-            size_t size = *(size_t*)arg3;
-            size_t* total_written = *(size_t**)arg4;
-
-            result = fdm::write(fd, buff, size, total_written);
         }
 
         return result;
@@ -75,6 +79,11 @@ namespace ackos
         utils::result stream_open(int* fd, const char* filename, int flags)
         {
             return syscall_dispatch(SYSCALL_STREAM_OPEN, &fd, &filename, &flags, NULL, NULL, NULL);
+        }
+
+        utils::result stream_close(int fd)
+        {
+            return syscall_dispatch(SYSCALL_STREAM_OPEN, &fd, NULL, NULL, NULL, NULL, NULL);
         }
 
         utils::result stream_read(int fd, void** buff, size_t size, size_t* total_read)
