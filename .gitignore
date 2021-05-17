@@ -15,7 +15,6 @@ bin
 *.o
 */*.o
 *.tar.gz
-isodir/*
 toolchain/build
 toolchain/gcc
 toolchain/binutils

@@ -3,27 +3,38 @@ ENTRY(_start)
 SECTIONS
 {
 	. = 1M;
+	_kernel_start = .;
 
-	.text :
+	.multiboot2 ALIGN(4K) :
 	{
-		KEEP(*(.multiboot))
-		*(.text*)
-		*(.rodata*)
+		KEEP(*(.multiboot2))
 	}
 
-	.data :
+	.stivale2hdr ALIGN(4K) :
 	{
-		*(.data)
+		KEEP(*(.stivale2hdr))
 	}
 
-	.rodata :
+	.text ALIGN(4K) :
 	{
-		*(.rodata)
+		KEEP(*(.text*))
 	}
 
-	.bss :
+	.rodata ALIGN(4K) :
+	{
+		KEEP(*(.rodata*))
+	}
+
+	.data ALIGN(4K) :
+	{
+		KEEP(*(.data*))
+	}
+
+	.bss ALIGN(4K) :
     {
-		*(COMMON)
-        *(.bss)
+		KEEP(*(COMMON))
+        KEEP(*(.bss*))
     }
+
+	_kernel_end = .;
 }

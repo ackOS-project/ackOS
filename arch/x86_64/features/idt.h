@@ -18,11 +18,11 @@ struct idt64_entry
 
 struct idt64_descriptor
 {
-    uint16_t segment;
+    uint16_t limit;
     uint64_t offset;
 }
 __attribute((packed));
 
-void idt_load(idt64_descriptor descriptor);
+void idt64_load(idt64_descriptor descriptor);
 
-void idt_initialize();
+void idt_initialise();

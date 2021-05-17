@@ -1,30 +1,27 @@
-extern long_mode_init
 global _start
 
 section .text
 bits 32
 _start:
-    ; Move the multiboot information into variables that we can access in long mode
-    mov dword[multiboot2_header], eax
-    mov dword[multiboot2_magic], ebx
+    cli
+    cld
 
-    ; Initalize before loading the kernel
-    mov esp, stack_top
+    ; backup multiboot information that we can access in long mode
+    mov dword[multiboot2_header], ebx
+    mov dword[multiboot2_magic], eax
 
-    ; Do all the checks
-    call multiboot_check
+    ; initialise stack
+    mov esp, _kernel_stack_top
+
+    ; do all the checks
     call cpuid_check_long_mode
 
     call set_up_page_tables
     call enable_paging
 
-    ; Load gdt
+    ; load gdt
     lgdt [_gdt_descriptor]
-    jmp _gdt.code:long_mode_init
-
-.loader_error:
-    mov al, "9" ; temporarily
-    jmp loader_print_error
+    jmp _gdt.code:long_mode_start
 
 ; thanks to https://os.phil-opp.com/entering-longmode/
 cpuid_check_long_mode:
@@ -40,14 +37,6 @@ cpuid_check_long_mode:
     ret
 .no_long_mode:
     mov al, "2"
-    jmp loader_print_error
-
-multiboot_check:
-    cmp eax, 0x36D76289
-    jne .no_multiboot
-    ret
-.no_multiboot:
-    mov al, "0"
     jmp loader_print_error
 
 global enable_a20
@@ -70,7 +59,6 @@ set_up_page_tables:
     mov [p3_table], eax
 
     mov ecx, 0
-
 
 .p2_table_map:
     ; map ecx-th P2 entry to a huge page that starts at address 2MiB*ecx
@@ -106,13 +94,32 @@ enable_paging:
 
     ret
 
+print:
+	mov ecx, 0xb8000
+.loop:
+    mov ah, byte[ebx]
+    cmp ah, byte 0
+    je .exit
+    mov byte[ecx], ah
+    add ecx, 2
+    add ebx, 1
+
+    jmp .loop
+.exit:
+    ret
+
 ; Errors
 loader_print_error:
-    mov dword [0xb8000], 0x4f524f45
-    mov dword [0xb8004], 0x4f3a4f52
-    mov dword [0xb8008], 0x4f204f20
-    mov byte  [0xb800a], al
-    mov byte  [0xb800c], " " ; Remove any extra text such as QEMU status
+    mov byte [0xb8000], "e"
+    mov byte [0xb8002], "r"
+    mov byte [0xb8004], "r"
+    mov byte [0xb8006], "o"
+    mov byte [0xb8008], "r"
+    mov byte [0xb800a], " "
+
+    mov byte [0xb800c], al
+    mov byte [0xb800e], " " ; Remove any extra text such as QEMU status
+
     hlt
     ret
 
@@ -131,10 +138,6 @@ p3_table:
 
 p2_table:
     resb 4096
-
-stack_bottom:
-    resb 64
-stack_top:
 
 section .data
 _gdt:
@@ -167,7 +170,28 @@ _gdt_descriptor:
     dw $ - _gdt - 1
     dq _gdt
 
-global multiboot2_header
-global multiboot2_magic
+extern _kernel_stack_top
+extern _kernel_stack_bottom
+
 multiboot2_header: dq 0
 multiboot2_magic: dq 0
+
+section .text
+; We are now in 64-bit long mode!
+bits 64
+long_mode_start:
+    mov ax, 0
+    mov ss, ax
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+
+    extern x86_64_init
+
+    mov edi, dword[multiboot2_header]
+    mov esi, dword[multiboot2_magic]
+
+    call x86_64_init
+
+    hlt

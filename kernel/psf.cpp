@@ -1,14 +1,19 @@
-#include "kernel/kernel.h"
 #include "kernel/psf.h"
 #include "kernel/logger.h"
 
-#include <stdint.h>
-#include <stddef.h>
 #include <climits>
+
+extern "C" char _binary_fonts_zap_vga16_psf_start;
+extern "C" char _binary_fonts_zap_vga16_psf_end;
+
+#define PSF_FONT_START _binary_fonts_zap_vga16_psf_start
+#define PSF_FONT_END _binary_fonts_zap_vga16_psf_end
+
+#define PSF_FONT_MAGIC 0x864ab572
 
 psf_version psf_test_version(char& psf_font_start)
 {
-    psf1_font* font1 = (psf1_font*)&psf_font_start;
+    psf1_header* font1 = (psf1_header*)&psf_font_start;
 
     if(font1->magic[0] == PSF1_MAGIC0)
     {
@@ -16,7 +21,7 @@ psf_version psf_test_version(char& psf_font_start)
     }
     else
     {
-        psf2_font* font2 = (psf2_font*)&psf_font_start;
+        psf2_header* font2 = (psf2_header*)&psf_font_start;
 
         if(font2->magic[0] == PSF2_MAGIC0)
         {
@@ -27,7 +32,7 @@ psf_version psf_test_version(char& psf_font_start)
     return psf_version::UNKNOWN;
 }
 
-void psf_initialize()
+void psf_initialise()
 {
     uint16_t glyph = 0;
 
@@ -43,6 +48,4 @@ void psf_initialize()
         log_error(__FILE__, "unknown PSF version. Are you livin' in the future?");
         return;
     }
-
-    
 }

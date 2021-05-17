@@ -1,1 +1,11 @@
+#pragma once
+
 #include <stddef.h>
+
+namespace std
+{
+    typedef decltype(nullptr) nullptr_t;
+    typedef size_t size_t;
+
+    enum class byte : unsigned char {};
+}

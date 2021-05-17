@@ -7,6 +7,14 @@ sudo apt-get install build-essential nasm gcc g++ bison flex xoriso qemu-system-
 ```
 Sorry Arch users, I don't have the time to test on Arch linux. Try using virtual machine or a docker container.
 
+## Fetch the submodules
+*This step is IMPORTANT*
+
+Make sure to clone with `--recursive` to fetch all the submodules. Like this:
+```
+git clone https://github.com/ackOS-project/ackOS.git --recursive
+```
+
 ## Building the toolchain
 Simply run this in the root of ackOS
 ```

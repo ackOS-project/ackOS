@@ -20,6 +20,8 @@
  */
 #pragma once
 
+#include "kernel/boot_protocols/uniheader.h"
+
 /* How many bytes from the start of the file we search for the header.  */
 #define MULTIBOOT_SEARCH 32768
 #define MULTIBOOT_HEADER_ALIGN 8
@@ -408,7 +410,9 @@ struct multiboot_tag_load_base_addr
     uint32_t load_base_addr;
 };
 
-void multiboot2_parse_tags();
+bool multiboot2_check_magic(uint32_t magic);
+
+void multiboot2_parse_tags(uniheader* uheader, void* mb_header);
 
 #endif /* ! ASM_FILE */
 

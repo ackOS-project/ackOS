@@ -1,5 +1,8 @@
 #pragma once
 
+#include <cstdint>
+#include <cstddef>
+
 // PC screen fonts
 
 // version 1
@@ -35,7 +38,7 @@ enum class psf_version
     UNKNOWN
 };
 
-struct psf2_font
+struct psf2_header
 {
     uint32_t magic[4];
     uint32_t version;
@@ -47,11 +50,11 @@ struct psf2_font
     uint32_t width; 
 };
 
-struct psf1_font
+struct psf1_header
 {
-    unsigned char magic[2];     /* magic number */
-    unsigned char mode;         /* font mode */
-    unsigned char char_size;    /* character size */
+    uint8_t magic[2];     /* magic number */
+    uint8_t mode;         /* font mode */
+    uint8_t char_size;    /* character size */
 };
 
-void psf_initialize();
+void psf_initialise();

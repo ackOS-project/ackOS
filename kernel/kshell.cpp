@@ -1,6 +1,6 @@
 #include "kernel/drivers/legacy_vga.h"
-#include "kernel/drivers/keyboard.h"
-#include "kernel/drivers/serial.h"
+#include "kernel/drivers/ps2_keyboard.h"
+#include "arch/x86_64/features/serial.h"
 #include <cstring>
 
 #define PORT SERIAL_COM1

@@ -1,45 +1,78 @@
 #pragma once
 
-#include <cstdlib>
 #include <cstring>
-#include <cstdio>
 
 namespace std
 {
     class string
     {
     private:
-        char* _str;
-        size_t _size;
+        char* _str = nullptr;
+        size_t _size = 0;
+        size_t _capacity = 0;
 
         void reallocate()
         {
-            if(_str != nullptr)
+            if(_size > _capacity)
             {
-                free((void*)_str);
-            }
+                _capacity += (_size - _capacity) + 5;
 
-            _str = (char*)malloc(sizeof(char) * _size);
+                if(_str != nullptr)
+                {
+                    delete[] _str;
+                }
+
+                _str = new char[_capacity];
+            }
         }
 
     public:
         string()
         {
-            _size = 1;
-            reallocate();
+            _capacity = 5;
+            _size = 0;
+            _str = new char[_capacity];
         }
 
         string(const char* str)
         {
-            string();
-            *this = str;
+            operator=(str);
         }
 
         void operator=(const char* str)
         {
             _size = strlen(str);
+
             reallocate();
             strcpy(_str, str);
+        }
+
+        void operator+=(const char* str)
+        {
+            if(str == nullptr)
+            {
+                return;
+            }
+
+            size_t old_size = _size;
+            _size += strlen(str);
+
+            reallocate();
+
+            strcpy(_str + old_size, str);
+        }
+
+        void operator+=(const std::string str)
+        {
+            operator+=(str.c_str());
+        }
+
+        string operator+(const string& rhs)
+        {
+            string s;
+            s += rhs;
+
+            return s;
         }
 
         char& at(int index)
@@ -52,9 +85,14 @@ namespace std
             return at(index);
         }
 
-        const char* c_str()
+        const char* c_str() const
         {
             return _str;
+        }
+
+        void clear()
+        {
+            memset(_str, '\0', _size);
         }
 
         size_t length()
@@ -67,11 +105,16 @@ namespace std
             return _size;
         }
 
+        size_t capacity()
+        {
+            return _capacity;
+        }
+
         ~string()
         {
             if(_str != nullptr)
             {
-                memory_free((void*)_str);
+                delete[] _str;
             }
         }
     };

@@ -1,4 +1,4 @@
-#include "x86_64/features/CPUID.h"
+#include "arch/x86_64/features/CPUID.h"
 #include <cpuid.h>
 
 int cpuid_get_model_id()

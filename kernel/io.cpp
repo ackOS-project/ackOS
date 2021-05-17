@@ -1,6 +1,6 @@
 #include "kernel/io.h"
 
-uint8_t inb(unsigned short int port)
+uint8_t inb(uint16_t port)
 {
     unsigned char rv;
     __asm__ __volatile__("inb %1, %0"
@@ -9,14 +9,14 @@ uint8_t inb(unsigned short int port)
     return rv;
 }
 
-void outb(unsigned short int port, unsigned char data)
+void outb(uint16_t port, uint8_t data)
 {
     __asm__ __volatile__("outb %1, %0"
                          :
                          : "dN"(port), "a"(data));
 }
 
-void outw(unsigned short int port, unsigned short int data)
+void outw(uint16_t port, uint16_t data)
 {
     asm volatile("outw %%ax, %%dx"
                  :

@@ -1,26 +1,26 @@
-#include "x86_64/features/CPUID.h"
-#include "x86_64/features/idt.h"
-#include "x86_64/features/gdt.h"
-#include "x86_64/features/pic_8259.h"
-#include "x86_64/features/interrupts.h"
-#include "kernel/multiboot2.h"
-#include "kernel/kernel.h"
+#include "arch/x86_64/features/CPUID.h"
+#include "arch/x86_64/features/idt.h"
+#include "arch/x86_64/features/gdt.h"
+#include "arch/x86_64/features/pic_8259.h"
+#include "arch/x86_64/features/interrupts.h"
+#include "arch/x86_64/features/serial.h"
+#include "kernel/boot_protocols/multiboot2.h"
 
-void kmain(multiboot_header* header);
+void kmain(void*, uint32_t);
 
-extern "C" int x86_64_init(multiboot_header* header, unsigned int magic)
+extern "C" int x86_64_init(void* header, uint32_t magic)
 {
     serial::port_initialize(SERIAL_COM1, 9600);
 
-    gdt_initialize();
-    idt_initialize();
+    gdt_initialise();
+    idt_initialise();
 
     pic8259_remap();
     pic8259_mask();
 
     interrupts_enable();
 
-    kmain(header);
+    kmain(header, magic);
 
     return 0;
 }
