@@ -1,4 +1,4 @@
-#include "arch/x86_64/features/paging.h"
+#include "kernel/arch/x86_64/features/paging.h"
 
 #define FRAME_SIZE 4096
 #define FRAME_MASK 0xfffffffffffff000

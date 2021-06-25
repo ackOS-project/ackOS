@@ -1,4 +1,4 @@
-#include "arch/x86_64/features/instructions.h"
+#include "kernel/arch/x86_64/features/instructions.h"
 #include "kernel/boot_protocols/stivale2.h"
 
 extern "C" int x86_64_init(void* header, uint32_t magic);

@@ -1,5 +1,5 @@
 #include "kernel/drivers/legacy_vga.h"
-#include "arch/x86_64/features/io.h"
+#include "kernel/arch/x86_64/features/io.h"
 #include <cstring>
 
 // A text-based terminal session in VGA mode (not supported on most hardware)

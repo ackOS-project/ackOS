@@ -22,7 +22,7 @@ $(1)_OBJECTS := $$(patsubst %.cpp, $(BIN_FOLDER)/%.o, $$($(1)_SOURCES))
 
 TARGETS += $$($(1)_LIB)
 # this line should be removed but some libaries aren't behaving with the new setup
-OBJECTS += $$($(1)_OBJECTS)
+KERNEL_OBJECTS += $$($(1)_OBJECTS)
 
 $$($(1)_LIB): $$($(1)_OBJECTS)
 	@mkdir -p $$(@D)

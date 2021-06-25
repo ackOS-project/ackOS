@@ -1,8 +1,8 @@
 #ifdef BUILD_ARCH_x86_64
-#include "arch/x86_64/features/instructions.h"
+#include "kernel/arch/x86_64/features/instructions.h"
 #endif
 
-#include "arch.h"
+#include "kernel/arch/arch.h"
 
 namespace arch
 {

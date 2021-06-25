@@ -1,5 +1,5 @@
-#include "arch/x86_64/features/msr.h"
-#include "arch/x86_64/features/cpuid.h"
+#include "kernel/arch/x86_64/features/msr.h"
+#include "kernel/arch/x86_64/features/cpuid.h"
 
 #include <cpuid.h> // GCC header
 

@@ -1,5 +1,5 @@
-#include "arch/x86_64/features/io.h"
-#include "arch/x86_64/features/ps2_keyboard.h"
+#include "kernel/arch/x86_64/features/io.h"
+#include "kernel/arch/x86_64/features/ps2_keyboard.h"
 
 namespace x86_64
 {

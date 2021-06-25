@@ -1,5 +1,7 @@
 export PATH := $(shell toolchain/path.sh)
 
+rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(subst *,%,$2),$d))
+
 ARCH = x86_64
 BOOTLOADER = limine
 DIST = ackos-$(ARCH)-$(BOOTLOADER)
@@ -21,30 +23,9 @@ LIBS_FOLDER = $(BIN_FOLDER)/lib
 
 DIST_FOLDER = config/dist/$(DIST)
 
-SOURCES += \
-		$(wildcard kernel/*.cpp) \
-		$(wildcard kernel/*/*.cpp) \
-		$(wildcard arch/*.cpp) \
-		$(wildcard arch/$(ARCH)/*.cpp) \
-		$(wildcard arch/$(ARCH)/*/*.cpp)
-
-HEADERS += \
-		$(wildcard kernel/*.h) \
-		$(wildcard arch/$(ARCH)/*.h) \
-		$(wildcard arch/$(ARCH)/*/*.h) \
-		$(wildcard lib/*.h) \
-		$(wildcard lib/*/*.h)
-
-ASSEMBLY += \
-		$(wildcard kernel/*.asm) \
-		$(wildcard kernel/*/*.asm) \
-		$(wildcard arch/$(ARCH)/*.asm) \
-		$(wildcard arch/$(ARCH)/*/*.asm)
-
 FONTS += \
 		$(wildcard fonts/*.psf)
 
-OBJECTS := $(ASSEMBLY:%.asm=$(BIN_FOLDER)/%.asm.o) $(SOURCES:%.cpp=$(BIN_FOLDER)/%.o) $(FONTS:%.psf=$(BIN_FOLDER)/%.o)
 TARGETS :=
 
 CFLAGS += \
@@ -103,22 +84,23 @@ clean-sysroot:
 	@rm -rf $(SYSROOT_FOLDER)
 
 # includes
+include kernel/kernel.mk
 include lib/lib.mk
 include config/emulators/qemu.mk
 include config/emulators/bochs.mk
 include $(DIST_FOLDER)/build.mk
 
-$(BIN_FOLDER)/kernel.elf: $(OBJECTS) $(TARGETS)
+$(BIN_FOLDER)/kernel.elf: $(KERNEL_OBJECTS) $(TARGETS)
 	@mkdir -p $(@D)
 	@echo [ linking kernel ] $(LD)
-	@$(LD) -n -o $@ -T arch/$(ARCH)/link.ld $(OBJECTS) $(LFLAGS)
+	@$(LD) -n -o $@ -T kernel/arch/$(ARCH)/link.ld $(KERNEL_OBJECTS) $(LFLAGS)
 
-$(BIN_FOLDER)/%.o: %.cpp $(HEADERS)
+$(BIN_FOLDER)/%.o: %.cpp $(KERNEL_HEADERS)
 	@mkdir -p $(@D)
 	@echo [ compiling target $@ ] C++
 	@$(CXX) -c $< -o $@ $(CFLAGS)
 
-$(BIN_FOLDER)/arch/$(ARCH)/%.asm.o: arch/$(ARCH)/%.asm
+$(BIN_FOLDER)/%.asm.o: %.asm
 	@mkdir -p $(@D)
 	@echo [ assemling target $@ ] Assembly
 	@$(NASM) -f elf64 $< -o $@

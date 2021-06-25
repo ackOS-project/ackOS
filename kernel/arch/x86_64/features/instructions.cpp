@@ -1,4 +1,4 @@
-#include "arch/x86_64/features/instructions.h"
+#include "kernel/arch/x86_64/features/instructions.h"
 
 namespace x86_64
 {

@@ -8,14 +8,17 @@
 
 namespace x86_64
 {
-    const int GDT_LONG_MODE_GRANULARITY = 0x2;
-    const int GDT_SEGMENT = 0x10;
-    const int GDT_PRESENT = 0x80;
-    const int GDT_TSS_PRESENT = 0x80;
-    const int GDT_USER = 0x60;
-    const int GDT_EXECUTABLE = 0x8;
-    const int GDT_READ_WRITE = 0x2;
-    const int GDT_FLAGS = 0xC;
+    enum
+    {
+        GDT_LONG_MODE_GRANULARITY = 0x2,
+        GDT_SEGMENT = 0x10,
+        GDT_PRESENT = 0x80,
+        GDT_TSS_PRESENT = 0x80,
+        GDT_USER = 0x60,
+        GDT_EXECUTABLE = 0x8,
+        GDT_READ_WRITE = 0x2,
+        GDT_FLAGS = 0xC
+    };
 
     struct gdt_entry
     {
