@@ -1,5 +1,5 @@
-#include "arch/x86_64/features/io.h"
-#include "arch/arch.h"
+#include "kernel/arch/x86_64/features/io.h"
+#include "kernel/arch/arch.h"
 
 #define bit(n) (1 << (n))
 #define check_flag(flags, n) ((flags)&bit(n))

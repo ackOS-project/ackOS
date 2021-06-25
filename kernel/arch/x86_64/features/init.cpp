@@ -1,8 +1,8 @@
-#include "arch/x86_64/features/idt.h"
-#include "arch/x86_64/features/gdt.h"
-#include "arch/x86_64/features/pic_8259.h"
-#include "arch/x86_64/features/instructions.h"
-#include "arch/x86_64/features/com.h"
+#include "kernel/arch/x86_64/features/idt.h"
+#include "kernel/arch/x86_64/features/gdt.h"
+#include "kernel/arch/x86_64/features/pic_8259.h"
+#include "kernel/arch/x86_64/features/instructions.h"
+#include "kernel/arch/x86_64/features/com.h"
 
 #include <liback/utils/assert.h>
 #include "kernel/boot_protocols/uniheader.h"

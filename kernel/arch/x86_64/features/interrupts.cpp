@@ -1,9 +1,9 @@
-#include "arch/x86_64/features/interrupts.h"
-#include "arch/x86_64/features/pic_8259.h"
-#include <cstdio>
-
-#include "arch/x86_64/features/ps2_keyboard.h"
+#include "kernel/arch/x86_64/features/interrupts.h"
+#include "kernel/arch/x86_64/features/pic_8259.h"
+#include "kernel/arch/x86_64/features/ps2_keyboard.h"
 #include "kernel/panic.h"
+
+#include <cstdio>
 
 const char* exception_names[] =
 {

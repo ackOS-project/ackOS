@@ -1,4 +1,4 @@
-#include "arch/x86_64/features/com.h"
+#include "kernel/arch/x86_64/features/com.h"
 #include "kernel/dev/com.h"
 
 static int com_port_to_address(int port)

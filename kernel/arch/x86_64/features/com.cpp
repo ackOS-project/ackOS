@@ -1,5 +1,6 @@
-#include "arch/x86_64/features/com.h"
-#include "arch/x86_64/features/io.h"
+#include "kernel/arch/x86_64/features/com.h"
+#include "kernel/arch/x86_64/features/io.h"
+
 #include <cstring>
 #include <cstdlib>
 

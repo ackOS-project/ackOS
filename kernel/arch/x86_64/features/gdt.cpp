@@ -1,4 +1,4 @@
-#include "arch/x86_64/features/gdt.h"
+#include "kernel/arch/x86_64/features/gdt.h"
 #include "kernel/logger.h"
 #include <cstdio>
 
