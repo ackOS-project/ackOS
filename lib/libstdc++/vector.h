@@ -18,13 +18,11 @@ namespace std
     {
         m_size = 0;
         m_capacity = capacity;
-        m_array = (T *)malloc(m_capacity * sizeof(T));
+        m_array = new T[m_capacity];
     }
 
     vector()
     {
-        // allocates 2 by default to reduce reallocations,
-        // this is not the default behaviour in the C++ standard library (strangely)
         vector(2);
     }
 
@@ -57,7 +55,7 @@ namespace std
 
     void resize(size_t count)
     {
-        T* block = (T*)malloc(count * sizeof(T));
+        T* block = new T[count];
 
         if(m_capacity < m_size)
         {
@@ -72,8 +70,6 @@ namespace std
         m_capacity = count;
     }
 
-    // returning vector& (not standard C++) allows us to do this:
-    // vec.push_back("1").push_back("2") etc...
     vector& push_back(T data)
     {
         resize(m_capacity + 1);

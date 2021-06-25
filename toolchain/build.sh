@@ -113,9 +113,11 @@ if [ ! -d "build/gcc" ]; then
 		echo "Running make install-target-libgcc on GCC"
 		make install-target-libgcc
 
-		# apparently I need libc in order to use libstdc++ 
+		make -C $(DIR)/.. build-sysroot
+
 		# echo "Compiling libstdc++"
 		# make all-target-libstdc++-v3
+
 		# echo "Installing libstdc++"
 		# make install-target-libstdc++-v3
 	popd

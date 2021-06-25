@@ -1,5 +1,10 @@
 #pragma once
 
-void arch_interrupts_enable();
+namespace arch
+{
+    void interrupts_enable();
 
-void arch_interrupts_disable();
+    void interrupts_disable();
+
+    void halt();
+}

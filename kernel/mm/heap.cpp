@@ -1,4 +1,5 @@
 #include "kernel/mm/heap.h"
+#include "kernel/logger.h"
 #include <cstring>
 
 struct heap_block
@@ -132,6 +133,13 @@ void* heap_allocate(size_t size)
 
 void heap_deallocate(void* mem)
 {
+    if(mem == nullptr)
+    {
+        log_error("kernel_heap", "double free (address is 0x%x)", mem);
+
+        while(true);
+    }
+
     heap_block* block = ((heap_block*)mem) - 1;
     block->is_free = true;
 

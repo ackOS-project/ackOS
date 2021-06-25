@@ -3,4 +3,9 @@
 #include <stdint.h>
 #include <stddef.h>
 
-bool apic_check();
+namespace x86_64::apic
+{
+    bool check();
+
+    void initialise();
+}

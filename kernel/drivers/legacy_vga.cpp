@@ -1,5 +1,5 @@
 #include "kernel/drivers/legacy_vga.h"
-#include "kernel/io.h"
+#include "arch/x86_64/features/io.h"
 #include <cstring>
 
 // A text-based terminal session in VGA mode (not supported on most hardware)
@@ -30,27 +30,27 @@ namespace legacy_vga
 
     void enable_cursor(unsigned char cursor_start, unsigned char cursor_end)
     {
-        outb(0x3D4, 0x0A);
-        outb(0x3D5, (inb(0x3D5) & 0xC0) | cursor_start);
+        x86_64::outb(0x3D4, 0x0A);
+        x86_64::outb(0x3D5, (x86_64::inb(0x3D5) & 0xC0) | cursor_start);
 
-        outb(0x3D4, 0x0B);
-        outb(0x3D5, (inb(0x3D5) & 0xE0) | cursor_end);
+        x86_64::outb(0x3D4, 0x0B);
+        x86_64::outb(0x3D5, (x86_64::inb(0x3D5) & 0xE0) | cursor_end);
     }
 
     void disable_cursor(void)
     {
-        outb(0x3D4, 0x0A);
-        outb(0x3D5, 0x20);
+        x86_64::outb(0x3D4, 0x0A);
+        x86_64::outb(0x3D5, 0x20);
     }
 
     void set_cursor_pos(int x, int y)
     {
         uint16_t pos = y * VGA_WIDTH + x;
 
-        outb(0x3D4, 0x0F);
-        outb(0x3D5, (unsigned char)(pos & 0xFF));
-        outb(0x3D4, 0x0E);
-        outb(0x3D5, (unsigned char)((pos >> 8) & 0xFF));
+        x86_64::outb(0x3D4, 0x0F);
+        x86_64::outb(0x3D5, (unsigned char)(pos & 0xFF));
+        x86_64::outb(0x3D4, 0x0E);
+        x86_64::outb(0x3D5, (unsigned char)((pos >> 8) & 0xFF));
     }
 
     void update_cursor(void)

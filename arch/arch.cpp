@@ -1,19 +1,29 @@
 #ifdef BUILD_ARCH_x86_64
-#include "x86_64/features/interrupts.h"
+#include "arch/x86_64/features/instructions.h"
 #endif
 
 #include "arch.h"
 
-void arch_interrupts_enable()
+namespace arch
 {
-    #ifdef BUILD_ARCH_x86_64
-    interrupts_enable();
-    #endif
-}
+    void interrupts_enable()
+    {
+        #ifdef BUILD_ARCH_x86_64
+        x86_64::interrupts_enable();
+        #endif
+    }
 
-void arch_interrupts_disable()
-{
-    #ifdef BUILD_ARCH_x86_64
-    interrupts_disable();
-    #endif
+    void interrupts_disable()
+    {
+        #ifdef BUILD_ARCH_x86_64
+        x86_64::interrupts_disable();
+        #endif
+    }
+
+    void halt()
+    {
+        #ifdef BUILD_ARCH_x86_64
+        x86_64::halt();
+        #endif
+    }
 }

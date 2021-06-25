@@ -2,6 +2,22 @@
 
 namespace utils
 {
+    #include "liback/utils/__result_macro.h"
+
+    #define RESULT_GENERATE_ENUM(__name, __description) __name,
+    #define RESULT_GENERATE_STR(__name, __description) #__name,
+    #define RESULT_GENERATE_DESC(__name, __description) __description,
+
+    static const char* result_enum_strings[] =
+    {
+        RESULT_MACRO(RESULT_GENERATE_STR)
+    };
+
+    static const char* result_descriptions[] =
+    {
+        RESULT_MACRO(RESULT_GENERATE_DESC)
+    };
+
     result::result() { }
 
     result::result(int code)
@@ -26,14 +42,24 @@ namespace utils
         return this->_code != code;
     }
 
-    const char* result::description()
+    result::operator int()
     {
-        return this->_descriptions[this->_code];
+        return get_error_code();
+    }
+
+    result::operator bool()
+    {
+        return get_error_code() == SUCCESS;
+    }
+
+    const char* result::get_description()
+    {
+        return result_descriptions[this->_code];
     }
 
     const char* result::to_string()
     {
-        return this->_enum_strings[this->_code];
+        return result_enum_strings[this->_code];
     }
 
     int result::get_error_code()

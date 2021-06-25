@@ -1,20 +1,10 @@
+#pragma once
+
+#include <ostream>
+
 namespace std
 {
-    class ostream
-    {
-    private:
-
-    public:
-    };
-
-    class basic_ostream
-    {
-    private:
-
-    public:
-        basic_ostream();
-        ~basic_ostream();
-    };
-    
-
+    extern ostream cout;
+    extern ostream cerr;
+    extern ostream clog;
 }

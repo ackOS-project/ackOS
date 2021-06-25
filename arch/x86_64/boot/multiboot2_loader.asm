@@ -39,13 +39,6 @@ cpuid_check_long_mode:
     mov al, "2"
     jmp loader_print_error
 
-global enable_a20
-enable_a20:
-    in al, 0x92
-    or al, 2
-    out 0x92, al
-    ret
-
 global set_up_page_tables
 set_up_page_tables:
     ; map first P4 entry to P3 table
@@ -61,14 +54,13 @@ set_up_page_tables:
     mov ecx, 0
 
 .p2_table_map:
-    ; map ecx-th P2 entry to a huge page that starts at address 2MiB*ecx
-    mov eax, 0x200000  ; 2MiB
-    mul ecx            ; start address of ecx-th page
+    mov eax, 0x200000  ; 2MB
+    mul ecx
     or eax, 0b10000011 ; present + writable + huge
-    mov [p2_table + ecx * 8], eax ; map ecx-th entry
+    mov [p2_table + ecx * 8], eax
 
-    inc ecx            ; increase counter
-    cmp ecx, 512       ; if counter == 512, the whole P2 table is mapped
+    inc ecx
+    cmp ecx, 512       ; if counter equals 512, then the whole P2 table is mapped
     jne .p2_table_map  ; else map the next entry
 
     ret

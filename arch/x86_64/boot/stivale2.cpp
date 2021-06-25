@@ -1,18 +1,14 @@
+#include "arch/x86_64/features/instructions.h"
 #include "kernel/boot_protocols/stivale2.h"
 
 extern "C" int x86_64_init(void* header, uint32_t magic);
 
-void hello()
-{
-    return;
-}
-
-extern "C" void _stivale2_start(void* header)
+static void _stivale2_start(void* header)
 {
     x86_64_init(header, 0xC0DE);
 
-    __asm__ __volatile__("cli;"
-                         "hlt;");
+    x86_64::interrupts_disable();
+    x86_64::halt();
 }
 
 extern uint64_t _kernel_stack_top;
