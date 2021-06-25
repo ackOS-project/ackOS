@@ -5,32 +5,6 @@
 
 // PC screen fonts
 
-// version 1
-#define PSF1_MAGIC0     0x36
-#define PSF1_MAGIC1     0x04
-
-#define PSF1_MODE512    0x01
-#define PSF1_MODEHASTAB 0x02
-#define PSF1_MODEHASSEQ 0x04
-#define PSF1_MAXMODE    0x05
-
-#define PSF1_SEPARATOR  0xFFFF
-#define PSF1_STARTSEQ   0xFFFE
-
-// version 2
-#define PSF2_MAGIC0     0x72
-#define PSF2_MAGIC1     0xb5
-#define PSF2_MAGIC2     0x4a
-#define PSF2_MAGIC3     0x86
-
-#define PSF2_HAS_UNICODE_TABLE 0x01
-
-#define PSF2_MAXVERSION 0
-
-/* UTF8 separators */
-#define PSF2_SEPARATOR  0xFF
-#define PSF2_STARTSEQ   0xFE
-
 enum class psf_version
 {
     V1,
@@ -50,11 +24,28 @@ struct psf2_header
     uint32_t width; 
 };
 
-struct psf1_header
+struct psf2_font
 {
-    uint8_t magic[2];     /* magic number */
-    uint8_t mode;         /* font mode */
-    uint8_t char_size;    /* character size */
+    psf2_header header;
+    uint8_t data[];
 };
 
+struct psf1_header
+{
+    uint8_t magic[2];
+    uint8_t mode;
+    uint8_t char_size;
+};
+
+struct psf1_font
+{
+    psf1_header header;
+    uint8_t data[];
+};
+
+
 void psf_initialise();
+
+char* psf1_get_character(char c);
+
+char* psf2_get_character(char c);

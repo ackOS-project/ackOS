@@ -3,20 +3,23 @@
 #include <liback/utils/result.h>
 #include <stdint.h>
 #include <stddef.h>
-#include "kernel/io/device_node.h"
+#include "kernel/io/fs_node.h"
 
 class handle
 {
 private:
-    int _fd;
-    int _flags;
-    device_node* _dev;
+    int _fd = 0;
+    int _flags = 0;
+    fs_node* _node = nullptr;
 
 public:
-    handle(int fd, int flags, device_node* node);
+    handle(int fd, fs_node* node, int flags);
+    ~handle();
 
     utils::result read(void* buff, size_t size, size_t* total_read);
     utils::result write(const void* buff, size_t size, size_t* total_written);
+
+    utils::result io_call(int request, void* arg);
 
     int get_index();
 };

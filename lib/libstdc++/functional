@@ -4,7 +4,7 @@
 
 namespace std
 {
-    template <typename>
+    template <typename T>
     class function;
 
     template <typename ReturnType, typename... Args>
@@ -19,9 +19,25 @@ namespace std
             return *this;
         }
 
+        template <typename T>
+        function(T t)
+        {
+            operator=(t);
+        }
+
+        function()
+        {
+            _call = nullptr;
+        }
+
         ReturnType operator()(Args... args) const
         {
             return _call->invoke(args...);
+        }
+
+        operator bool() const
+        {
+            return _call != nullptr;
         }
 
         ~function()
@@ -37,7 +53,7 @@ namespace std
         {
         public:
             virtual ~callable_base() = default;
-            virtual ReturnType invoke(Args... args) = 0;
+            virtual ReturnType invoke(Args...) = 0;
         };
 
         template <typename T>

@@ -1,91 +1,103 @@
 #pragma once
 
+#include <cstdint>
 #include <cstring>
 
 namespace std
 {
-    class string
+    template<typename T>
+    class basic_string
     {
     private:
-        char* _str = nullptr;
+        T* _str = nullptr;
         size_t _size = 0;
         size_t _capacity = 0;
 
-        void reallocate()
-        {
-            if(_size > _capacity)
-            {
-                _capacity += (_size - _capacity) + 5;
-
-                if(_str != nullptr)
-                {
-                    delete[] _str;
-                }
-
-                _str = new char[_capacity];
-            }
-        }
-
     public:
-        string()
+        basic_string()
         {
-            _capacity = 5;
-            _size = 0;
-            _str = new char[_capacity];
+            resize(5);
         }
 
-        string(const char* str)
+        basic_string(const char* str)
         {
             operator=(str);
         }
 
+        basic_string(const basic_string<T>& old)
+        {
+            _size = old.size();
+            _capacity = old.capacity();
+            _str = new T[_capacity];
+
+            memcpy((void*)_str, (const void*)old._str, size());
+        }
+
         void operator=(const char* str)
         {
-            _size = strlen(str);
-
-            reallocate();
+            resize(strlen(str));
             strcpy(_str, str);
         }
 
-        void operator+=(const char* str)
+        void operator+=(const std::basic_string<T>& str)
         {
-            if(str == nullptr)
+            size_t old_size = length();
+            size_t str_size = str.length();
+
+            resize(length() + str_size);
+            
+            for(int i = 0; i < str_size; i++)
+            {
+                _str[old_size + i] = str[i];
+            }
+        }
+
+        void operator+=(const char* cstr)
+        {
+            if(cstr == nullptr)
             {
                 return;
             }
 
-            size_t old_size = _size;
-            _size += strlen(str);
-
-            reallocate();
-
-            strcpy(_str + old_size, str);
+            operator+=(std::basic_string<T>(cstr));
         }
 
-        void operator+=(const std::string str)
+        std::basic_string<T> operator+(const std::basic_string<T>& rhs)
         {
-            operator+=(str.c_str());
-        }
-
-        string operator+(const string& rhs)
-        {
-            string s;
+            std::basic_string<T> s;
+            s += *this;
             s += rhs;
 
             return s;
         }
 
-        char& at(int index)
+        void resize(size_t size)
+        {
+            _capacity = size;
+            _size = size;
+
+            T* new_str = new T[_capacity];
+
+            if(_str != nullptr)
+            {
+                memcpy((void*)new_str, (const void*)_str, size);
+
+                delete[] _str;
+            }
+            _str = new_str;
+        }
+
+        T& at(int index) const
         {
             return _str[index];
         }
 
-        char& operator[](int index)
+        T& operator[](int index) const
         {
             return at(index);
         }
 
-        const char* c_str() const
+        const T* c_str() const
         {
             return _str;
         }
@@ -95,22 +107,22 @@ namespace std
             memset(_str, '\0', _size);
         }
 
-        size_t length()
+        size_t length() const
         {
             return _size;
         }
 
-        size_t size()
+        size_t size() const
         {
             return _size;
         }
 
-        size_t capacity()
+        size_t capacity() const
         {
             return _capacity;
         }
 
-        ~string()
+        ~basic_string()
         {
             if(_str != nullptr)
             {
@@ -118,4 +130,6 @@ namespace std
             }
         }
     };
+
+    using string = basic_string<char>;
 }

@@ -5,15 +5,19 @@ BOOTLOADER = limine
 DIST = ackos-$(ARCH)-$(BOOTLOADER)
 ISONAME = $(DIST).iso
 
-CC = $(ARCH)-ackos-gcc
-CXX = $(ARCH)-ackos-g++
-AS = $(ARCH)-ackos-as
-NASM = nasm
-LD = $(ARCH)-ackos-ld
+CC := $(ARCH)-ackos-gcc
+CXX := $(ARCH)-ackos-g++
+AS := $(ARCH)-ackos-as
+NASM := nasm
+OBJCOPY := $(ARCH)-ackos-objcopy
+LD := $(ARCH)-ackos-ld
+AR := $(ARCH)-ackos-ar
+
+ROOT_DIRECTORY := $(shell pwd)
 
 BIN_FOLDER = bin
 SYSROOT_FOLDER = sysroot
-LIBS_FOLDER = sysroot/usr/lib/static
+LIBS_FOLDER = $(BIN_FOLDER)/lib
 
 DIST_FOLDER = config/dist/$(DIST)
 
@@ -57,14 +61,13 @@ CFLAGS += \
 		-DBUILD_HOST_ARCH=\"$(shell uname --machine)\" \
 		-DBUILD_TIME='"$(shell date)"' \
 		-DBUILD_HOST_OS=\"$(shell uname --operating-system)\" \
-		-mgeneral-regs-only \
+		-DBUILD_DISABLE_FPA \
 		-std=c++20
 
 LFLAGS += \
 		-L $(LIBS_FOLDER) \
 		-lc \
 		-lack \
-		-lutils \
 		-lstdc++
 
 QEMU_FLAGS += \
@@ -75,17 +78,25 @@ QEMU_FLAGS += \
 all: $(BIN_FOLDER)/$(ISONAME)
 
 check-multiboot2: all
-	@if grub-file --is-x86-multiboot2 $(BIN_FOLDER)/ackos.elf; then \
+	@if grub-file --is-x86-multiboot2 $(BIN_FOLDER)/kernel.elf; then \
 		echo multiboot confirmed; \
 	else \
 		echo not multiboot2 compliant :\(; \
 	fi
 
 strip-symbols:
-	@objcopy --only-keep-debug $(BIN_FOLDER)/ackos.elf $(BIN_FOLDER)/ackos.sym
+	@objcopy --only-keep-debug $(BIN_FOLDER)/kernel.elf $(BIN_FOLDER)/ackos.sym
+
+build-sysroot:
+	@mkdir -p sysroot
+	@mkdir -p sysroot/usr/lib/static sysroot/usr/lib/headers
+
+	@cd lib; cp --parents $(shell cd lib; find -name \*.h*) $(ROOT_DIRECTORY)/sysroot/usr/lib/headers
+	@cp $(LIBS_FOLDER)/* sysroot/usr/lib/static 2>/dev/null || :
 
 clean:
 	@rm -rf $(BIN_FOLDER)
+	@rm -rf sysroot
 	@rm -f *.iso
 
 clean-sysroot:
@@ -97,9 +108,9 @@ include config/emulators/qemu.mk
 include config/emulators/bochs.mk
 include $(DIST_FOLDER)/build.mk
 
-$(BIN_FOLDER)/ackos.elf: $(OBJECTS) $(TARGETS)
+$(BIN_FOLDER)/kernel.elf: $(OBJECTS) $(TARGETS)
 	@mkdir -p $(@D)
-	@echo [ linking everything ] $(LD)
+	@echo [ linking kernel ] $(LD)
 	@$(LD) -n -o $@ -T arch/$(ARCH)/link.ld $(OBJECTS) $(LFLAGS)
 
 $(BIN_FOLDER)/%.o: %.cpp $(HEADERS)
@@ -116,3 +127,7 @@ $(BIN_FOLDER)/fonts/%.o: fonts/%.psf
 	@mkdir -p $(BIN_FOLDER)/fonts
 	@echo [ creating font object $@ ] PC Screen Font
 	@objcopy -O elf64-x86-64 -I binary $< $@
+
+$(BIN_FOLDER)/ramdisk.tar.gz: build-sysroot
+	@echo [ creating ramdisk $@ ] tar
+	@cd $(SYSROOT_FOLDER); tar -czf $(ROOT_DIRECTORY)/$@ .

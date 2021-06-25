@@ -1,5 +1,7 @@
 MULTIBOOT2_HEADER_MAGIC equ 0xe85250d6
 
+MULTIBOOT2_ARCHITECTURE_I386 equ 0
+
 MULTIBOOT2_HEADER_TAG_OPTIONAL equ 1
 MULTIBOOT2_HEADER_TAG_INFORMATION_REQUEST equ 1
 MULTIBOOT2_HEADER_TAG_ADDRESS equ 2
@@ -16,10 +18,11 @@ MULTIBOOT2_HEADER_TAG_END equ 0
 section .multiboot2
 align 8
 header_start:
-    dd MULTIBOOT2_HEADER_MAGIC   ; mb2 magic number
-    dd 0                         ; i386 architecture
-    dd header_end - header_start ; length
-    dd 0x100000000 - (0xe85250d6 + 0 + (header_end - header_start)) ; checksum
+    dd MULTIBOOT2_HEADER_MAGIC       ; mb2 magic number
+    dd MULTIBOOT2_ARCHITECTURE_I386  ; architecture
+    dd header_end - header_start     ; length
+    dd -(MULTIBOOT2_HEADER_MAGIC + MULTIBOOT2_ARCHITECTURE_I386 + (header_end - header_start)) ; checksum
+; tags
 align 8
     dw MULTIBOOT2_HEADER_TAG_FRAMEBUFFER
     dw MULTIBOOT2_HEADER_TAG_OPTIONAL

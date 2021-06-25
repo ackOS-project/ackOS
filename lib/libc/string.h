@@ -18,4 +18,8 @@ char* strcat(char *dest, const char *src);
 char* strncat(char *dest, const char *src, size_t size);
 size_t strlcat(char *dest, const char *src, size_t size);
 
+int strcmp(const char* str1, const char* str2);
+int strncmp(const char* str1, const char* str2, size_t size);
+
+char* strndup(const char* s, size_t size);
 char* strdup(const char* s);

@@ -11,6 +11,33 @@
 namespace std
 {
     template <typename T>
+    class allocator
+    {
+    public:
+        typedef T value_type;
+        typedef T* pointer;
+        typedef const T* const_pointer;
+        typedef T& reference;
+        typedef const T& const_reference;
+        typedef std::size_t size_type;
+        typedef std::ptrdiff_t difference_type;
+
+        allocator() { }
+
+        ~allocator() { }
+
+        pointer allocate(size_t n)
+        {
+            return ::operator new(n * sizeof(T));
+        }
+
+        void deallocate(pointer p, size_t n)
+        {
+            ::operator delete(p);
+        }
+    };
+
+    template <typename T>
     class default_delete
     {
     public:
@@ -45,6 +72,10 @@ namespace std
     template <typename T, typename Deleter = default_delete<T>>
     class unique_ptr
     {
+    private:
+        T* _pointer;
+        Deleter _deleter; 
+
     public:
         unique_ptr()
         :
@@ -156,10 +187,6 @@ namespace std
                 _pointer = nullptr;
             }
         }
-
-    private:
-        T* _pointer;
-        Deleter _deleter; 
     };
 
     template<typename T, typename... Args>
@@ -169,7 +196,7 @@ namespace std
     }
     
     template <typename T>
-    enable_if_t<is_unbounded_array_v<T>, unique_ptr<T>> make_unique(std::size_t n)
+    enable_if_t<is_same<T, remove_extent_t<T>[]>::value, unique_ptr<T>> make_unique(size_t n)
     {
         return unique_ptr<T>(new remove_extent_t<T>[n]());
     }

@@ -88,7 +88,7 @@ int vsnprintf(char* buff, size_t n, const char* fmt, va_list args)
 
     while(char ch = *fmt++)
     {
-        if(n != 0 && length == n)
+        if(n != 0 && length > n)
         {
             break;
         }
@@ -214,7 +214,7 @@ int snprintf(char* buff, size_t n, const char* fmt, ...)
     va_list args;
     va_start(args, fmt);
 
-    int length = vsnprintf(buff, 0, fmt, args);
+    int length = vsnprintf(buff, n, fmt, args);
 
     va_end(args);
 
@@ -233,10 +233,102 @@ int sprintf(char* buff, const char* fmt, ...)
     return length;
 }
 
+static size_t calculate_vfprintf_buff_size(const char* fmt, va_list args)
+{
+    size_t length = 0;
+    size_t fmt_len = strlen(fmt);
+
+    while(char ch = *fmt++)
+    {
+        if(ch == '%')
+        {
+            switch(ch = *fmt++)
+            {
+                case '%':
+                {
+                    length++;
+
+                    break;
+                }
+                case 'c':
+                {
+                    char c = va_arg(args, int);
+
+                    if(c != 0)
+                    {
+                        length++;
+                    }
+
+                    break;
+                }
+                case 's':
+                {
+                    char* str = va_arg(args, char*);
+
+                    length += strlen(str);
+
+                    break;
+                }
+                case 'd':
+                {
+                    int interger = va_arg(args, int);
+
+                    length += 128;
+
+                    break;
+                }
+                case 'x':
+                {
+                    int interger = va_arg(args, uint32_t);
+
+                    length += 128;
+
+                    break;
+                }
+                case 'l':
+                {
+                    if((fmt_len - strlen(fmt)) < fmt_len)
+                    {
+                        ch = *fmt++;
+
+                        switch(ch)
+                        {
+                            default:
+                            {
+                                length++;
+                                ch = *fmt--;
+
+                                break;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        length++;
+                    }
+
+                    break;
+                }
+                default:
+                {
+                    length++;
+                }
+            }
+
+        }
+    }
+
+    return length;
+}
+
 int vfprintf(FILE* file, const char* fmt, va_list args) 
 {
-    char buff[512];
-    int length = vsnprintf(buff, 512, fmt, args);
+    va_list new_list;
+    va_copy(new_list, args);
+    size_t size = calculate_vfprintf_buff_size(fmt, new_list);
+
+    char buff[size];
+    int length = vsnprintf(buff, size, fmt, args);
 
     fputs(buff, file);
 

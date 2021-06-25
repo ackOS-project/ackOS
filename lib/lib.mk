@@ -7,8 +7,6 @@ LIBC_NAME = libc
 LIBS += LIBSTDCXX
 LIBSTDCXX_NAME = libstdc++
 
-AR := $(ARCH)-ackos-ar
-
 define LIBRARY_TEMPLATE =
 $(1)_LIB := $(LIBS_FOLDER)/$($(1)_NAME).a
 
@@ -31,7 +29,7 @@ $$($(1)_LIB): $$($(1)_OBJECTS)
 	@echo [ creating library archive $@ for $$($(1)_NAME) ] $(AR)
 	@$(AR) -rsc $$@ $$^
 
-$$(BIN_FOLDER)/lib/$($(1)_NAME)/%.o: lib/$$($(1)_NAME)/%.cpp $(HEADERS)
+$$(BIN_FOLDER)/lib/$($(1)_NAME)/%.o: lib/$$($(1)_NAME)/%.cpp $($(1)_HEADERS)
 	@mkdir -p $$(@D)
 	@echo [ compiling target $$@ ] C++
 	@$(CXX) -c $$< -o $$@ $(CFLAGS)

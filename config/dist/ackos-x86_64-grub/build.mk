@@ -1,10 +1,13 @@
-$(BIN_FOLDER)/$(ISONAME): $(BIN_FOLDER)/ackos.elf
+$(BIN_FOLDER)/$(ISONAME): $(BIN_FOLDER)/kernel.elf $(BIN_FOLDER)/ramdisk.tar.gz
 	@mkdir -p $(@D)
 
 	@echo [ creating media ] grub-mkrescue
 
 	@mkdir -p $(BIN_FOLDER)/isodir/boot/grub
 	@cp $(DIST_FOLDER)/grub.cfg $(BIN_FOLDER)/isodir/boot/grub
-	@cp $(BIN_FOLDER)/ackos.elf $(BIN_FOLDER)/isodir/boot
+	@cp -r $(DIST_FOLDER)/resources $(BIN_FOLDER)/isodir/boot
+
+	@cp $(BIN_FOLDER)/kernel.elf $(BIN_FOLDER)/isodir/boot
+	@cp $(BIN_FOLDER)/ramdisk.tar.gz $(BIN_FOLDER)/isodir/boot
 
 	@sudo grub-mkrescue -o $@ $(BIN_FOLDER)/isodir

@@ -5,44 +5,20 @@ namespace utils
     class result
     {
     private:
-        int _code;
-
-        #define ENUM_MACRO(X)                               \
-            X(SUCCESS, "success")                            \
-            X(ERR_UNIMPLEMENTED, "unimplemented function")    \
-            X(ERR_OUT_OF_BOUNDS, "out of bounds")              \
-            X(ERR_OUT_OF_MEMORY, "out of memory")               \
-            X(ERR_INVALID_ADDRESS, "invalid address")            \
-            X(ERR_INVALID_ARGUMENT, "invalid argument")           \
-            X(ERR_INVALID_FD, "invalid file descriptor")           \
-            X(ERR_NOT_READABLE, "not readable")                     \
-            X(ERR_NOT_WRITABLE, "not writable")                      \
-            X(ERR_UNKNOWN, "unknown error")
-
-        #define GENERATE_ENUM(name, description) name,
-        #define GENERATE_STR(name, description) #name,
-        #define GENERATE_DESC(name, description) description,
-
-        const char* _enum_strings[15] =
-        {
-            ENUM_MACRO(GENERATE_STR)
-        };
-
-        const char* _descriptions[15] =
-        {
-            ENUM_MACRO(GENERATE_DESC)
-        };
+        int _code = ERR_UNKNOWN;
 
     public:
+        #include "liback/utils/__result_macro.h"
+        #define RESULT_GENERATE_ENUM(__name, __description) __name,
+
         enum
         {
-            ENUM_MACRO(GENERATE_ENUM)
+            RESULT_MACRO(RESULT_GENERATE_ENUM)
         };
 
         #undef GENERATE_ENUM
         #undef GENERATE_DESC
-        #undef ENUM_MACRO
-
+        #undef RESULT_MACRO
 
         result();
         result(int code);
@@ -51,8 +27,11 @@ namespace utils
         bool operator==(int code);
         bool operator!=(int code);
 
+        explicit operator int();
+        operator bool();
+
         const char* to_string();
-        const char* description();
+        const char* get_description();
 
         int get_error_code();
     };

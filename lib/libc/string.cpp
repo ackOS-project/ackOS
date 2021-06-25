@@ -172,6 +172,42 @@ size_t strlcat(char *dest, const char *src, size_t size)
     return dest_len + src_len;
 }
 
+int strcmp(const char* str1, const char* str2)
+{
+    char c1, c2;
+
+    do
+    {
+        c1 = (char)*str1++;
+        c2 = (char)*str2++;
+
+        if(c1 == '\0')
+        {
+            return c1 - c2;
+        }
+    }
+    while(c1 == c2);
+
+    return c1 - c2;
+}
+
+int strncmp(const char* str1, const char* str2, size_t size)
+{
+    while(size > 0 && *str1 && (*str1 == *str2))
+    {
+        ++str1;
+        ++str2;
+        --size;
+    }
+
+    if(size == 0)
+    {
+        return 0;
+    }
+
+    return (*(char*)str1 - *(char*)str2);
+}
+
 char* strdup(const char* s)
 {
     size_t len = strlen(s) + 1;
