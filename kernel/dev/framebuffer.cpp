@@ -1,6 +1,6 @@
 #include "kernel/dev/framebuffer.h"
 
-framebuffer::framebuffer(void* addr_physical, int width, int height, int pitch, int bpp)
+framebuffer_device::framebuffer_device(void* addr_physical, int width, int height, int pitch, int bpp)
 :
 fs_node(NODE_TYPE_DEVICE)
 {
@@ -11,11 +11,11 @@ fs_node(NODE_TYPE_DEVICE)
     _bpp = bpp;
 }
 
-framebuffer::~framebuffer()
+framebuffer_device::~framebuffer_device()
 {
 }
 
-utils::result framebuffer::io_call(int request, void* arg)
+utils::result framebuffer_device::io_call(int request, void* arg)
 {
     if(arg == nullptr)
     {
@@ -55,4 +55,3 @@ utils::result framebuffer::io_call(int request, void* arg)
         return utils::result::ERR_INVALID_ARGUMENT;
     }
 }
-

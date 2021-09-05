@@ -17,25 +17,34 @@ enum class process_state
 class process
 {
 private:
-    pid_t _parent_pid;
+    process* _parent_process;
     pid_t _pid;
     fd_table _fd_table;
     process_state _state = process_state::ZOMBIE;
+    uintptr_t _memory_start = 0;
+    uintptr_t _memory_end = 0;
 
 public:
-    pid_t get_pid() { return _pid; }
-    pid_t get_parent_pid() { return _parent_pid; }
+    pid_t get_pid() const { return _pid; }
+    process* get_parent_pid() const { return _parent_process; }
     fd_table& get_fd_table() { return _fd_table; }
+    const fd_table& get_fd_table() const { return _fd_table; }
+
+    void set_memory_region(uintptr_t start, uintptr_t end)
+    {
+        _memory_start = start;
+        _memory_end = end;
+    }
 
     utils::result send_signal(int signal);
 
-    friend pid_t process_start(pid_t parent_pid, const char* name, void* entry_point);
+    friend process* process_start(process* parent, const char* name, void* entry_point);
 };
 
 process* process_get_from_pid(pid_t pid);
 
-utils::result process_destroy(pid_t pid);
+int process_destroy(process* process);
 
-pid_t process_start(pid_t parent_pid, const char* name, void* entry_point);
+process* process_start(process* parent, const char* name, void* entry_point);
 
 void processes_initialise();

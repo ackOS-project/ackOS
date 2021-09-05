@@ -1,6 +1,7 @@
 #pragma once
 
 #include <liback/utils/macros.h>
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -10,7 +11,7 @@ namespace x86_64
 {
     enum
     {
-        GDT_LONG_MODE_GRANULARITY = 0x2,
+        GDT_LONG_MODE_GRANULARITY = 0x20,
         GDT_SEGMENT = 0x10,
         GDT_PRESENT = 0x80,
         GDT_TSS_PRESENT = 0x80,
@@ -31,6 +32,32 @@ namespace x86_64
     }
     ATTRIBUTE_PACKED;
 
+    struct tss_struct
+    {
+        uint32_t reserved0;
+        uint64_t rsp[3];
+        uint64_t reserved1;
+        uint64_t ist[7];
+        uint32_t reserved2;
+        uint32_t reserved3;
+        uint16_t reserved4;
+        uint16_t iomap_base;
+    }
+    ATTRIBUTE_PACKED;
+
+    struct tss_entry
+    {
+        uint16_t size = 0;
+        uint16_t base_low = 0;
+        uint8_t base_mid = 0;
+        uint8_t flags1 = 0;
+        uint8_t flags2 = 0;
+        uint8_t base_high = 0;
+        uint32_t base_upper = 0;
+        uint32_t reserved0 = 0;
+    }
+    ATTRIBUTE_PACKED;
+
     struct gdt_descriptor
     {
         uint16_t segment;
@@ -38,9 +65,22 @@ namespace x86_64
     }
     ATTRIBUTE_PACKED;
 
+    struct gdt_struct
+    {
+        gdt_entry gdt[GDT_ENTRIES]{};
+        tss_entry tss;
+    }
+    ATTRIBUTE_PACKED;
+
+    void tss_set_stack(uint64_t addr);
+
     gdt_entry gdt_create_entry(uint32_t base, uint32_t limit, uint8_t granularity, uint8_t access);
+
+    tss_entry gdt_create_tss_entry(uint64_t addr);
 
     void gdt_initialise();
 
     void gdt_load(gdt_descriptor* descriptor);
+
+    void tss_flush();
 }

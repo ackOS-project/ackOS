@@ -11,8 +11,8 @@
 ## How do I build ackOS?
 [click here for the build guide](manual/build.md)
 
-## Screenshots
-![](assets/screenshots/1-november-2020.png)
+## The state of ackOS
+ackOS currently does not render anything to the screen; everything is printed to the serial ports. We're still working on things like memory management and basic kernel functions. [View the to do list here](TODO.md)
 
 ## Links
-[Discord](https://discord.gg/f6WRY6sHqa)
+[Chat on Discord](https://discord.gg/f6WRY6sHqa)

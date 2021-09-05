@@ -1,5 +1,5 @@
 #pragma once
-/* Bjarne Stroustrup is very proud of this file */
+/* Bjarne Stroustrup is very proud of this part of C++ */
 
 namespace std
 {

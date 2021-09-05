@@ -28,6 +28,6 @@ mouse: enabled=false, toggle=ctrl+mbutton
 magic_break: enabled=1
 
 com1: enabled=true, mode=file, dev=/dev/stdout
-com2: enabled=false
+com2: enabled=true, mode=file, dev=%s
 com3: enabled=false
 com4: enabled=false

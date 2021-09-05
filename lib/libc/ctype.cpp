@@ -37,12 +37,12 @@ int isalnum(int c)
 
 int iscntrl(int c)
 {
-    return c == 0x7f || c >= 0 && c <= 0x1f;
+    return c == 0x7f || (c >= 0 && c <= 0x1f);
 }
 
 int isxdigit(int c)
 {
-    return isdigit(c) || c >= 'A' && c <= 'F' || c >= 'a' && c <= 'f';
+    return isdigit(c) || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f');
 }
 
 int tolower(int c)

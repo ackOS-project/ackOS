@@ -11,12 +11,10 @@ define LIBRARY_TEMPLATE =
 $(1)_LIB := $(LIBS_FOLDER)/$($(1)_NAME).a
 
 $(1)_SOURCES += \
-		$$(wildcard lib/$($(1)_NAME)/*.cpp) \
-		$$(wildcard lib/$($(1)_NAME)/*/*.cpp)
+		$$(call rwildcard, lib/$($(1)_NAME), *.cpp)
 
 $(1)_HEADERS += \
-		$$(wildcard lib/$($(1)_NAME)/*.h) \
-		$$(wildcard lib/$($(1)_NAME)/*/*.h)
+		$$(call rwildcard, lib/$($(1)_NAME), *.h)
 
 $(1)_OBJECTS := $$(patsubst %.cpp, $(BIN_FOLDER)/%.o, $$($(1)_SOURCES))
 

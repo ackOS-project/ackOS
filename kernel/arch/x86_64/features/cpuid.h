@@ -1,7 +1,12 @@
 #pragma once
 
-#include <stdint.h>
-#include <stddef.h>
+#include <cstdint>
+#include <cstddef>
+
+#ifndef __COMPILER_CPUID_HEADER_DEFINED
+#define __COMPILER_CPUID_HEADER_DEFINED
+#include <cpuid.h>
+#endif
 
 namespace x86_64::cpuid
 {
@@ -19,7 +24,7 @@ namespace x86_64::cpuid
         INTEL_BRAND_STRING_END
     };
 
-    enum : uint32_t
+    enum
     {
         FEAT_ECX_SSE3         = 1 << 0, 
         FEAT_ECX_PCLMUL       = 1 << 1,
@@ -76,7 +81,7 @@ namespace x86_64::cpuid
         FEAT_EDX_SS           = 1 << 27, 
         FEAT_EDX_HTT          = 1 << 28, 
         FEAT_EDX_TM1          = 1 << 29, 
-        FEAT_EDX_IA64         = 1 << 30 /*,
-        FEAT_EDX_PBE          = 1 << 31 -- Commented out because `enumerator value evaluates to -2147483648, which cannot be narrowed to type 'uint32_t'` */
+        FEAT_EDX_IA64         = 1 << 30,
+        FEAT_EDX_PBE          = 1 << 31
     };
 }

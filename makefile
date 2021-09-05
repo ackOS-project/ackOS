@@ -1,11 +1,13 @@
 export PATH := $(shell toolchain/path.sh)
 
-rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(subst *,%,$2),$d))
+rwildcard = $(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(subst *,%,$2),$d))
 
 ARCH = x86_64
 BOOTLOADER = limine
 DIST = ackos-$(ARCH)-$(BOOTLOADER)
 ISONAME = $(DIST).iso
+
+TOOLCHAIN_LIBGCC = $(shell toolchain/path.sh --option=libgcc --target=$(ARCH)-ackos)
 
 CC := $(ARCH)-ackos-gcc
 CXX := $(ARCH)-ackos-g++
@@ -28,6 +30,8 @@ FONTS += \
 
 TARGETS :=
 
+SANITISATION_ENABLED := yes
+
 CFLAGS += \
 		-g \
 		-I lib/libc \
@@ -36,25 +40,34 @@ CFLAGS += \
 		-I . \
 		-ffreestanding \
 		-fno-exceptions \
-		-fno-rtti \
+		-fno-rtti  \
+		-O3 \
 		-mno-red-zone \
 		-DBUILD_ARCH_$(ARCH) \
 		-DBUILD_HOST_ARCH=\"$(shell uname --machine)\" \
 		-DBUILD_TIME='"$(shell date)"' \
 		-DBUILD_HOST_OS=\"$(shell uname --operating-system)\" \
-		-DBUILD_DISABLE_FPA \
 		-std=c++20
+
+ifeq ($(SANITISATION_ENABLED), yes)
+	CFLAGS += -fsanitize=undefined
+endif
 
 LFLAGS += \
 		-L $(LIBS_FOLDER) \
 		-lc \
 		-lack \
-		-lstdc++
+		-lstdc++ \
+		-L $(TOOLCHAIN_LIBGCC) \
+		-lgcc
 
-QEMU_FLAGS += \
-			-serial stdio
+VM_LOGFILE := ackos.log
+VM_MEMORY := 256
 
-.PHONY: all qemu qemu-debug bochs check-multiboot2 strip-symbols clean
+DEBUG_SYMBOL_FILE := $(BIN_FOLDER)/ackos.sym
+DEBUG_BREAKPOINT := kmain
+
+.PHONY: all qemu qemu-debug bochs build-sysroot check-multiboot2 strip-symbols clean clean-sysroot print-log
 
 all: $(BIN_FOLDER)/$(ISONAME)
 
@@ -66,7 +79,7 @@ check-multiboot2: all
 	fi
 
 strip-symbols:
-	@objcopy --only-keep-debug $(BIN_FOLDER)/kernel.elf $(BIN_FOLDER)/ackos.sym
+	@objcopy --only-keep-debug $(BIN_FOLDER)/kernel.elf $(DEBUG_SYMBOL_FILE)
 
 build-sysroot:
 	@mkdir -p sysroot
@@ -83,11 +96,15 @@ clean:
 clean-sysroot:
 	@rm -rf $(SYSROOT_FOLDER)
 
+print-log:
+	@cat ackos.log 2>/dev/null
+
 # includes
 include kernel/kernel.mk
 include lib/lib.mk
 include config/emulators/qemu.mk
 include config/emulators/bochs.mk
+include config/debug/gdb.mk
 include $(DIST_FOLDER)/build.mk
 
 $(BIN_FOLDER)/kernel.elf: $(KERNEL_OBJECTS) $(TARGETS)
@@ -99,6 +116,12 @@ $(BIN_FOLDER)/%.o: %.cpp $(KERNEL_HEADERS)
 	@mkdir -p $(@D)
 	@echo [ compiling target $@ ] C++
 	@$(CXX) -c $< -o $@ $(CFLAGS)
+
+$(BIN_FOLDER)/%.32.o: %.32.cpp $(KERNEL_HEADERS)
+	@mkdir -p $(@D)
+	@echo [ compiling 32-bit target $@ ] C++
+	@$(CXX) -c $< -o $@ $(CFLAGS) -m32
+	@$(OBJCOPY) -O elf64-x86-64 $@ $@
 
 $(BIN_FOLDER)/%.asm.o: %.asm
 	@mkdir -p $(@D)

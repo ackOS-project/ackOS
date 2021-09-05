@@ -3,6 +3,8 @@
 #include "kernel/arch/x86_64/features/pic_8259.h"
 #include "kernel/arch/x86_64/features/instructions.h"
 #include "kernel/arch/x86_64/features/com.h"
+#include "kernel/arch/x86_64/features/sse.h"
+#include "kernel/arch/x86_64/features/paging.h"
 
 #include <liback/utils/assert.h>
 #include "kernel/boot_protocols/uniheader.h"
@@ -26,6 +28,10 @@ extern "C" int x86_64_init(void* header, uint32_t magic)
     pic8259_mask();
 
     interrupts_enable();
+
+    //paging_initialise();
+
+    sse_enable();
 
     uheader.parse(header, magic);
 

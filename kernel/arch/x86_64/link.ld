@@ -20,6 +20,11 @@ SECTIONS
 		KEEP(*(.text*))
 	}
 
+	.text32 ALIGN(4K) :
+	{
+		KEEP(*(.text32*))
+	}
+
 	.rodata ALIGN(4K) :
 	{
 		KEEP(*(.rodata*))

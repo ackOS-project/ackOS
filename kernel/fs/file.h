@@ -7,10 +7,10 @@ class file_node : public fs_node
 private:
     const char* _filename;
     char* _data_addr;
+    size_t _size = 0;
     int _flags = 0;
 
     int _offset = 0;
-    size_t _size = 0;
 
 public:
     file_node(const char* filename, char* data_addr, size_t size, int flags);

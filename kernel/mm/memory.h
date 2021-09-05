@@ -14,3 +14,5 @@ struct memory_info
 void memory_initialise(uniheader* uheader);
 
 memory_info* memory_get_info();
+
+void memory_dump();

@@ -14,15 +14,25 @@ extern FILE* stderr;
 
 #define EOF -1
 
+FILE* fdopen(int fd, const char* mode);
+
+size_t fread(void* buff, size_t size, size_t count, FILE* file);
+
 size_t fwrite(const void* buff, size_t size, size_t count, FILE* file);
+
+int fgetc(FILE* file);
 
 int fputc(int c, FILE* file);
 
 int fputs(const char* str, FILE* file);
 
+int getc(FILE* file);
+
 int putc(int c, FILE* file);
 
 int putchar(int c);
+
+int getchar();
 
 int puts(const char* str);
 

@@ -89,6 +89,8 @@ char* itoa(int value, char* str, int base)
     return int_to_string<int>(value, str, base);
 }
 
+#ifndef BUILD_DISABLE_FPA
+
 void ftoa(float value, char* str, int precision)
 {
 
@@ -105,6 +107,8 @@ double pow(double x, double y)
 
     return result;
 }
+
+#endif
 
 int abs(int i)
 {

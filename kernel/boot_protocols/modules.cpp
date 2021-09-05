@@ -3,12 +3,14 @@
 #include "kernel/panic.h"
 
 #include <cstring>
+#include <string>
 
 void boot_modules_intialise(uniheader* uheader)
 {
     for(int i = 0; i < uheader->module_count; i++)
     {
         uniheader_module& mod = uheader->modules[i];
+        
 
         if(strcmp(mod.command_line_args, "tar_ramdisk") == 0)
         {
@@ -21,7 +23,7 @@ void boot_modules_intialise(uniheader* uheader)
         }
         else
         {
-            kpanic("unknown module detected!");
+            kpanic((std::string("unknown boot module detected: ") + mod.command_line_args).c_str());
         }
     }
 }
