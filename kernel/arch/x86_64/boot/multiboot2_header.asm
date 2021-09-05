@@ -27,9 +27,9 @@ align 8
     dw MULTIBOOT2_HEADER_TAG_FRAMEBUFFER
     dw MULTIBOOT2_HEADER_TAG_OPTIONAL
     dd 20
+    dd 0 ; let the bootloader decide the width and height of the framebuffer
     dd 0
-    dd 0
-    dd 32
+    dd 32 ; 32 bit colour depth
 align 8
     dw MULTIBOOT2_HEADER_TAG_END
     dw 0

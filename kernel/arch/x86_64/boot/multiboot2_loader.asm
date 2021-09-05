@@ -1,6 +1,60 @@
 global _start
+extern multiboot2_helper_init
+extern multiboot2_helper_com_write_char
+extern multiboot2_helper_com_write
 
-section .text
+extern multiboot2_helper_vga_write
+extern multiboot2_helper_vga_write_char
+
+section .text32
+%macro COM_WRITE_CHAR 1
+    push ebp
+    mov ebp, esp
+    push %1
+
+    call multiboot2_helper_com_write_char
+
+    add esp, 12
+    mov esp, ebp
+    pop ebp
+%endmacro
+
+%macro COM_WRITE 1
+    push ebp
+    mov ebp, esp
+    push %1
+
+    call multiboot2_helper_com_write
+
+    add esp, 12
+    mov esp, ebp
+    pop ebp
+%endmacro
+
+%macro VGA_WRITE_CHAR 1
+    push ebp
+    mov ebp, esp
+    push %1
+
+    call multiboot2_helper_vga_write_char
+
+    add esp, 12
+    mov esp, ebp
+    pop ebp
+%endmacro
+
+%macro VGA_WRITE 1
+    push ebp
+    mov ebp, esp
+    push %1
+
+    call multiboot2_helper_vga_write
+
+    add esp, 12
+    mov esp, ebp
+    pop ebp
+%endmacro
+
 bits 32
 _start:
     cli
@@ -12,6 +66,8 @@ _start:
 
     ; initialise stack
     mov esp, _kernel_stack_top
+
+    call multiboot2_helper_init
 
     ; do all the checks
     call cpuid_check_long_mode
@@ -36,7 +92,7 @@ cpuid_check_long_mode:
     jz .no_long_mode
     ret
 .no_long_mode:
-    mov al, "2"
+    mov ebx, error_no_long_mode
     jmp loader_print_error
 
 global set_up_page_tables
@@ -102,22 +158,27 @@ print:
 
 ; Errors
 loader_print_error:
-    mov byte [0xb8000], "e"
-    mov byte [0xb8002], "r"
-    mov byte [0xb8004], "r"
-    mov byte [0xb8006], "o"
-    mov byte [0xb8008], "r"
-    mov byte [0xb800a], " "
+    mov ecx, error_prompt
+    VGA_WRITE ecx
+    VGA_WRITE ebx
+    VGA_WRITE_CHAR ` `
 
-    mov byte [0xb800c], al
-    mov byte [0xb800e], " " ; Remove any extra text such as QEMU status
+    ; No console? no problem
+    mov ecx, error_prompt
+    COM_WRITE ecx
+    COM_WRITE ebx
+    COM_WRITE_CHAR `\n`
 
     hlt
     ret
 
 loader_print_unknown_err:
-    mov al, "9"
+    mov ebx, error_unknown
     call loader_print_error
+
+error_prompt: db "boot error: ", 0
+error_unknown: db "An unknown error occured", 0
+error_no_long_mode: db "No long mode detected. Please use an x86_64 compatible machine.", 0
 
 section .bss
 align 4096
@@ -169,10 +230,12 @@ multiboot2_header: dq 0
 multiboot2_magic: dq 0
 
 section .text
-; We are now in 64-bit long mode!
+; We are now in PAE long mode!
 bits 64
 long_mode_start:
-    mov ax, 0
+    cli
+
+    mov ax, _gdt.data
     mov ss, ax
     mov ds, ax
     mov es, ax

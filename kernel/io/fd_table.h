@@ -25,7 +25,11 @@ public:
     utils::result clone(int old_fd, int new_fd);
     utils::result clone(int* new_fd, int old_fd);
 
+    utils::result seek(int fd, off_t off);
+
     int insert_node_at(int fd, fs_node* node, int flags);
     int append_node(fs_node* node, int flags);
-    void remove_node(int fd);
+    utils::result remove_node(int fd);
+
+    void dump();
 };

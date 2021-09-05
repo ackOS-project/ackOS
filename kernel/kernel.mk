@@ -18,3 +18,11 @@ KERNEL_ASSEMBLY += \
 		$(wildcard kernel/arch/*.asm)
 
 KERNEL_OBJECTS := $(KERNEL_ASSEMBLY:%.asm=$(BIN_FOLDER)/%.asm.o) $(KERNEL_SOURCES:%.cpp=$(BIN_FOLDER)/%.o) $(FONTS:%.psf=$(BIN_FOLDER)/%.o)
+
+KERNEL_DISABLE_FPA := yes
+
+ifdef KERNEL_DISABLE_FPA
+CFLAGS += \
+		-DBUILD_DISABLE_FPA \
+		-mgeneral-regs-only
+endif

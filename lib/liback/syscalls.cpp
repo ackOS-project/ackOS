@@ -1,92 +1,13 @@
 #include <liback/syscalls.h>
-#include "kernel/mm/heap.h"
-#include "kernel/proc/process.h"
+
+#include "kernel/proc/syscalls.h"
 
 namespace ackos
 {
     utils::result syscall_dispatch(int call, void* arg1, void* arg2, void* arg3, void* arg4, void* arg5, void* arg6)
     {
-        utils::result result = utils::result::ERR_INVALID_SYSCALL;
-
-        if(call == SYSCALL_STREAM_READ)
-        {
-            int fd = *(int*)arg1;
-            void* buff = *(void**)arg2;
-            size_t size = *(size_t*)arg3;
-            size_t* total_read = *(size_t**)arg4;
-
-            // FIXME: hard coded pid
-            result = process_get_from_pid(0)->get_fd_table().read(fd, buff, size, total_read);
-        }
-        else if(call == SYSCALL_STREAM_WRITE)
-        {
-            int fd = *(int*)arg1;
-            const void* buff = *(const void**)arg2;
-            size_t size = *(size_t*)arg3;
-            size_t* total_written = *(size_t**)arg4;
-
-            result = process_get_from_pid(0)->get_fd_table().write(fd, buff, size, total_written);
-        }
-        else if(call == SYSCALL_STREAM_OPEN)
-        {
-            result = utils::result::ERR_UNIMPLEMENTED;
-        }
-        else if(call == SYSCALL_STREAM_CLOSE)
-        {
-            result = utils::result::ERR_UNIMPLEMENTED;
-        }
-        else if(call == SYSCALL_STREAM_IOCALL)
-        {
-            int fd = *(int*)arg1;
-            int request = *(int*)arg2;
-            void* arg = *(void**)arg3;
-
-            result = process_get_from_pid(0)->get_fd_table().io_call(fd, request, arg);
-        }
-        else if(call == SYSCALL_STREAM_CLONE1)
-        {
-            int* new_fd = *(int**)arg1;
-            int old_fd = *(int*)arg2;
-
-            result = process_get_from_pid(0)->get_fd_table().clone(new_fd, old_fd);
-        }
-        else if(call == SYSCALL_STREAM_CLONE2)
-        {
-            int old_fd = *(int*)arg1;
-            int new_fd = *(int*)arg2;
-
-            result = process_get_from_pid(0)->get_fd_table().clone(new_fd, old_fd);
-        }
-        else if(call == SYSCALL_MEMORY_ALLOC)
-        {
-            void** addr = *(void***)arg1;
-            size_t size = *(size_t*)arg2;
-
-            *addr = heap_allocate(size);
-            if(addr == nullptr)
-            {
-                result = utils::result::ERR_OUT_OF_MEMORY;
-            }
-            else
-            {
-                result = utils::result::SUCCESS;
-            }
-        }
-        else if(call == SYSCALL_MEMORY_FREE)
-        {
-            void* addr = *(void**)arg1;
-
-            if(addr == nullptr)
-            {
-                result = utils::result::ERR_INVALID_ADDRESS;
-            }
-            else
-            {
-                heap_deallocate(addr);
-
-                result = utils::result::SUCCESS;
-            }
-        }
+        // FIXME: hard coded pid
+        utils::result result = syscalls_dispatch(process_get_from_pid(0), call, arg1, arg2, arg3, arg4, arg5, arg6);
 
         return result;
     }
@@ -141,6 +62,11 @@ namespace ackos
         utils::result stream_read(int fd, void* buff, size_t size, size_t* total_read)
         {
             return syscall_dispatch(SYSCALL_STREAM_READ, &fd, &buff, &size, &total_read, NULL, NULL);
+        }
+
+        utils::result system_get_info(system_info* info)
+        {
+            return syscall_dispatch(SYSCALL_SYSTEM_GET_INFO, &info, NULL, NULL, NULL, NULL, NULL);
         }
     }
 }

@@ -34,4 +34,13 @@ namespace x86_64
         uint64_t ss;
     }
     ATTRIBUTE_PACKED;
+
+    struct stack_frame
+    {
+        stack_frame* rbp;
+        uint64_t rip;
+    }
+    ATTRIBUTE_PACKED;
+
+    void dump_stack_frame(interrupt_stack_frame* frame);
 }

@@ -1,6 +1,8 @@
+#include "kernel/io/fd_table.h"
+#include "kernel/logger.h"
+
 #include <fcntl.h>
 #include <liback/utils/result.h>
-#include "kernel/io/fd_table.h"
 
 int fd_table::insert_node_at(int fd, fs_node* node, int flags)
 {
@@ -26,13 +28,21 @@ int fd_table::append_node(fs_node* node, int flags)
     return fd; 
 }
 
-void fd_table::remove_node(int fd)
+utils::result fd_table::remove_node(int fd)
 {
+    utils::result result;
+
     if(_nodes[fd] != nullptr)
     {
         delete _nodes[fd];
         _nodes[fd] = NULL;
     }
+    else
+    {
+        result = utils::result::ERR_INVALID_FD;
+    }
+
+    return result;
 }
 
 utils::result fd_table::read(int fd, void* buff, size_t size, size_t* total_read)
@@ -157,4 +167,27 @@ fd_table::~fd_table()
     {
         if(_nodes[i] != nullptr) delete _nodes[i];
     }
+}
+
+void fd_table::dump()
+{
+    log_info("fd", "Open file descriptors: ");
+
+    for(int i = 0; i < HANDLE_LIMIT; i++)
+    {
+        if(_nodes[i] != nullptr)
+        {
+            log_info("fd", "  %d -> %s", i, fs_node_type_to_string(_nodes[i]->get_type()));
+        }
+    }
+}
+
+utils::result fd_table::seek(int fd, off_t off)
+{
+    if(_nodes[fd] == nullptr)
+    {
+        return utils::result::ERR_INVALID_FD;
+    }
+
+    return _nodes[fd]->set_offset(off);
 }

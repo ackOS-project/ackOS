@@ -27,7 +27,7 @@ enum
     FRAMEBUFFER_CALL_GET_DISPLAY_INFO
 };
 
-class framebuffer : public fs_node
+class framebuffer_device : public fs_node
 {
 private:
     void* _addr_physical;
@@ -37,8 +37,8 @@ private:
     int _bpp;
 
 public:
-    framebuffer(void* addr_physical, int width, int height, int pitch, int bpp);
-    ~framebuffer();
+    framebuffer_device(void* addr_physical, int width, int height, int pitch, int bpp);
+    ~framebuffer_device();
 
     utils::result io_call(int request, void* arg) override;
 };

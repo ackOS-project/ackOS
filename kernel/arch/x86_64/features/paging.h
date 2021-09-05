@@ -49,10 +49,11 @@ namespace x86_64
 
     static_assert(sizeof(page_table) == sizeof(uint64_t));
 
-    void paging_load_directory(uint64_t pd);
+    void paging_switch_directory(uint64_t pd);
 
     uint64_t paging_get_page_mask();
 
     uint64_t paging_get_page_size();
 
+    void paging_initialise();
 }

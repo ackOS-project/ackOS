@@ -1,5 +1,5 @@
 #include "kernel/arch/x86_64/features/com.h"
-#include "kernel/dev/com.h"
+#include "kernel/arch/x86_64/features/com_dev.h"
 
 static int com_port_to_address(int port)
 {
@@ -74,4 +74,9 @@ utils::result com_port::write(const void* buff, size_t size, size_t* total_writt
     }
 
     return utils::result::SUCCESS;
+}
+
+utils::result com_port::set_offset(off_t offset)
+{
+    return utils::result::ERR_IS_TERMINAL;
 }

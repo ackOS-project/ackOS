@@ -1,9 +1,15 @@
-#include <fcntl.h>
-#include <csignal>
-#include "kernel/dev/com.h"
+#include "kernel/dev/early_console.h"
+#include "kernel/arch/x86_64/features/com_dev.h"
 #include "kernel/proc/process.h"
 
+#include <fcntl.h>
+#include <sys/runtime/ubsan.h>
+#include <csignal>
+
 #define PROCESS_LIMIT 512
+
+extern uintptr_t _kernel_start;
+extern uintptr_t _kernel_end;
 
 static process* processes[PROCESS_LIMIT];
 
@@ -22,7 +28,7 @@ utils::result process::send_signal(int signal)
         else
         {
             _state = process_state::ZOMBIE;
-            result = process_destroy(get_pid());
+            result = process_destroy(this);
         }
 
         break;
@@ -36,13 +42,13 @@ utils::result process::send_signal(int signal)
     return result;
 }
 
-utils::result process_destroy(pid_t pid)
+int process_destroy(process* proc)
 {
-    utils::result result;
+    int result;
 
-    if(processes[pid] != nullptr)
+    if(proc != nullptr)
     {
-        delete processes[pid];
+        delete proc;
 
         result = utils::result::SUCCESS;
     }
@@ -59,9 +65,9 @@ process* process_get_from_pid(pid_t pid)
     return processes[pid];
 }
 
-pid_t process_start(pid_t parent_pid, const char* name, void* entry_point)
+process* process_start(process* parent, const char* name, void* entry_point)
 {
-    pid_t pid = -1;
+    process* proc = nullptr;
 
     for(int i = 0; i < PROCESS_LIMIT; i++)
     {
@@ -69,22 +75,29 @@ pid_t process_start(pid_t parent_pid, const char* name, void* entry_point)
         {
             processes[i] = new process;
 
-            processes[i]->_parent_pid = parent_pid;
+            processes[i]->_parent_process = parent;
             processes[i]->_pid = i;
-            pid = i;
+            proc = processes[i];
 
             break;
         }
     }
 
-    return pid;
+    return proc;
 }
 
 void processes_initialise()
 {
-    pid_t pid = process_start(0, "kernel", nullptr);
-    process* proc = process_get_from_pid(pid);
+    process* kernel_proc = process_start(nullptr, "kernel", nullptr);
 
-    proc->get_fd_table().insert_node_at(1, new com_port(1), O_WRONLY);
-    proc->get_fd_table().insert_node_at(2, new com_port(1), O_WRONLY);
+    kernel_proc->set_memory_region(_kernel_start, _kernel_end);
+
+    kernel_proc->get_fd_table().insert_node_at(0, new early_console_device(), O_RDONLY);
+    kernel_proc->get_fd_table().insert_node_at(1, new early_console_device(), O_WRONLY);
+    kernel_proc->get_fd_table().insert_node_at(2, new early_console_device(), O_WRONLY);
+    kernel_proc->get_fd_table().insert_node_at(3, new com_port(2), O_WRONLY);
+
+    FILE* log_stream = fdopen(3, "w");
+    fputs("This is the log file. Verbose information will appear here. \n\n", log_stream);
+    __ubsan_set_output_file(log_stream);
 }

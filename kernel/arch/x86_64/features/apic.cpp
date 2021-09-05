@@ -2,8 +2,6 @@
 #include "kernel/arch/x86_64/features/msr.h"
 #include "kernel/arch/x86_64/features/cpuid.h"
 
-#include <cpuid.h>
-
 static volatile uint32_t* lapic_addr;
 
 namespace x86_64::apic

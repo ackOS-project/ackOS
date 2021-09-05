@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <cstdio>
 
 namespace std
 {
@@ -17,6 +18,39 @@ namespace std
             _call = new callable<T>(t);
 
             return *this;
+        }
+
+        function& operator=(const function& other)
+        {
+            // if(_call != nullptr) delete _call; - FIXME
+
+            _call = other._call == nullptr ? nullptr : other._call->clone();
+
+            return *this;
+        }
+
+        function& operator=(function&& other)
+        {
+            _call = other._call;
+
+            other._call = nullptr;
+        }
+
+        function& operator=(std::nullptr_t)
+        {
+            _call = nullptr;
+
+            return *this;
+        }
+
+        function(const function& other)
+        {
+            operator=(other);
+        }
+
+        function(function&& other)
+        {
+            operator=(other);
         }
 
         template <typename T>
@@ -54,6 +88,7 @@ namespace std
         public:
             virtual ~callable_base() = default;
             virtual ReturnType invoke(Args...) = 0;
+            virtual callable_base* clone() = 0;
         };
 
         template <typename T>
@@ -73,10 +108,15 @@ namespace std
                 return _t(args...);
             }
 
+            callable_base* clone() override
+            {
+                return new callable<T>(_t);
+            }
+
         private:
             T _t;
         };
 
-        callable_base* _call;
+        callable_base* _call = nullptr;
     };
 }

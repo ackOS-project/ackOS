@@ -19,15 +19,15 @@ void ramdisk_mount(const char* mount_point, void* addr, ramdisk_type type)
 
             if(header == nullptr) break;
 
-            printf("%s\n", header->filename);
+            //printf("%s\n", header->filename);
 
             if(header->type_flag == TAR_REGULAR)
             {
                 char* data = (char*)header + 512;
                 size_t size = tar_get_file_size(header);
 
-                file_node* node = new file_node(header->filename, data, size, 0);
-                process_get_from_pid(0)->get_fd_table().append_node(node, O_RDWR);
+                //file_node* node = new file_node(header->filename, data, size, 0);
+                //process_get_from_pid(0)->get_fd_table().append_node(node, O_RDWR);
             }
         }
     }

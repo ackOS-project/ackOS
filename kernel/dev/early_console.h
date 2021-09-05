@@ -2,15 +2,14 @@
 
 #include "kernel/io/fs_node.h"
 
-class com_port : public fs_node
+class early_console_device : public fs_node
 {
-private:
-    int _addr;
-
 public:
-    com_port(int port);
-    ~com_port();
+    early_console_device();
+    ~early_console_device();
 
     utils::result read(void* buff, size_t size, size_t* total_read) const override;
     utils::result write(const void* buff, size_t size, size_t* total_written) override;
+
+    utils::result set_offset(off_t offset) override;
 };

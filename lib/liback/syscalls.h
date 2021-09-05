@@ -1,6 +1,8 @@
 #pragma once
 
 #include <liback/utils/result.h>
+#include <liback/system_info.h>
+
 #include <cstdarg>
 #include <cstddef>
 
@@ -16,6 +18,7 @@ namespace ackos
         SYSCALL_STREAM_IOCALL,
         SYSCALL_STREAM_CLONE1,
         SYSCALL_STREAM_CLONE2,
+        SYSCALL_SYSTEM_GET_INFO,
         SYSCALL_MEMORY_ALLOC,
         SYSCALL_MEMORY_FREE
     };
@@ -31,6 +34,8 @@ namespace ackos
         utils::result stream_iocall(int fd, int request, void* arg);
         utils::result stream_clone(int* new_fd, int old_fd);
         utils::result stream_clone(int old_fd, int new_fd);
+
+        utils::result system_get_info(system_info* info);
 
         utils::result memory_allocate(void** addr, size_t size);
         utils::result memory_free(void* addr);
