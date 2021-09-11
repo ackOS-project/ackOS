@@ -3,7 +3,7 @@
 ## Prerequisites
 If you're on Ubuntu or any Ubuntu based distro, such as Linux Mint type this
 ```
-sudo apt install build-essential nasm gcc g++ bison flex xoriso qemu-system-x86 libgmp3-dev libmpc-dev libmpfr-dev texinfo libisl-dev
+sudo apt install build-essential nasm gcc g++ bison flex xorriso qemu-system-x86 libgmp3-dev libmpc-dev libmpfr-dev texinfo libisl-dev
 ```
 Arch users: Sorry but I'm not a btwOS user so don't think I can help you here.
 
