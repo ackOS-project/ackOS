@@ -3,7 +3,7 @@
 #include "kernel/proc/process.h"
 
 #include <fcntl.h>
-#include <sys/runtime/ubsan.h>
+#include <stdlib/runtime/ubsan.h>
 #include <csignal>
 
 #define PROCESS_LIMIT 512

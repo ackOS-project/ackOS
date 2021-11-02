@@ -1,11 +1,11 @@
-#include <sys/runtime/ubsan.h>
+#include <stdlib/runtime/ubsan.h>
 
 #include <cstdarg>
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
 
-FILE* _ubsan_output = stderr;
+static FILE* _ubsan_output = stderr;
 
 struct ubsan_source_location
 {

@@ -1,17 +1,20 @@
 #include "kernel/mm/memory.h"
 #include "kernel/mm/physical.h"
-#include "kernel/logger.h"
+#include "kernel/mm/virtual.h"
+#include "kernel/sys/logger.h"
 
 #include <liback/utils/storage_size.h>
+#include <cstdio>
 
 static memory_info mem_info;
 
 void memory_initialise(uniheader* uheader)
 {
-    mem_info.total_memory = uheader->get_usable_memory();
     mem_info.used_memory = 0;
+    mem_info.total_memory = uheader->get_usable_memory();
 
     physical_initialise(uheader);
+    virtual_initialise(uheader);
 }
 
 memory_info* memory_get_info()
@@ -21,10 +24,5 @@ memory_info* memory_get_info()
 
 void memory_dump()
 {
-    std::string used_mem;
-    used_mem = utils::format_storage_size(mem_info.used_memory);
-    std::string total_mem;
-    total_mem = utils::format_storage_size(mem_info.total_memory);
-
-    log_info("memory", "Memory Usage: %s/%s", used_mem.c_str(), total_mem.c_str());
+    log_info("memory", "Memory Usage: %s/%s", utils::format_storage_size(mem_info.used_memory).c_str(), utils::format_storage_size(mem_info.total_memory).c_str());
 }

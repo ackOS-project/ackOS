@@ -2,9 +2,11 @@
 #include "kernel/arch/x86_64/features/instructions.h"
 #include "kernel/arch/x86_64/features/pic_8259.h"
 #include "kernel/arch/x86_64/features/ps2_keyboard.h"
-#include "kernel/panic.h"
+#include "kernel/sys/panic.h"
 
 #include <cstdio>
+
+#define STACKFRAME_MAX 8
 
 namespace x86_64
 {
@@ -45,6 +47,29 @@ namespace x86_64
         "(reserved)"
     };
 
+    struct symtab_entry_t
+    {
+        char* name;
+        uintptr_t addr;
+    };
+
+    extern "C" symtab_entry_t _kernel_symbol_table[];
+
+    char* trace_address(uintptr_t* off, uintptr_t addr)
+    {
+        for(uintptr_t i = 0;; i++)
+        {
+            if(_kernel_symbol_table[i].addr >= addr)
+            {
+                *off = addr - _kernel_symbol_table[i - 1].addr;
+
+                return _kernel_symbol_table[i - 1].name;
+            }
+        }
+
+        return nullptr;
+    }
+
     static void keyboard_handler(x86_64::interrupt_stack_frame* frame)
     {
         x86_64::keyboard_scancode scancode = x86_64::kbps2_get_scancode();
@@ -55,43 +80,84 @@ namespace x86_64
         x86_64::pic8259_master_eoi();
     }
 
-    void print_stack_trace(stack_frame* frame)
+    void print_stack_trace(stack_frame* frame, size_t size)
     {
         stack_frame* current = frame;
+        int i = 0;
 
-        while(current != nullptr)
+        puts("stacktrace: ");
+
+        while(current != nullptr && i++ < size)
         {
-            printf("0x%x\n", current->rip);
+            uintptr_t offset = 0;
+            char* name = trace_address(&offset, current->rip);
+
+            if(name)
+            {
+                printf("    [0x%x] <%s+0x%x>\n", current->rip, name, offset);
+            }
+            else
+            {
+                printf("    [0x%x]\n", current->rip);
+            }
 
             current = current->rbp;
         }
+
+        if(i == 0)
+        {
+            puts("    (empty)");
+        }
     }
 
-    void dump_stack_frame(interrupt_stack_frame* frame)
+    void dump_stackframe()
     {
-        printf("R8=0x%x R9=0x%x R10=0x%x R11=0x%x R12=0x%x R13=0x%x R14=0x%x R15=0x%x,\n", frame->r8, frame->r9, frame->r10, frame->r11, frame->r12, frame->r13, frame->r14, frame->r15);
-        printf("RAX=0x%x RBX=0x%x RCX=0x%x RDX=0x%x RSI=0x%x RDI=0x%x RBP=0x%x\n", frame->rax, frame->rbx, frame->rcx, frame->rdx, frame->rsi, frame->rdi, frame->rbp);
-        printf("RIP=0x%x CS=0x%x RFLAGS=0x%x RSP=0x%x SS=0x%x\n", frame->rip, frame->cs, frame->rflags, frame->rsp, frame->ss);
-        //printf("CR0=0x%x CR1=0x%x CR2=0x%x CR3=0x%x CR4=0x%x\n\n", get_cr0(), get_cr1(), get_cr2(), get_cr3(), get_cr4());
+        uintptr_t* base_ptr;
 
-        puts("\nStack Trace: ");
-        print_stack_trace(reinterpret_cast<stack_frame*>(frame->rbp));
+        asm volatile("mov %%rbp, %0" : "=r"(base_ptr));
+
+        print_stack_trace(reinterpret_cast<stack_frame*>(base_ptr), STACKFRAME_MAX);
 
         putchar('\n');
     }
 
+    void dump_interrupt_info(interrupt_stack_frame* frame)
+    {
+        if(frame->int_num < 32)
+        {
+            printf("CPU exception! %s(0x%x) error_code=0x%x\n", exception_names[frame->int_num], frame->int_num, frame->err);
+
+            if(frame->int_num == INT_PAGE_FAULT)
+            {
+                printf("caused by virtual address 0x%x\n", get_cr2());
+            }
+
+            printf("\nR8=0x%x R9=0x%x R10=0x%x R11=0x%x R12=0x%x R13=0x%x R14=0x%x R15=0x%x,\n"
+                   "RAX=0x%x RBX=0x%x RCX=0x%x RDX=0x%x RSI=0x%x RDI=0x%x RBP=0x%x\n"
+                   "RIP=0x%x CS=0x%x RFLAGS=0x%x RSP=0x%x SS=0x%x\n"
+                   "CR0=0x%x CR2=0x%x CR3=0x%x CR4=0x%x\n\n",
+                   frame->r8, frame->r9, frame->r10, frame->r11, frame->r12, frame->r13, frame->r14, frame->r15,
+                   frame->rax, frame->rbx, frame->rcx, frame->rdx, frame->rsi, frame->rdi, frame->rbp,
+                   frame->rip, frame->cs, frame->rflags, frame->rsp, frame->ss,
+                   get_cr0(), get_cr2(), get_cr3(), get_cr4());
+
+            print_stack_trace(reinterpret_cast<stack_frame*>(frame->rbp), STACKFRAME_MAX);
+
+            putchar('\n');
+
+            kpanic(exception_names[frame->int_num], false);
+        }
+    }
+
     extern "C" void interrupt_handler(x86_64::interrupt_stack_frame* frame)
     {
-        if(frame->int_num == 0x21)
+        if(frame->int_num == INT_KEYBOARD)
         {
             keyboard_handler(frame);
         }
         else
         {
-            printf("unhandled interrupt! int_num=0x%x; error=0x%x\n\n", frame->int_num, frame->err);
-            dump_stack_frame(frame);
-
-            kpanic(exception_names[frame->int_num]);
+            dump_interrupt_info(frame);
         }
     }
 }

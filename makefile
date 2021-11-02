@@ -14,6 +14,7 @@ CXX := $(ARCH)-ackos-g++
 AS := $(ARCH)-ackos-as
 NASM := nasm
 OBJCOPY := $(ARCH)-ackos-objcopy
+OBJDUMP := $(ARCH)-ackos-objdump
 LD := $(ARCH)-ackos-ld
 AR := $(ARCH)-ackos-ar
 
@@ -30,18 +31,19 @@ FONTS += \
 
 TARGETS :=
 
-SANITISATION_ENABLED := yes
+SANITISATION_ENABLED := no
+DEBUG_ENABLED := yes
+OPTIMISATION_LEVEL := 3
 
 CFLAGS += \
-		-g \
 		-I lib/libc \
 		-I lib/libstdc++ \
 		-I lib \
 		-I . \
 		-ffreestanding \
 		-fno-exceptions \
-		-fno-rtti  \
-		-O3 \
+		-fno-rtti \
+		-O$(OPTIMISATION_LEVEL) \
 		-mno-red-zone \
 		-DBUILD_ARCH_$(ARCH) \
 		-DBUILD_HOST_ARCH=\"$(shell uname --machine)\" \
@@ -53,6 +55,11 @@ ifeq ($(SANITISATION_ENABLED), yes)
 	CFLAGS += -fsanitize=undefined
 endif
 
+ifeq ($(DEBUG_ENABLED), yes)
+	CFLAGS += -g
+	TARGETS += strip-symbols
+endif
+
 LFLAGS += \
 		-L $(LIBS_FOLDER) \
 		-lc \
@@ -62,10 +69,12 @@ LFLAGS += \
 		-lgcc
 
 VM_LOGFILE := ackos.log
-VM_MEMORY := 256
+VM_MEMORY := 64
 
 DEBUG_SYMBOL_FILE := $(BIN_FOLDER)/ackos.sym
 DEBUG_BREAKPOINT := kmain
+
+SYMLIST_FILE := $(BIN_FOLDER)/symlist.cpp
 
 .PHONY: all qemu qemu-debug bochs build-sysroot check-multiboot2 strip-symbols clean clean-sysroot print-log
 
@@ -79,7 +88,20 @@ check-multiboot2: all
 	fi
 
 strip-symbols:
-	@objcopy --only-keep-debug $(BIN_FOLDER)/kernel.elf $(DEBUG_SYMBOL_FILE)
+	@mkdir -p $(BIN_FOLDER)
+	@make --no-print-directory $(BIN_FOLDER)/kernel.elf DEBUG_ENABLED=no >/dev/null
+	@echo "[ stripping symbols ] objcopy"
+	@$(OBJCOPY) --only-keep-debug $(BIN_FOLDER)/kernel.elf $(DEBUG_SYMBOL_FILE)
+	@rm -rf $(BIN_FOLDER)/symlist.cpp; \
+	 export SYMFILE="$(shell mktemp)"; \
+	 export ADDRFILE="$(shell mktemp)"; \
+	 $(OBJDUMP) -t bin/kernel.elf | sed '/\bd\b/d' | sort | grep "\.text" | awk 'NF{ print $$NF }' > $$SYMFILE; \
+	 $(OBJDUMP) -t bin/kernel.elf | sed '/\bd\b/d' | sort | grep "\.text" | cut -d' ' -f1 > $$ADDRFILE; \
+	 printf "#include <cstdint>\n\nstruct symtab_entry_t\n{\n    char* name;\n    uintptr_t addr;\n};\n\nsymtab_entry_t _kernel_symbol_table[] =\n{\n" >> $(SYMLIST_FILE); \
+	 paste -d'$$' "$$SYMFILE" "$$ADDRFILE" | sed 's/^/    { "/g' | sed 's/\$$/", 0x/g' | sed 's/$$/ },/g' >> $(SYMLIST_FILE); \
+	 printf "    { \"\", 0xffffffffffffffff }\n};\n" >> $(SYMLIST_FILE); \
+	 rm $$SYMFILE; \
+	 rm $$ADDRFILE
 
 build-sysroot:
 	@mkdir -p sysroot
@@ -110,7 +132,16 @@ include $(DIST_FOLDER)/build.mk
 $(BIN_FOLDER)/kernel.elf: $(KERNEL_OBJECTS) $(TARGETS)
 	@mkdir -p $(@D)
 	@echo [ linking kernel ] $(LD)
-	@$(LD) -n -o $@ -T kernel/arch/$(ARCH)/link.ld $(KERNEL_OBJECTS) $(LFLAGS)
+	@if [ -f "$(SYMLIST_FILE)" ]; \
+	 then \
+	 	$(CXX) -c "$(SYMLIST_FILE)" -o $(BIN_FOLDER)/symlist.o -Wno-write-strings $(CFLAGS); \
+	 else \
+	 	export TMP=$(shell mktemp /tmp/tmp.XXXXXXXX.cpp); \
+	 	printf "#include <cstdint>\n\nstruct symtab_entry_t\n{\n    char* name;\n    uintptr_t addr;\n};\n\nsymtab_entry_t _kernel_symbol_table[] = { { \"\", 0xffffffffffffffff } };\n" > $$TMP; \
+		$(CXX) -Wno-write-strings -c $$TMP -o $(BIN_FOLDER)/symlist.o $(CFLAGS) && \
+		rm $$TMP; \
+	 fi
+	@$(LD) -n -o $@ -T kernel/arch/$(ARCH)/link.ld $(BIN_FOLDER)/symlist.o $(KERNEL_OBJECTS) $(LFLAGS)
 
 $(BIN_FOLDER)/%.o: %.cpp $(KERNEL_HEADERS)
 	@mkdir -p $(@D)

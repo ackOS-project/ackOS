@@ -5,7 +5,7 @@
 
 // PC screen fonts
 
-enum class psf_version
+enum class psf_version_t
 {
     V1,
     V2,

@@ -7,6 +7,7 @@ class root_filesystem
 {
 private:
     directory_node* _root;
+    directory_node* _current;
 
 public:
     root_filesystem()

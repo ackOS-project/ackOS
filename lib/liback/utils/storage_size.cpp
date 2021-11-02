@@ -40,15 +40,12 @@ namespace utils
         {
             if(is[i](size_in_bytes))
             {
-                char size_buffer[50];
-                ultoa(convert[i](size_in_bytes), size_buffer, 10); /* TODO: use std::to_string() */
-
-                res.append(size_buffer).append(units[i]);
+                res.append(std::to_string(convert[i](size_in_bytes))).append(units[i]);
 
                 break;
             }
         }
 
-        return res;
+        return std::string(res);
     }
 }

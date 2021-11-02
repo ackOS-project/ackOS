@@ -1,8 +1,9 @@
-#include "kernel/arch/x86_64/features/apic.h"
+#include "kernel/arch/x86_64/features/acpi/apic.h"
 #include "kernel/arch/x86_64/features/msr.h"
 #include "kernel/arch/x86_64/features/cpuid.h"
+#include "kernel/arch/arch.h"
 
-static volatile uint32_t* lapic_addr;
+static volatile uint32_t* lapic_addr = nullptr;
 
 namespace x86_64::apic
 {
@@ -20,6 +21,8 @@ namespace x86_64::apic
     {
         if(!check())
         {
+            arch::early_print("warning: APIC support was not detected\n");
+
             return;
         }
 

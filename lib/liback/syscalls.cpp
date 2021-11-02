@@ -14,16 +14,6 @@ namespace ackos
 
     namespace sys_wrapper
     {
-        utils::result memory_allocate(void** addr, size_t size)
-        {
-            return syscall_dispatch(SYSCALL_MEMORY_ALLOC, &addr, &size, NULL, NULL, NULL, NULL);
-        }
-
-        utils::result memory_free(void* addr)
-        {
-            return syscall_dispatch(SYSCALL_MEMORY_FREE, &addr, NULL, NULL, NULL, NULL, NULL);
-        }
-
         utils::result stream_open(int* fd, const char* filename, int flags)
         {
             return syscall_dispatch(SYSCALL_STREAM_OPEN, &fd, &filename, &flags, NULL, NULL, NULL);

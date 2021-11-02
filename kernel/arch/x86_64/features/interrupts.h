@@ -42,5 +42,43 @@ namespace x86_64
     }
     ATTRIBUTE_PACKED;
 
-    void dump_stack_frame(interrupt_stack_frame* frame);
+    enum interrupt_code
+    {
+        INT_DIV_BY_ZERO,
+        INT_DEBUG,
+        INT_NON_MASKABLE_INTERRUPT,
+        INT_BREAKPOINT,
+        INT_OVERFLOW,
+        INT_BOUND_RANGE_EXCEEDED,
+        INT_INVALID_OPCODE,
+        INT_DEV_NOT_AVALIABLE,
+        INT_DOUBLE_FAULT,
+        INT_COPROCESSOR_SEG_OVERRUN,
+        INT_INVALID_TSS,
+        INT_SEGMENT_NOT_PRESENT,
+        INT_STACK_SEG_FAULT,
+        INT_GENERAL_PROTECTION_FAULT,
+        INT_PAGE_FAULT,
+        INT_x87_FPU_ERROR = 16,
+        INT_ALIGNMENT_CHECK,
+        INT_MACHINE_CHECK,
+        INT_SIMD_FP_ERROR,
+        INT_VIRTUALISATION_ERROR,
+        INT_CONTROL_PROTECTION_EXCEPTION,
+        INT_PIT = 32,
+        INT_KEYBOARD,
+        INT_CASCADE,
+        INT_COM2,
+        INT_COM1,
+        INT_LPT2,
+        INT_FLOPPY_DISK,
+        INT_LPT1,
+        INT_CMOS,
+        INT_MOUSE = 44,
+        INT_FPU,
+        INT_PRIMARY_ATA,
+        INT_SECONDARY_ATA
+    };
+
+    void dump_stackframe();
 }

@@ -144,12 +144,7 @@ namespace std
         {
             if(str._str == nullptr) return;
 
-            clear();
-
-            resize(str.capacity());
-            _size = str._size;
-
-            copy_string(_str, str._str, size());
+            operator=(str.c_str());
         }
 
         basic_string<T>& append(const basic_string<T>& str)
@@ -176,6 +171,13 @@ namespace std
 
             efficient_resize(length() + str_size);
             copy_string(&_str[old_size], cstr, str_size);
+
+            return *this;
+        }
+
+        basic_string<T>& append(size_t n, char c)
+        {
+            append(basic_string<T>(n, c));
 
             return *this;
         }
@@ -300,4 +302,9 @@ namespace std
     };
 
     using string = basic_string<char>;
+
+    std::string to_string(int32_t value);
+    std::string to_string(uint32_t value);
+    std::string to_string(int64_t value);
+    std::string to_string(uint64_t value);
 }

@@ -8,12 +8,12 @@ gdt64_load:
     push rbp
     mov rbp, rsp
 
-    push qword 0x10
+    push rax
     push rbp
     pushfq
 
-    push qword 0x8
-    push .trampoline ; kernel code selector
+    push rdx
+    push .trampoline
 
     iretq
 
@@ -21,13 +21,11 @@ gdt64_load:
     pop rbp
 
     ; flush the registers
-    mov ax, 0x10 ; kernel data selector
-
-    mov ss, ax
-    mov gs, ax
-    mov fs, ax
-    mov ds, ax
-    mov es, ax
+    mov ss, rax
+    mov gs, rax
+    mov fs, rax
+    mov ds, rax
+    mov es, rax
 
     ret
 

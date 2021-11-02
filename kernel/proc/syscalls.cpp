@@ -1,6 +1,5 @@
-#include "kernel/mm/heap.h"
 #include "kernel/proc/process.h"
-#include "kernel/sys_info.h"
+#include "kernel/sys/sys_info.h"
 
 #include <liback/syscalls.h>
 
@@ -69,44 +68,6 @@ int syscalls_dispatch(process* proc, int call, void* arg1, void* arg2, void* arg
         else
         {
             *info = get_system_info();
-
-            result = utils::result::SUCCESS;
-        }
-    }
-    else if(call == ackos::SYSCALL_MEMORY_ALLOC)
-    {
-        void** addr = *(void***)arg1;
-        size_t size = *(size_t*)arg2;
-
-        if(addr == nullptr)
-        {
-            result = utils::result::ERR_INVALID_ADDRESS;
-        }
-        else
-        {
-            *addr = heap_allocate(size);
-        }
-
-        if(*addr == nullptr)
-        {
-            result = utils::result::ERR_OUT_OF_MEMORY;
-        }
-        else
-        {
-            result = utils::result::SUCCESS;
-        }
-    }
-    else if(call == ackos::SYSCALL_MEMORY_FREE)
-    {
-        void* addr = *(void**)arg1;
-
-        if(addr == nullptr)
-        {
-            result = utils::result::ERR_INVALID_ADDRESS;
-        }
-        else
-        {
-            heap_deallocate(addr);
 
             result = utils::result::SUCCESS;
         }

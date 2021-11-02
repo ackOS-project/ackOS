@@ -1,15 +1,6 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
-#include <liback/syscalls.h>
-
-void* malloc(size_t size)
-{
-    void* mem;
-    ackos::sys_wrapper::memory_allocate(&mem, size);
-
-    return mem;
-}
 
 void* calloc(size_t size)
 {
@@ -17,16 +8,6 @@ void* calloc(size_t size)
     memset(mem, 0, size);
 
     return mem;
-}
-
-void free(void* ptr)
-{
-    auto result = ackos::sys_wrapper::memory_free(ptr);
-
-    if(result == utils::result::ERR_INVALID_ADDRESS)
-    {
-        fprintf(stderr, "free(): double free detected (address is 0x%x)\n", ptr);
-    }
 }
 
 template <typename T>

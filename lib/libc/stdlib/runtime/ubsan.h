@@ -1,6 +1,6 @@
 #pragma once
 
-#include <sys/cdefs.h>
+#include <stdlib/runtime/ubsan.h>
 #include <cstdio>
 
 __BEGIN_DECLS

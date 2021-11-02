@@ -5,7 +5,16 @@
 #include "kernel/boot_protocols/uniheader.h"
 #include "kernel/boot_protocols/multiboot2.h"
 #include "kernel/boot_protocols/stivale2.h"
-#include "kernel/panic.h"
+#include "kernel/sys/panic.h"
+
+static const char* memory_type_strings[] =
+{
+    "Usable",
+    "Reserved",
+    "ACPI Reclaimable",
+    "NVS",
+    "Bad RAM"
+};
 
 void uniheader::parse(void* header, uint32_t magic)
 {
@@ -38,12 +47,24 @@ void uniheader::dump()
            "    .pitch = %d\n"
            "  }\n\n"
            "  .rsdp = 0x%x\n\n"
+           "  .usable_memory = %s\n"
            "  .memmap.entry_count = %d\n"
-           "  .usable_memory = %s\n\n",
-           framebuffer.addr, framebuffer.width, framebuffer.height, framebuffer.bpp, framebuffer.pitch, rsdp, memmap.entry_count,
-           utils::format_storage_size(get_usable_memory()).c_str());
+           "  .memmap =\n"
+           "  {\n",
+           framebuffer.addr, framebuffer.width, framebuffer.height, framebuffer.bpp, framebuffer.pitch, rsdp, utils::format_storage_size(get_usable_memory()).c_str(), memmap.entry_count);
+    
+    for(int i = 0; i < memmap.entry_count; i++)
+    {
+        printf("    [\n"
+               "      .type = %s\n"
+               "      .addr = 0x%x\n"
+               "      .length = %d\n"
+               "    ]\n",
+               memory_type_strings[memmap.entries[i].type], memmap.entries[i].addr, memmap.entries[i].length);
+    }
 
-    printf("  .module_count = %d\n"
+    printf("  }\n"
+           "  .module_count = %d\n"
            "  .modules =\n"
            "  {\n",
            module_count);

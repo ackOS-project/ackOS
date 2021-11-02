@@ -1,6 +1,6 @@
 #include "kernel/boot_protocols/modules.h"
 #include "kernel/fs/ramdisk.h"
-#include "kernel/panic.h"
+#include "kernel/sys/panic.h"
 
 #include <cstring>
 #include <string>
@@ -11,7 +11,6 @@ void boot_modules_intialise(uniheader* uheader)
     {
         uniheader_module& mod = uheader->modules[i];
         
-
         if(strcmp(mod.command_line_args, "tar_ramdisk") == 0)
         {
             ramdisk_mount("/", mod.start, RAMDISK_TYPE_TAR);
