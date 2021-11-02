@@ -21,17 +21,6 @@ namespace x86_64
         GDT_FLAGS = 0xC
     };
 
-    struct gdt_entry
-    {
-        uint16_t limit_low;
-        uint16_t base_low;
-        uint8_t base_mid;
-        uint8_t access;
-        uint8_t granularity;
-        uint8_t base_high;
-    }
-    ATTRIBUTE_PACKED;
-
     struct tss_struct
     {
         uint32_t reserved0;
@@ -58,6 +47,17 @@ namespace x86_64
     }
     ATTRIBUTE_PACKED;
 
+    struct gdt_entry
+    {
+        uint16_t limit_low;
+        uint16_t base_low;
+        uint8_t base_mid;
+        uint8_t access;
+        uint8_t granularity;
+        uint8_t base_high;
+    }
+    ATTRIBUTE_PACKED;
+
     struct gdt_descriptor
     {
         uint16_t segment;
@@ -71,6 +71,8 @@ namespace x86_64
         tss_entry tss;
     }
     ATTRIBUTE_PACKED;
+
+    static_assert(sizeof(gdt_entry) == sizeof(uint64_t));
 
     void tss_set_stack(uint64_t addr);
 

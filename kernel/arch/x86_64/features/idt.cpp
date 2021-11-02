@@ -3,8 +3,6 @@
 #include "kernel/arch/x86_64/features/pic_8259.h"
 #include "kernel/arch/x86_64/features/io.h"
 
-#include "kernel/logger.h"
-
 #define INTERRUPT_GATE32 0x8E
 #define TRAP_GATE32 0xEF
 #define INTERRUPT_USER 0x60

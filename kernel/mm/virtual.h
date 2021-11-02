@@ -1,13 +1,17 @@
 #pragma once
 
+#include "kernel/boot_protocols/uniheader.h"
+
 #include <cstdint>
 #include <cstddef>
 
-enum
+enum virtual_flag_t
 {
-    VIRTUAL_FLAG_NONE = 0,
-    VIRTUAL_FLAG_USER = (1 << 1),
-    VIRTUAL_FLAG_CLEAR = (1 << 1)
+    VIRTUAL_FLAG_NONE,
+    VIRTUAL_FLAG_WRITE,
+    VIRTUAL_FLAG_USER
 };
 
-void virtual_map(void* physical_addr, void* virtual_addr, uint32_t flags);
+void virtual_initialise(uniheader* uheader);
+
+void virtual_map(uintptr_t physical_addr, uintptr_t virtual_addr, size_t size, uint32_t flags);

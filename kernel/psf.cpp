@@ -1,5 +1,5 @@
 #include "kernel/psf.h"
-#include "kernel/logger.h"
+#include "kernel/sys/logger.h"
 
 #include <cstdio>
 #include <cassert>
@@ -35,26 +35,26 @@ extern char _binary_fonts_zap_light20_psf_end;
 #define PSF_FONT_START _binary_fonts_zap_light20_psf_start
 #define PSF_FONT_END _binary_fonts_zap_light20_psf_end
 
-psf_version psf_test_version(psf1_header* font1)
+psf_version_t psf_test_version(psf1_header* font1)
 {
     if(font1->magic[0] == PSF1_MAGIC0 && font1->magic[1] == PSF1_MAGIC1)
     {
-        return psf_version::V1;
+        return psf_version_t::V1;
     }
     else if(font1->magic[0] == PSF2_MAGIC0 && font1->magic[1] == PSF2_MAGIC1 && font1->magic[2] == PSF2_MAGIC2 && font1->magic[3] == PSF2_MAGIC3)
     {
-        return psf_version::V2;
+        return psf_version_t::V2;
     }
 
-    return psf_version::UNKNOWN;
+    return psf_version_t::UNKNOWN;
 }
 
 void psf_initialise()
 {
     psf1_font* font = (psf1_font*)&PSF_FONT_START;
-    psf_version version = psf_test_version(&font->header);
+    psf_version_t version = psf_test_version(&font->header);
 
-    if(version == psf_version::UNKNOWN)
+    if(version == psf_version_t::UNKNOWN)
     {
         log_error("psf", "unknown PC Screen Font version");
 

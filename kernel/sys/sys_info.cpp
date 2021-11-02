@@ -1,4 +1,4 @@
-#include "kernel/sys_info.h"
+#include "kernel/sys/sys_info.h"
 
 #define ACKOS_NAME_STRING "ackOS"
 #define ACKOS_VERSION_STRING "0.02"

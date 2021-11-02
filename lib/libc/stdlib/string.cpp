@@ -58,16 +58,43 @@ void* memmove(void* dest, const void* src, size_t len)
     return dest;
 }
 
-void* memset(void *ptr, int value, size_t num)
+
+// Uses Duff's device for preformance gains
+void* memset(void* ptr, int value, size_t num)
 {
     uint8_t* p = (uint8_t*)ptr;
+    uint8_t x = value & 0xff;
+    uint32_t leftover = num & 0x7;
 
-	while (num--)
+    if(num < 1) return ptr;
+
+    num = (num + 7) >> 3;
+
+    switch(leftover)
     {
-        *p++ = (uint8_t)value;
+    case 0:
+        do
+        {
+            *p++ = x;
+        case 7:
+            *p++ = x;
+        case 6:
+            *p++ = x;
+        case 5:
+            *p++ = x;
+        case 4:
+            *p++ = x;
+        case 3:
+            *p++ = x;
+        case 2:
+            *p++ = x;
+        case 1:
+            *p++ = x;
+        }
+        while(--num > 0);
     }
 
-	return ptr;
+    return ptr;
 }
 
 size_t strlen(const char* str) 

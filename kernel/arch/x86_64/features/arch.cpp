@@ -1,6 +1,7 @@
 #include "kernel/arch/x86_64/features/instructions.h"
 #include "kernel/arch/x86_64/features/com.h"
 #include "kernel/arch/x86_64/features/paging.h"
+#include "kernel/arch/x86_64/features/interrupts.h"
 
 #include "kernel/arch/arch.h"
 
@@ -18,9 +19,29 @@ namespace arch
         x86_64::interrupts_disable();
     }
 
+    void stacktrace_dump()
+    {
+        x86_64::dump_stackframe();
+    }
+
     void halt()
     {
         x86_64::halt();
+    }
+
+    void paging_init()
+    {
+        x86_64::paging_initialise();
+    }
+
+    void paging_map(uintptr_t virtual_addr, uintptr_t phys_addr, uint32_t flags)
+    {
+        x86_64::paging_map(virtual_addr, phys_addr, flags);
+    }
+
+    void paging_flush()
+    {
+        x86_64::paging_flush();
     }
 
     void early_print(const char* s)

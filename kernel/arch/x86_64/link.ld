@@ -41,5 +41,10 @@ SECTIONS
         KEEP(*(.bss*))
     }
 
+	.symtab ALIGN(4K) :
+	{
+		KEEP(*(.symtab))
+	}
+
 	_kernel_end = .;
 }

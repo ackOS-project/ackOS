@@ -30,7 +30,7 @@ enum
 class framebuffer_device : public fs_node
 {
 private:
-    void* _addr_physical;
+    void* _addr_virtual;
     int _width;
     int _height;
     int _pitch;

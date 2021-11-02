@@ -1,6 +1,8 @@
-#include "kernel/mm/heap.h"
-#include "kernel/logger.h"
+#include <cstddef>
+#include <cstdint>
 #include <cstring>
+#include <cstdio>
+#include <sys/cdefs.h>
 
 struct heap_block
 {
@@ -14,9 +16,12 @@ struct heap_block
     bool is_free;
 };
 
-static heap_block* heap_start;
+static heap_block* heap_root;
 
-void heap_merge_blocks(heap_block* a, heap_block* b)
+#define HEAP_SIZE 0x10000
+uint8_t heap[HEAP_SIZE];
+
+static void heap_merge_blocks(heap_block* a, heap_block* b)
 {
     if(a == nullptr) return;
     if(b == nullptr) return;
@@ -43,20 +48,22 @@ void heap_merge_blocks(heap_block* a, heap_block* b)
     }
 }
 
-void heap_initialise(uint64_t start, uint64_t end)
+void __stdlib_heap_initialise()
 {
-    heap_start = (heap_block*)start;
-    heap_start->size = end - sizeof(heap_block);
+    heap_root = (heap_block*)heap;
+    heap_root->size = (uint64_t)HEAP_SIZE - sizeof(heap_block);
 
-    heap_start->next = nullptr;
-    heap_start->next_free = nullptr;
-    heap_start->previous = nullptr;
-    heap_start->previous_free = nullptr;
+    heap_root->next = nullptr;
+    heap_root->next_free = nullptr;
+    heap_root->previous = nullptr;
+    heap_root->previous_free = nullptr;
 
-    heap_start->is_free = true;
+    heap_root->is_free = true;
 }
 
-void* heap_allocate(size_t size)
+
+__BEGIN_DECLS
+void* malloc(size_t size)
 {
     if(size < 1)
     {
@@ -69,7 +76,7 @@ void* heap_allocate(size_t size)
         size += 8;
     }
 
-    heap_block* block = heap_start;
+    heap_block* block = heap_root;
 
     while (true)
     {
@@ -91,9 +98,9 @@ void* heap_allocate(size_t size)
                 block->next = new_block;
                 block->size = size;
             }
-            if(block == heap_start)
+            if(block == heap_root)
             {
-                heap_start = block->next_free;
+                heap_root = block->next_free;
             }
             block->is_free = false;
 
@@ -131,11 +138,11 @@ void* heap_allocate(size_t size)
     return nullptr;
 }
 
-void heap_deallocate(void* mem)
+void free(void* mem)
 {
     if(mem == nullptr)
     {
-        log_error("kernel_heap", "double free (address is 0x%x)", mem);
+        fprintf(stderr, "free(): double free detected (address is 0x%x)\n", mem);
 
         while(true);
     }
@@ -143,9 +150,9 @@ void heap_deallocate(void* mem)
     heap_block* block = ((heap_block*)mem) - 1;
     block->is_free = true;
 
-    if(block < heap_start)
+    if(block < heap_root)
     {
-        heap_start = block;
+        heap_root = block;
     }
 
     if(block->next_free != nullptr)
@@ -182,3 +189,4 @@ void heap_deallocate(void* mem)
         }
     }
 }
+__END_DECLS

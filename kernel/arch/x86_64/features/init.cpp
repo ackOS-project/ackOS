@@ -5,6 +5,7 @@
 #include "kernel/arch/x86_64/features/com.h"
 #include "kernel/arch/x86_64/features/sse.h"
 #include "kernel/arch/x86_64/features/paging.h"
+#include "kernel/arch/x86_64/features/acpi/apic.h"
 
 #include <liback/utils/assert.h>
 #include "kernel/boot_protocols/uniheader.h"
@@ -14,8 +15,12 @@ void kmain(uniheader&);
 
 using namespace x86_64;
 
+void __stdlib_init();
+
 extern "C" int x86_64_init(void* header, uint32_t magic)
 {
+    __stdlib_init();
+
     com_initialize(COM1, 9600);
     com_initialize(COM2, 9600);
     com_initialize(COM3, 9600);
@@ -29,9 +34,9 @@ extern "C" int x86_64_init(void* header, uint32_t magic)
 
     interrupts_enable();
 
-    //paging_initialise();
-
     sse_enable();
+
+    apic::initialise();
 
     uheader.parse(header, magic);
 

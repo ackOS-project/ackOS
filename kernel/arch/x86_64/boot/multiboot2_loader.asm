@@ -60,16 +60,14 @@ _start:
     cli
     cld
 
-    ; backup multiboot information that we can access in long mode
     mov dword[multiboot2_header], ebx
     mov dword[multiboot2_magic], eax
 
-    ; initialise stack
+    ; initialise the stack
     mov esp, _kernel_stack_top
 
     call multiboot2_helper_init
 
-    ; do all the checks
     call cpuid_check_long_mode
 
     call set_up_page_tables
@@ -97,27 +95,51 @@ cpuid_check_long_mode:
 
 global set_up_page_tables
 set_up_page_tables:
-    ; map first P4 entry to P3 table
+    ; Paging is required in long mode.
+    ; To get to the last page table, we must
+    ; walk down the four page table levels.
+    ; here is some psuedo code:
+
+    ; entry = p4_table[0];
+    ; entry.user = false; - deny user access
+    ; entry.present = true; - must be set to present
+    ; entry.writable = true; - make it writable
+    ; entry.address = p3_table; - next page table
     mov eax, p3_table
-    or eax, 0b11 ; present + writable
+    or eax, 0b11
     mov [p4_table], eax
 
-    ; map first P3 entry to P2 table
+    ; entry = p3_table[0];
+    ; entry.user = false;
+    ; entry.present = true;
+    ; entry.writable = true;
+    ; entry.address = p2_table;
     mov eax, p2_table
-    or eax, 0b11 ; present + writable
+    or eax, 0b00000011
     mov [p3_table], eax
 
+    ; Loop through the 512 page table entries
+    ; and set their attributes.
+    ; for(int i = 0; i < 512; i++)
     mov ecx, 0
 
 .p2_table_map:
-    mov eax, 0x200000  ; 2MB
+    ; x = 0x200000 * i
+    mov eax, 0x200000  ; use huge 2MiB pages
     mul ecx
+
+    ; eax is in the lower 32 bits
+    ; entry = p3_table[0];
+    ; entry.user = false;
+    ; entry.present = true;
+    ; entry.writable = true;
+    ; entry.address = p2_table[i];
     or eax, 0b10000011 ; present + writable + huge
     mov [p2_table + ecx * 8], eax
 
     inc ecx
-    cmp ecx, 512       ; if counter equals 512, then the whole P2 table is mapped
-    jne .p2_table_map  ; else map the next entry
+    cmp ecx, 512
+    jne .p2_table_map
 
     ret
 
