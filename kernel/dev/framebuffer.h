@@ -1,7 +1,6 @@
 #pragma once
 
 #include "kernel/io/fs_node.h"
-#include "kernel/boot_protocols/uniheader.h"
 
 struct framebuffer_write_data_info
 {

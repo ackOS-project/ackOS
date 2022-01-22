@@ -1,6 +1,6 @@
 #pragma once
 
-#include "kernel/boot_protocols/uniheader.h"
+#include "kernel/boot/uniheader.h"
 
 #include <cstddef>
 #include <cstdint>

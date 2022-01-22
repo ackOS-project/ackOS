@@ -14,6 +14,8 @@ extern FILE* stderr;
 
 #define EOF -1
 
+FILE* fopen(const char *filename, const char *mode);
+
 FILE* fdopen(int fd, const char* mode);
 
 size_t fread(void* buff, size_t size, size_t count, FILE* file);
@@ -51,5 +53,9 @@ int fprintf(FILE* file, const char* fmt, ...);
 int vprintf(const char* fmt, va_list args);
 
 int printf(const char* string, ...);
+
+int vsscanf(const char* buffer, const char* format, va_list args);
+
+int sscanf(const char* buffer, const char* format, ...);
 
 __END_DECLS

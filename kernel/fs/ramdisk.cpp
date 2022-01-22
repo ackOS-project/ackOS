@@ -1,11 +1,53 @@
 #include "kernel/fs/ramdisk.h"
 #include "kernel/fs/tar.h"
 #include "kernel/fs/file.h"
+#include "kernel/fs/filesystem.h"
 #include "kernel/proc/process.h"
 
 #include <cstring>
 #include <cstdio>
 #include <fcntl.h>
+
+#include <filesystem>
+
+class tar_node_t : public fs_node
+{
+private:
+    char* _data;
+    size_t _size;
+
+public:
+    tar_node_t(char* data, size_t size)
+    :
+    fs_node(NODE_TYPE_REGULAR),
+    _data(data),
+    _size(size)
+    {
+    }
+
+    utils::result read(void* buff, size_t size, size_t* total_read) const override
+    {
+        char* str = (char*)buff;
+
+        for(int i = 0; i < size; i++)
+        {
+            if(i >= _size) break;
+
+            str[i] = _data[i];
+
+            ++*total_read;
+        }
+
+        str[*total_read] = '\0';
+
+        return utils::result::SUCCESS;
+    }
+
+    utils::result write(const void* buff, size_t size, size_t* total_written) override
+    {
+        return utils::result::ERR_READ_ONLY_FS;
+    }
+};
 
 void ramdisk_mount(const char* mount_point, void* addr, ramdisk_type type)
 {
@@ -26,8 +68,12 @@ void ramdisk_mount(const char* mount_point, void* addr, ramdisk_type type)
                 char* data = (char*)header + 512;
                 size_t size = tar_get_file_size(header);
 
-                //file_node* node = new file_node(header->filename, data, size, 0);
+                //tar_node_t* node = new tar_node_t(data, size);
                 //process_get_from_pid(0)->get_fd_table().append_node(node, O_RDWR);
+                printf("%s\n", header->filename);
+
+                filesystem_info_t fs;
+                fs.link(header->filename, new tar_node_t(data, size));
             }
         }
     }

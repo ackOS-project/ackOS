@@ -27,7 +27,11 @@ int syscalls_dispatch(process* proc, int call, void* arg1, void* arg2, void* arg
     }
     else if(call == ackos::SYSCALL_STREAM_OPEN)
     {
-        result = utils::result::ERR_UNIMPLEMENTED;
+        int* fd = *(int**)arg1;
+        const char* path = *(const char**)arg2;
+        int flags = *(int*)arg3;
+
+        result = proc->get_fd_table().open(fd, path, flags);
     }
     else if(call == ackos::SYSCALL_STREAM_CLOSE)
     {

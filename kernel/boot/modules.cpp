@@ -1,11 +1,11 @@
-#include "kernel/boot_protocols/modules.h"
+#include "kernel/boot/modules.h"
 #include "kernel/fs/ramdisk.h"
 #include "kernel/sys/panic.h"
 
 #include <cstring>
 #include <string>
 
-void boot_modules_intialise(uniheader* uheader)
+void boot_modules_initialise(uniheader* uheader)
 {
     for(int i = 0; i < uheader->module_count; i++)
     {

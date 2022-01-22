@@ -1,6 +1,7 @@
 #include "liback/utils/assert.h"
 
 #include <cstdio>
+#include <cstdlib>
 
 namespace utils
 {
@@ -8,7 +9,7 @@ namespace utils
     {
         fprintf(stderr, "%s() in %s:%d: assertion failed. %s\n", function, filename, line, message);
 
-        while(true); // TODO: when we have userspace, abort()
+        exit(EXIT_FAILURE);
     }
 
     void assert_if_reached(const char* message, std::source_location source)

@@ -8,16 +8,14 @@ namespace std
     class vector
     {
     private:
-        T* m_array = nullptr;
-        size_t m_size = 0;
-        size_t m_capacity = 0;
+        T* _data = nullptr;
+        size_t _size = 0;
+        size_t _capacity = 0;
 
     public:
         vector(size_t capacity)
         {
-            m_size = 0;
-            m_capacity = capacity;
-            m_array = new T[m_capacity];
+            resize(capacity);
         }
 
         vector(const vector<T>& old)
@@ -29,6 +27,73 @@ namespace std
                 push_back(old[i]);
             }
         }
+
+        class iterator
+        {
+        private:
+            vector<T>& _vec;
+            int _index;
+
+        public:
+            iterator(vector<T>& vec, int index)
+            :
+            _vec(vec),
+            _index(index)
+            {
+            }
+
+            iterator& operator++()
+            {
+                _index++;
+
+                return *this;
+            }
+
+            iterator& operator--()
+            {
+                _index--;
+
+                return *this;
+            }
+
+            iterator operator++(int)
+            {
+                iterator old = *this;
+
+                operator++();
+
+                return old;
+            }
+
+            iterator operator--(int)
+            {
+                iterator old = *this;
+
+                operator--();
+
+                return old;
+            }
+
+            bool operator==(const iterator& other)
+            {
+                return _index == other._index;
+            }
+
+            bool operator!=(const iterator& other)
+            {
+                return _index != other._index;
+            }
+
+            T& operator*()
+            {
+                return _vec.at(_index);
+            }
+
+            T* operator->()
+            {
+                return &_vec.at(_index);
+            }
+        };
 
         void operator=(const initializer_list<T>& l)
         {
@@ -47,27 +112,27 @@ namespace std
 
         vector()
         {
-            vector(2);
+            clear();
         }
 
         ~vector()
         {
-            if(m_array != nullptr)
+            if(_data != nullptr)
             {
-                delete[] m_array;
+                delete[] _data;
             }
         }
 
-        size_t capacity() const { return m_capacity; }
-        size_t size() const { return m_size; }
+        size_t capacity() const { return _capacity; }
+        size_t size() const { return _size; }
 
-        bool empty() const { return m_size == 0; }
+        bool empty() const { return _size == 0; }
 
-        T* data() { return m_array; }
-        const T* data() const { return m_array; }
+        T* data() { return _data; }
+        const T* data() const { return _data; }
 
-        T& at(size_t index) { return m_array[index]; }
-        const T& at(size_t index) const { return m_array[index]; }
+        T& at(size_t index) { return _data[index]; }
+        const T& at(size_t index) const { return _data[index]; }
 
         T& operator[](int index)
         {
@@ -83,54 +148,63 @@ namespace std
         {
             T* block = new T[size];
 
-            if(m_array != nullptr)
+            if(_data != nullptr)
             {
-                for (size_t i = 0; i < m_size; i++)
+                for(int i = 0; i < _size; i++)
                 {
-                    block[i] = m_array[i];
+                    block[i] = _data[i];
                 }
 
-                delete[] m_array;
+                delete[] _data;
             }
 
-            m_size = size;
-            m_capacity = size;
-            m_array = block;
+            _size = size;
+            _capacity = size;
+            _data = block;
         }
 
         void push_back(const T& data)
         {
-            resize(m_size + 1);
+            resize(_size + 1);
 
-            m_array[m_size - 1] = data;
+            _data[_size - 1] = data;
         }
 
         void push_front(const T& data)
         {
-            T* block = new T[m_size + 1];
+            T* block = new T[_size + 1];
 
-            if(m_array != nullptr)
+            if(_data != nullptr)
             {
-                for(int i = 0; i < m_size; i++)
+                for(int i = 0; i < _size; i++)
                 {
-                    block[i + 1] = m_array[i];
+                    block[i + 1] = _data[i];
                 }
 
-                if(m_array != nullptr) { delete[] m_array; }
+                delete[] _data;
             }
 
-            m_capacity++;
-            m_size++;
-            m_array = block;
-            m_array[0] = data;
+            _capacity++;
+            _size++;
+            _data = block;
+            _data[0] = data;
         }
 
         void clear()
         {
-            m_size = 0;
-            m_capacity = 0;
+            resize(1);
 
-            if(m_array != nullptr) delete[] m_array;
+            _size = 0;
+        }
+
+        iterator begin()
+        {
+            return iterator(*this, 0);
+        }
+
+        iterator end()
+        {
+            return iterator(*this, _size);
         }
     };
 }

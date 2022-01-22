@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include <list>
+#include <vector>
 
 namespace std::filesystem
 {
@@ -19,9 +19,134 @@ namespace std::filesystem
             auto_format
         };
 
-        path& operator=(string_type&& p) { _p = p; }
+        class const_iterator
+        {
+        private:
+            const path& _path;
+            int _index = 0;
+        
+        public:
+            const_iterator(const path& path, int index)
+            :
+            _path(path),
+            _index(index)
+            {
+            }
+
+            const_iterator& operator++()
+            {
+                _index++;
+
+                return *this;
+            }
+
+            const_iterator& operator--()
+            {
+                _index--;
+
+                return *this;
+            }
+
+            const_iterator operator++(int)
+            {
+                const_iterator old = *this;
+
+                operator++();
+
+                return old;
+            }
+
+            const_iterator operator--(int)
+            {
+                const_iterator old = *this;
+
+                operator--();
+
+                return old;
+            }
+
+            bool operator==(const const_iterator& other)
+            {
+                return _index == other._index;
+            }
+
+            bool operator!=(const const_iterator& other)
+            {
+                return _index != other._index;
+            }
+
+            const string_type& operator*()
+            {
+                return _path._components[_index];
+            }
+        };
+
+        using iterator = const_iterator;
+
+        path(format fmt = auto_format)
+        {
+            assign(string_type());
+        }
+
+        path(const string_type& source, format fmt = auto_format)
+        {
+            assign(source);
+        }
+
+        path(const value_type* source, format fmt = auto_format)
+        {
+            assign(source);
+        }
+
+        path& assign(const string_type& source)
+        {
+            split(source);
+
+            return *this;
+        }
+
+        path& operator=(const string_type& p) { return assign(p); }
+
+        path filename() const
+        {
+            if(_components.size() > 0)
+            {
+                return path(_components[_components.size() - 1]);
+            }
+
+            return path();
+        }
+
+        operator string_type() const
+        {
+            string_type s;
+
+            for(int i = 0; i < _components.size(); i++)
+            {
+                s.append(_components[i]);
+
+                if(i != 0 && i < (_components.size() - 1))
+                {
+                    s.append(1, preferred_separator);
+                }
+            }
+
+            return s;
+        }
+
+        iterator begin() const
+        {
+            return iterator(*this, 0);
+        }
+
+        iterator end() const
+        {
+            return iterator(*this, _components.size());
+        }
 
     private:
-        std::list<string_type> _components;
+        void split(const string_type& s);
+
+        std::vector<string_type> _components;
     };
 }

@@ -35,4 +35,40 @@ namespace utils
 
         int get_error_code();
     };
+
+    template <typename T>
+    class result_tuple
+    {
+    private:
+        result _result;
+        T _data;
+    public:
+        result_tuple(result res)
+        :
+        _result(res)
+        {
+        }
+
+        result_tuple(T data)
+        :
+        _result(result::SUCCESS),
+        _data(data)
+        {
+        }
+
+        operator bool()
+        {
+            return _result == result::SUCCESS;
+        }
+
+        result get_result()
+        {
+            return _result;
+        }
+
+        T get_value()
+        {
+            return _data;
+        }
+    };
 }

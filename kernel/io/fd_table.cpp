@@ -153,6 +153,18 @@ utils::result fd_table::clone(int* new_fd, int old_fd)
     return utils::result::SUCCESS;
 }
 
+utils::result fd_table::open(int* fd, const char* path, int flags)
+{
+    auto result = _filesystem.open(path, flags);
+
+    if(result)
+    {
+        *fd = append_node(result.get_value(), flags);
+    }
+
+    return result.get_result();
+}
+
 fd_table::fd_table()
 {
     for(int i = 0; i < HANDLE_LIMIT; i++)

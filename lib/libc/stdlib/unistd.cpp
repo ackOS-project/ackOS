@@ -1,6 +1,21 @@
 #include <unistd.h>
+#include <cstdarg>
 #include <cerrno>
 #include <liback/syscalls.h>
+
+int open(const char* path, int flags, ...)
+{
+    va_list args;
+    va_start(args, flags);
+
+    int fd;
+
+    utils::result result = ackos::sys_wrapper::stream_open(&fd, path, flags);
+
+    va_end(args);
+
+    return fd;
+}
 
 ssize_t read(int fd, void* buff, size_t count)
 {
@@ -119,4 +134,16 @@ int dup2(int old_fd, int new_fd)
     }
 
     return new_fd;
+}
+
+void _exit(int status)
+{
+    // FIXME
+
+    asm volatile("cli");
+
+    while(true)
+    {
+        asm volatile("hlt");
+    }
 }

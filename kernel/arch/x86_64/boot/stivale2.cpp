@@ -1,5 +1,5 @@
 #include "kernel/arch/x86_64/features/instructions.h"
-#include "kernel/boot_protocols/stivale2.h"
+#include "kernel/boot/stivale2.h"
 
 extern "C" int x86_64_init(void* header, uint32_t magic);
 
@@ -25,12 +25,18 @@ static stivale2_header_tag_framebuffer framebuffer_hdr_tag =
     .framebuffer_bpp    = 0
 };
 
+static stivale2_tag five_level_paging_tag =
+{
+    .identifier = STIVALE2_HEADER_TAG_5LV_PAGING_ID,
+    .next = (uint64_t)&framebuffer_hdr_tag
+};
+
 __attribute__((section(".stivale2hdr"), used))
 static stivale2_header _stivale2_header =
 {
     .entry_point = (uint64_t)&_stivale2_start,
     .stack = (uintptr_t)&_kernel_stack_top,
     .flags = 0,
-    .tags = (uintptr_t)&framebuffer_hdr_tag
+    .tags = (uintptr_t)&five_level_paging_tag
 };
 
