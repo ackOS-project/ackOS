@@ -98,6 +98,68 @@ namespace std
             T* _cp;
         };
 
+        class const_iterator
+        {
+        public:
+            const_iterator(const T* ptr)
+            :
+            _cp(ptr)
+            {
+            }
+
+            const_iterator& operator++()
+            {
+                _cp++;
+
+                return *this;
+            }
+
+            const_iterator operator++(int)
+            {
+                iterator iterator = *this;
+                ++(*this);
+
+                return iterator;
+            }
+
+            const_iterator& operator--()
+            {
+                _cp--;
+
+                return *this;
+            }
+
+            const_iterator operator--(int)
+            {
+                iterator iterator = *this;
+                --(*this);
+
+                return iterator;
+            }
+
+            const T* operator->()
+            {
+                return _cp;
+            }
+
+            const T& operator*()
+            {
+                return *_cp;
+            }
+
+            bool operator==(const const_iterator& rhs)
+            {
+                return _cp == rhs._cp;
+            }
+
+            bool operator!=(const const_iterator& rhs)
+            {
+                return _cp != rhs._cp;
+            }
+        private:
+            const T* _cp;
+        };
+
         basic_string()
         {
             resize(1);
@@ -115,6 +177,17 @@ namespace std
         basic_string(const basic_string<T>& old)
         {
             operator=(old);
+        }
+
+        basic_string(basic_string<T>&& old)
+        {
+            _str = old._str;
+            _size = old._size;
+            _capacity = old._size;
+
+            old._str = nullptr;
+            old._size = 0;
+            old._capacity = 0;
         }
 
         basic_string(size_t n, T c)
@@ -142,7 +215,7 @@ namespace std
 
         void operator=(const basic_string<T>& str)
         {
-            if(str._str == nullptr) return;
+            if(str._str == nullptr) clear();
 
             operator=(str.c_str());
         }
@@ -234,9 +307,19 @@ namespace std
             return true;
         }
 
+        bool operator!=(const std::basic_string<T>& other) const
+        {
+            return !(operator==(other));
+        }
+
         bool operator==(const T* cstr) const
         {
             return operator==(std::basic_string<T>(cstr));
+        }
+
+        bool operator!=(const T* cstr) const
+        {
+            return !(operator==(cstr));
         }
 
         T& at(int index) const
@@ -256,10 +339,17 @@ namespace std
 
         void clear()
         {
+            if(_str == nullptr)
+            {
+                resize(1);
+            }
+
             for(int i = 0; i < _size; i++)
             {
                 _str[i] = '\0';
             }
+
+            _size = 0;
         }
 
         size_t length() const
@@ -290,6 +380,16 @@ namespace std
         iterator end()
         {
             return iterator(_str + _size);
+        }
+
+        const_iterator begin() const
+        {
+            return const_iterator(_str);
+        }
+
+        const_iterator end() const
+        {
+            return const_iterator(_str + _size);
         }
 
         ~basic_string()

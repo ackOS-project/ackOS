@@ -3,12 +3,13 @@
 #include <cstdint>
 #include <cstddef>
 
-#include "kernel/boot_protocols/uniheader.h"
+#include "kernel/boot/uniheader.h"
 
 struct stivale2_tag {
     uint64_t identifier;
     uint64_t next;
-} __attribute__((__packed__));
+}
+__attribute__((__packed__));
 
 /* --- Header --------------------------------------------------------------- */
 /*  Information passed from the kernel to the bootloader                      */
@@ -121,13 +122,13 @@ struct stivale2_struct_tag_framebuffer
     uint16_t framebuffer_height;
     uint16_t framebuffer_pitch;
     uint16_t framebuffer_bpp;
-    uint8_t  memory_model;
-    uint8_t  red_mask_size;
-    uint8_t  red_mask_shift;
-    uint8_t  green_mask_size;
-    uint8_t  green_mask_shift;
-    uint8_t  blue_mask_size;
-    uint8_t  blue_mask_shift;
+    uint8_t memory_model;
+    uint8_t red_mask_size;
+    uint8_t red_mask_shift;
+    uint8_t green_mask_size;
+    uint8_t green_mask_shift;
+    uint8_t blue_mask_size;
+    uint8_t blue_mask_shift;
 }
 __attribute__((__packed__));
 

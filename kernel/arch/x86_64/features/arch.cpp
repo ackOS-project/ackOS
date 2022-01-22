@@ -9,6 +9,8 @@
 
 namespace arch
 {
+    uint64_t page_size = 4096;
+
     void interrupts_enable()
     {
         x86_64::interrupts_enable();
@@ -39,6 +41,11 @@ namespace arch
         x86_64::paging_map(virtual_addr, phys_addr, flags);
     }
 
+    void paging_unmap(uintptr_t virtual_addr)
+    {
+        x86_64::paging_unmap(virtual_addr);
+    }
+
     void paging_flush()
     {
         x86_64::paging_flush();
@@ -60,10 +67,5 @@ namespace arch
     char early_getchar()
     {
         return x86_64::com_getc(x86_64::COM1);
-    }
-
-    uint64_t get_page_size()
-    {
-        return x86_64::paging_get_page_size();
     }
 }

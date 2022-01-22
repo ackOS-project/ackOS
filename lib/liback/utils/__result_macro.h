@@ -16,6 +16,6 @@
     X(ERR_READ_ONLY_FS, "read-only filesystem")                    \
     X(ERR_FILE_IS_A_DIRECTORY, "file is a directory")               \
     X(ERR_FILE_EXISTS, "file already exists")                        \
-    X(ERR_NOT_A_DIRECTORY, "not a directory")                         \
+    X(ERR_NO_SUCH_FILE_OR_DIRECTORY, "no such file or directory")     \
     X(ERR_IS_TERMINAL, "refers to a terminal device")                  \
     X(ERR_UNKNOWN, "unknown error")

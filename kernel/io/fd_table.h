@@ -1,6 +1,7 @@
 #pragma once
 
 #include "kernel/io/fs_node.h"
+#include "kernel/fs/filesystem.h"
 
 #include <cstdint>
 #include <cstddef>
@@ -12,6 +13,7 @@ class fd_table
 {
 private:
     fs_node* _nodes[HANDLE_LIMIT];
+    filesystem_info_t _filesystem;
 
 public:
     fd_table();
@@ -26,6 +28,8 @@ public:
     utils::result clone(int* new_fd, int old_fd);
 
     utils::result seek(int fd, off_t off);
+
+    utils::result open(int* fd, const char* path, int flags);
 
     int insert_node_at(int fd, fs_node* node, int flags);
     int append_node(fs_node* node, int flags);

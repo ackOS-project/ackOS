@@ -4,4 +4,4 @@ symbol-file %s
 
 break %s
 
-layout next
+layout src

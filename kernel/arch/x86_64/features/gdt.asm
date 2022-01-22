@@ -1,6 +1,7 @@
 bits 64
 
 global gdt64_load
+global gdt64_32bit_trampoline
 
 gdt64_load:
     lgdt [rdi]
@@ -8,7 +9,7 @@ gdt64_load:
     push rbp
     mov rbp, rsp
 
-    push rax
+    push rsi
     push rbp
     pushfq
 
@@ -21,11 +22,11 @@ gdt64_load:
     pop rbp
 
     ; flush the registers
-    mov ss, rax
-    mov gs, rax
-    mov fs, rax
-    mov ds, rax
-    mov es, rax
+    mov ss, rsi
+    mov gs, rsi
+    mov fs, rsi
+    mov ds, rsi
+    mov es, rsi
 
     ret
 

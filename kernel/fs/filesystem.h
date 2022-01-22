@@ -3,29 +3,28 @@
 #include "kernel/io/fs_node.h"
 #include "kernel/fs/directory.h"
 
-class root_filesystem
+#include <liback/utils/result.h>
+
+class filesystem_info_t
 {
 private:
-    directory_node* _root;
-    directory_node* _current;
+    directory_node_t* _current;
 
 public:
-    root_filesystem()
+    filesystem_info_t();
+    filesystem_info_t(const filesystem_info_t& parent);
+
+    directory_node_t* get_current() { return _current; }
+    void set_current(directory_node_t* node) { _current = node; }
+
+    fs_node* find(const char* p);
+
+    utils::result_tuple<fs_node*> open(const char* path, int flags);
+    void link(const char* p, fs_node* link_node);
+
+    ~filesystem_info_t()
     {
-    }
-
-    root_filesystem(const root_filesystem& other) = delete;
-
-    directory_node* get_root() { return _root; }
-    void set_root(directory_node* root) { _root = root; }
-
-    fs_node* open(const char* path);
-    void link(const char* path, fs_node* node);
-
-    ~root_filesystem()
-    {
-        if(_root != nullptr) delete _root;
     }
 };
 
-root_filesystem* filesystem_get_root_fs();
+void filesystem_initialise();

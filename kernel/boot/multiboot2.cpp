@@ -4,7 +4,7 @@
 #include <cstring>
 #include <memory>
 
-#include "kernel/boot_protocols/multiboot2.h"
+#include "kernel/boot/multiboot2.h"
 
 #define next_tag(__tag) ((multiboot_tag*)((uint8_t*)__tag + ((__tag->size + 7) & ~7)))
 

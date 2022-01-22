@@ -3,190 +3,254 @@
 #include <cstring>
 #include <cstdio>
 #include <sys/cdefs.h>
+#include "kernel/arch/arch.h"
 
-struct heap_block
+__BEGIN_DECLS
+
+static constexpr const int page_size = 4096;
+
+void* libmem_alloc_pages(int pages)
 {
-    uint64_t size;
+    return nullptr;
+}
 
-    heap_block* next;
-    heap_block* next_free;
-    heap_block* previous;
-    heap_block* previous_free;
+int libmem_free_pages(void* mem, int pages)
+{
+    //return munmap(mem, pages * page_size);
 
-    bool is_free;
+    return 0;
+}
+
+#define ALLOCATE_PAGES libmem_alloc_pages_safe
+#define FREE_PAGES libmem_free_pages_safe
+#define MAGIC_NUMBER 0xA110CA1E
+#define HOW_MANY_PAGES 8
+
+struct libmem_header_t
+{
+    uint32_t magic;
+    size_t size;
+    size_t allocated_size;
+
+    libmem_header_t* last_split;
+
+    libmem_header_t* prev;
+    libmem_header_t* next;
 };
 
-static heap_block* heap_root;
+static libmem_header_t* base_header;
 
-#define HEAP_SIZE 0x10000
-uint8_t heap[HEAP_SIZE];
-
-static void heap_merge_blocks(heap_block* a, heap_block* b)
+enum libmem_err_t
 {
-    if(a == nullptr) return;
-    if(b == nullptr) return;
+    LIBMEM_SUCCESS,
+    LIBMEM_ERR_NULL_HEADERS,
+    LIBMEM_ERR_UNLINKED,
+    LIBMEM_ERR_NO_MAGIC
+};
 
-    if(a < b)
+static void libmem_print_error(libmem_err_t err)
+{
+    if(err == LIBMEM_SUCCESS)
     {
-        a->size += b->size + sizeof(heap_block);
-        a->next = b->next;
-        a->next_free = b->next_free;
-
-        b->next->previous = a;
-        b->next->previous_free = a;
-        b->next_free->previous_free = a;
+        return;
+    }
+    else if(err == LIBMEM_ERR_NULL_HEADERS)
+    {
+        fputs("heap error: cannot merge: headers are nullptr\n", stderr);
+    }
+    else if(err == LIBMEM_ERR_UNLINKED)
+    {
+        fputs("heap error: cannot merge: headers are not linked\n", stderr);
+    }
+    else if(err == LIBMEM_ERR_NO_MAGIC)
+    {
+        fputs("heap error: cannot merge: headers do not contain magic number\n", stderr);
     }
     else
     {
-        b->size += a->size + sizeof(heap_block);
-        b->next = a->next;
-        b->next_free = a->next_free;
+        fputs("heap error: error unknown\n", stderr);
+    }
 
-        a->next->previous = b;
-        a->next->previous_free = b;
-        a->next_free->previous_free = b;
+    arch::stacktrace_dump();
+}
+
+static libmem_header_t libmem_create_header(size_t size, size_t allocated_size, libmem_header_t* prev, libmem_header_t* next)
+{
+    return
+    {
+        .magic = MAGIC_NUMBER,
+        .size = size,
+        .allocated_size = allocated_size,
+        .last_split = nullptr,
+        .prev = prev,
+        .next = next
+    };
+}
+
+static libmem_header_t* libmem_split(libmem_header_t* header, size_t size)
+{
+    if(!header) return nullptr;
+
+    size_t lhs_size = header->allocated_size - (size + sizeof(libmem_header_t));
+
+    if(lhs_size < header->size || lhs_size > header->allocated_size || header->magic != MAGIC_NUMBER)
+    {
+        return nullptr;
+    }
+
+    header->allocated_size = lhs_size;
+
+    libmem_header_t* split_header = (libmem_header_t*)(((uintptr_t)header) + sizeof(libmem_header_t) + lhs_size);
+    libmem_header_t* last_split = header->last_split ? header->last_split : header;
+
+    *split_header = libmem_create_header(size, size, last_split, nullptr);
+
+    last_split->next = split_header;
+    header->last_split = split_header;
+
+    return split_header;
+}
+
+static void libmem_merge(libmem_header_t* header1, libmem_header_t* header2)
+{
+    libmem_err_t err = LIBMEM_SUCCESS;
+
+    if(header1 == nullptr || header2 == nullptr)
+    {
+        err = LIBMEM_ERR_NULL_HEADERS;
+    }
+    else if(header1->next != header2 || header2->prev != header1)
+    {
+        err = LIBMEM_ERR_UNLINKED;
+    }
+    else if(header1->magic != MAGIC_NUMBER || header2->magic != MAGIC_NUMBER)
+    {
+        err = LIBMEM_ERR_NO_MAGIC;
+    }
+
+    if(err)
+    {
+        libmem_print_error(err);
+
+        return;
+    }
+
+    header1->allocated_size += header2->allocated_size + sizeof(libmem_header_t);
+    header1->next = header2->next;
+
+    if(header1->prev)
+    {
+        header1->prev->last_split = header1->prev->last_split == header2 ? header1 : header1->prev->last_split;
+    }
+    else
+    {
+        header1->last_split = nullptr;
+    }
+
+    if(header1->next)
+    {
+        header1->next->prev = header1;
     }
 }
 
-void __stdlib_heap_initialise()
+static libmem_header_t* libmem_find_free_header(libmem_header_t* header, size_t size)
 {
-    heap_root = (heap_block*)heap;
-    heap_root->size = (uint64_t)HEAP_SIZE - sizeof(heap_block);
+    libmem_header_t* hdr = header;
 
-    heap_root->next = nullptr;
-    heap_root->next_free = nullptr;
-    heap_root->previous = nullptr;
-    heap_root->previous_free = nullptr;
-
-    heap_root->is_free = true;
-}
-
-
-__BEGIN_DECLS
-void* malloc(size_t size)
-{
-    if(size < 1)
+    if(!hdr)
     {
-        return NULL;
+        return nullptr;
     }
 
-    size -= size % 8;
-    if((size % 8) != 0)
+    while(true)
     {
-        size += 8;
-    }
-
-    heap_block* block = heap_root;
-
-    while (true)
-    {
-        if(block->size >= size)
+        if(hdr->size == 0 && hdr->allocated_size >= size)
         {
-            if(block->size > size + sizeof(heap_block))
-            {
-                heap_block* new_block = (heap_block*)block + sizeof(heap_block) + size;
+            hdr->size = size;
 
-                new_block->is_free = true;
-                new_block->size = block->size - sizeof(heap_block) + size;
-
-                new_block->next_free = block->next_free;
-                new_block->next = block->next;
-                new_block->previous_free = block->previous_free;
-                new_block->previous = block;
-
-                block->next_free = new_block;
-                block->next = new_block;
-                block->size = size;
-            }
-            if(block == heap_root)
-            {
-                heap_root = block->next_free;
-            }
-            block->is_free = false;
-
-            if(block->previous_free != nullptr)
-            {
-                block->previous_free->next_free = block->next_free;
-            }
-
-            if(block->previous != nullptr)
-            {
-                block->previous->next_free = block->next_free;
-            }
-
-            if(block->next_free != nullptr)
-            {
-                block->next_free->previous_free = block->previous_free;
-            }
-
-            if(block->next != nullptr)
-            {
-                block->next->previous_free = block->previous_free;
-            }
-
-            return block + 1;
+            return hdr;
         }
 
-        if(block->next_free == nullptr)
+        hdr = libmem_split(hdr, size);
+
+        if(hdr)
         {
-            // out of memory
+            break;
+        }
+        else
+        {
+            fputs("heap error: cannot split: heap overflow detected\n", stderr);
+
             return nullptr;
         }
-
-        block = block->next_free;
     }
-    return nullptr;
+
+    return hdr;
+}
+
+void* malloc(size_t size)
+{
+    return (void*)(((uintptr_t)libmem_find_free_header(base_header, size)) + sizeof(libmem_header_t));
 }
 
 void free(void* mem)
 {
-    if(mem == nullptr)
-    {
-        fprintf(stderr, "free(): double free detected (address is 0x%x)\n", mem);
+    libmem_header_t* header = (libmem_header_t*)((uintptr_t)mem - sizeof(libmem_header_t));
 
-        while(true);
+    if(header->magic != MAGIC_NUMBER)
+    {
+        return;
     }
 
-    heap_block* block = ((heap_block*)mem) - 1;
-    block->is_free = true;
-
-    if(block < heap_root)
+    if(header->prev)
     {
-        heap_root = block;
+        libmem_merge(header->prev, header);
     }
-
-    if(block->next_free != nullptr)
+    else
     {
-        if(block->next_free->previous_free < block)
-        {
-            block->next_free->previous_free = block;
-        }
-    }
-
-    if(block->next != nullptr)
-    {
-        block->next->previous = block;
-        if(block->next->is_free)
-        {
-            heap_merge_blocks(block, block->next);
-        }
-    }
-
-    if(block->previous_free != nullptr)
-    {
-        if(block->previous_free->next_free > block)
-        {
-            block->previous_free->next_free = block;
-        }
-    }
-
-    if(block->previous != nullptr)
-    {
-        block->previous->next = block;
-        if(block->previous->is_free)
-        {
-            heap_merge_blocks(block, block->previous);
-        }
+        header->size = 0;
     }
 }
+
+void* realloc(void* mem, size_t new_size)
+{
+    libmem_header_t* header = (libmem_header_t*)((uintptr_t)mem - sizeof(libmem_header_t));
+    libmem_header_t* new_header = header;
+
+    if(header->magic != MAGIC_NUMBER)
+    {
+        return nullptr;
+    }
+
+    if(new_size < header->allocated_size)
+    {
+        header->size = new_size;
+    }
+    else if(new_size > header->size)
+    {
+        new_header = libmem_find_free_header(base_header, new_size);
+
+        memcpy((void*)((uintptr_t)new_header + sizeof(libmem_header_t)), mem, new_size);
+
+        free(mem);
+    }
+
+    return (void*)((uintptr_t)new_header + sizeof(libmem_header_t));
+}
+
+static void libmem_init(void* mem, size_t size)
+{
+    base_header = (libmem_header_t*)mem;
+
+    *base_header = libmem_create_header(0, size - sizeof(libmem_header_t), nullptr, nullptr);
+}
+
 __END_DECLS
+
+#define HEAP_SIZE page_size * 64
+static uint8_t heap_memory[HEAP_SIZE];
+
+void __stdlib_heap_initialise()
+{
+    libmem_init((void*)heap_memory, HEAP_SIZE);
+}

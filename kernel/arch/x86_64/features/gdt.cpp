@@ -11,6 +11,7 @@
 namespace x86_64
 {
     static gdt_struct _gdt;
+
     static tss_struct _tss =
     {
         .reserved0 = 0,
@@ -23,16 +24,16 @@ namespace x86_64
         .iomap_base = 0
     };
 
+    gdt_descriptor _gdt_descriptor =
+    {
+        .segment = sizeof(gdt_struct) - 1,
+        .offset = (uint64_t)&_gdt
+    };
+
     extern "C" void jump_usermode();
 
     void gdt_initialise()
     {
-        gdt_descriptor _gdt_descriptor =
-        {
-            .segment = sizeof(gdt_struct) - 1,
-            .offset = (uint64_t)&_gdt
-        };
-
         _gdt.gdt[0] = gdt_create_entry(0, 0, 0, 0);
 
         _gdt.gdt[KERNEL_CODE_SELECTOR] = gdt_create_entry(0, 0, GDT_LONG_MODE_GRANULARITY, GDT_PRESENT | GDT_SEGMENT | GDT_READ_WRITE | GDT_EXECUTABLE);
@@ -46,6 +47,7 @@ namespace x86_64
         _gdt.tss = gdt_create_tss_entry((uintptr_t)&_tss);
 
         gdt_load(&_gdt_descriptor);
+
         //tss_flush();
     }
 

@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <cstddef>
 
-#include "kernel/boot_protocols/uniheader.h"
+#include "kernel/boot/uniheader.h"
 
 void physical_initialise(uniheader* uheader);
 

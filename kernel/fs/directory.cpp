@@ -3,65 +3,67 @@
 #include <fcntl.h>
 #include <cstring>
 
-const std::string& file_entry::get_filename() const
+#include <cstdio>
+
+const std::string& file_entry_t::get_filename() const
 {
     return _filename;
 }
 
-void file_entry::set_filename(const std::string& name)
+void file_entry_t::set_filename(const std::string& name)
 {
     _filename = name;
 }
 
-fs_node* file_entry::get_node() const
+fs_node* file_entry_t::get_node() const
 {
     return _node;
 }
 
-void file_entry::set_node(fs_node* node)
+void file_entry_t::set_node(fs_node* node)
 {
     _node = node;
 }
 
-directory_node::directory_node()
+directory_node_t::directory_node_t(directory_node_t* parent)
+:
+fs_node(NODE_TYPE_DIRECTORY),
+_parent(parent)
 {
 }
 
-utils::result directory_node::read(void* buff, size_t size, size_t* total_read) const
+utils::result directory_node_t::read(void* buff, size_t size, size_t* total_read) const
 {
     return utils::result::ERR_FILE_IS_A_DIRECTORY;
 }
 
-utils::result directory_node::write(const void* buff, size_t size, size_t* total_written)
+utils::result directory_node_t::write(const void* buff, size_t size, size_t* total_written)
 {
     return utils::result::ERR_FILE_IS_A_DIRECTORY;
 }
 
-file_entry directory_node::find_entry(const char* filename)
+file_entry_t directory_node_t::find_entry(const char* filename)
 {
-    file_entry res;
-
-    for(file_entry& file : _files)
+    for(auto& file : _files)
     {
         if(file.get_filename() == filename)
         {
-            res = file;
-
-            break;
+            return file;
         }
     }
 
-    return res;
+    return {};
 }
 
-utils::result directory_node::link(const char* filename, fs_node* node)
+utils::result directory_node_t::link(const char* filename, fs_node* node)
 {
     if(find_entry(filename))
     {
         return utils::result::ERR_FILE_EXISTS;
     }
 
-    _files.push_back({ filename, node });
+
+    _files.push_back(file_entry_t(filename, node));
 
     return utils::result::SUCCESS;
 }

@@ -1,16 +1,17 @@
 /*****************************************
 * ackOS kernel
 
-* Copyright (c) 2020 - 2021 Cael Rasmussen
+* Copyright (c) 2020 - 2022 Cael Rasmussen
 * Under the GPLv2 licence
 ******************************************/
 
-#include "kernel/boot_protocols/modules.h"
-#include "kernel/boot_protocols/uniheader.h"
+#include "kernel/boot/modules.h"
+#include "kernel/boot/uniheader.h"
 #include "kernel/mm/memory.h"
 #include "kernel/proc/process.h"
 #include "kernel/psf.h"
 #include "kernel/sys/sys_info.h"
+#include "kernel/fs/filesystem.h"
 
 #include <cstdio>
 
@@ -22,9 +23,10 @@ void print_greeting()
 
 void kmain(uniheader& header)
 {
+    filesystem_initialise();
     processes_initialise();
     memory_initialise(&header);
-    boot_modules_intialise(&header);
+    //boot_modules_initialise(&header);
 
     print_greeting();
     memory_dump();

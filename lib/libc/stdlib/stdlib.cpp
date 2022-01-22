@@ -1,6 +1,12 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
+#include <unistd.h>
+
+void exit(int status)
+{
+    _exit(status);
+}
 
 void* calloc(size_t size)
 {
@@ -68,6 +74,60 @@ char* utoa(uint32_t value, char* str, int base)
 char* itoa(int value, char* str, int base)
 {
     return int_to_string<int>(value, str, base);
+}
+
+template <typename T>
+T string_to_int(const char* str, char** endptr, int base)
+{
+    T res = 0;
+    size_t len = strlen(str);
+    int i = str[0] == '-' || str[0] == '+';
+
+    *endptr = (char*)str + len;
+
+    if(base < 1)
+    {
+        base = 10;
+    }
+
+    for(; i < len; i++)
+    {
+        if(str[i] > (('0' - 1) + base) || str[i] < '0' && endptr != NULL)
+        {
+            *endptr = (char*)str + i;
+
+            break;
+        }
+
+        res = (res * base) + (str[i] - '0');
+    }
+
+    if(str[0] == '-')
+    {
+        res = -res;
+    }
+
+    return res;
+}
+
+int64_t strtol(const char* str, char** endptr, int base)
+{
+    return string_to_int<int64_t>(str, endptr, base);
+}
+
+uint64_t strtoul(const char* str, char** endptr, int base)
+{
+    return string_to_int<uint64_t>(str, endptr, base);
+}
+
+uint32_t atol(const char* str)
+{
+    return string_to_int<uint32_t>(str, nullptr, 10);
+}
+
+int atoi(const char* str)
+{
+    return string_to_int<int>(str, nullptr, 10);
 }
 
 #ifndef BUILD_DISABLE_FPA

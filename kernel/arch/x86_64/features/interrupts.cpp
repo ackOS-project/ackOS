@@ -114,7 +114,7 @@ namespace x86_64
     {
         uintptr_t* base_ptr;
 
-        asm volatile("mov %%rbp, %0" : "=r"(base_ptr));
+        asm volatile("movq %%rbp, %0" : "=g"(base_ptr) :: "memory");
 
         print_stack_trace(reinterpret_cast<stack_frame*>(base_ptr), STACKFRAME_MAX);
 

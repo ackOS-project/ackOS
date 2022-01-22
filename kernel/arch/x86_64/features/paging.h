@@ -100,10 +100,9 @@ namespace x86_64
 
     void paging_flush();
 
-    uint64_t paging_get_page_mask();
-    uint64_t paging_get_page_size();
-
     void paging_map(uintptr_t virtual_addr, uintptr_t phys_addr, uint32_t flags);
+
+    void paging_unmap(uintptr_t virtual_addr);
 
     void paging_initialise();
 }

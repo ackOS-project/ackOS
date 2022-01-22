@@ -2,9 +2,9 @@
 #include <liback/utils/macros.h>
 #include <liback/utils/storage_size.h>
 
-#include "kernel/boot_protocols/uniheader.h"
-#include "kernel/boot_protocols/multiboot2.h"
-#include "kernel/boot_protocols/stivale2.h"
+#include "kernel/boot/uniheader.h"
+#include "kernel/boot/multiboot2.h"
+#include "kernel/boot/stivale2.h"
 #include "kernel/sys/panic.h"
 
 static const char* memory_type_strings[] =
@@ -98,20 +98,4 @@ uint64_t uniheader::get_usable_memory()
     }
 
     return usable_memory;
-}
-
-void uniheader_memory_map::align(uint64_t alignment)
-{
-    for(int index = 0; index < entry_count; index++)
-    {
-        uniheader_memory_map_entry* entry = &entries[index];
-
-        uint64_t align = alignment - (uint64_t)entry->addr % alignment;
-        align = (uint64_t)entry->addr % alignment == 0 ? 0 : align;
-
-        entry->addr = (void*)((uint64_t)entry->addr + align);
-        entry->length -= align;
-
-        entry->length = ALIGN_DOWN(entry->length, alignment);
-    }
 }

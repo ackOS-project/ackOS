@@ -1,11 +1,12 @@
 #include "kernel/mm/memory.h"
 #include "kernel/mm/physical.h"
+#include "kernel/arch/arch.h"
 
 #include <liback/utils/bitmap.h>
 #include <cstring>
 #include <cstdio>
 
-#define PAGE_SIZE 4096
+#define PAGE_SIZE (arch::page_size)
 
 static uintptr_t last_free = 0;
 static utils::bitmap memory_bitmap{nullptr, 0};

@@ -103,7 +103,8 @@
         "typeinfo": "cpp",
         "local_atomic": "cpp",
         "coroutine": "cpp",
-        "*.x": "cpp"
+        "*.x": "cpp",
+        "pr51959.C": "cpp"
     },
 
     "search.exclude":

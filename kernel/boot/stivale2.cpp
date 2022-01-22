@@ -3,8 +3,8 @@
 #include <cstring>
 #include <cstdio>
 
-#include "kernel/boot_protocols/stivale2.h"
-#include "kernel/boot_protocols/uniheader.h"
+#include "kernel/boot/stivale2.h"
+#include "kernel/boot/uniheader.h"
 
 bool stivale2_check_magic(uint32_t magic)
 {

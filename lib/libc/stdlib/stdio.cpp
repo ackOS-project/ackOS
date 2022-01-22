@@ -401,3 +401,85 @@ int printf(const char* fmt, ...)
 
     return length;
 }
+
+int vsscanf(const char* buffer, const char* format, va_list args)
+{
+    size_t buff_size = strlen(buffer);
+    size_t fmt_size = strlen(format);
+    int n = 0;
+    int buff_index = 0;
+
+    for(int i = 0; i < fmt_size && i < buff_size; i++)
+    {
+        if(format[i] == '%')
+        {
+            char c = format[i];
+            n++;
+            i++;
+            
+            if(c == 'c')
+            {
+                char* output = va_arg(args, char*);
+                
+                *output = c;
+            }
+            else if(c == 's')
+            {
+                char* output = va_arg(args, char*);
+            
+                while(buff_index < buff_size)
+                {
+                    if(buffer[buff_index] == ' ')
+                    {
+                        break;
+                    }
+
+                    *output++ = buffer[buff_index];
+                
+                    buff_index++;
+                }
+            }
+            else if(c == 'd')
+            {
+                int* output = va_arg(args, int*);
+            
+                *output = strtol(&buffer[buff_index], NULL, 10);
+            }
+            else if(c == 'x')
+            {
+                int* output = va_arg(args, int*);
+
+                *output = strtol(&buffer[buff_index], NULL, 16);
+            }
+            else if(c == '%')
+            {
+                n--;
+
+                if(buffer[buff_index] != c)
+                {
+                    break;
+                }
+            }
+        }
+        else if(buffer[buff_index] != format[i])
+        {
+            break;
+        }
+        
+        buff_index++;
+    }
+    
+    return n;
+}
+
+int sscanf(const char* buffer, const char* format, ...)
+{
+    va_list args;
+    va_start(args, format);
+
+    int n = vsscanf(buffer, format, args);
+
+    va_end(args);
+    
+    return n;
+}

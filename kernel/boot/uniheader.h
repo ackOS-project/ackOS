@@ -29,8 +29,6 @@ struct uniheader_memory_map
 {
     uniheader_memory_map_entry entries[UNIHEADER_MEMORY_MAP_ENTRIES_MAX];
     size_t entry_count;
-
-    void align(uint64_t alignment);
 };
 
 struct uniheader_framebuffer

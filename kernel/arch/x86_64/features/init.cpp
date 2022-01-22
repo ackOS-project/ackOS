@@ -6,9 +6,9 @@
 #include "kernel/arch/x86_64/features/sse.h"
 #include "kernel/arch/x86_64/features/paging.h"
 #include "kernel/arch/x86_64/features/acpi/apic.h"
+#include "kernel/boot/uniheader.h"
 
 #include <liback/utils/assert.h>
-#include "kernel/boot_protocols/uniheader.h"
 
 static uniheader uheader;
 void kmain(uniheader&);
