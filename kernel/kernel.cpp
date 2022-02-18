@@ -26,7 +26,7 @@ void kmain(uniheader& header)
     filesystem_initialise();
     processes_initialise();
     memory_initialise(&header);
-    //boot_modules_initialise(&header);
+    boot_modules_initialise(&header);
 
     print_greeting();
     memory_dump();

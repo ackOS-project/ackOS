@@ -1,6 +1,7 @@
 #pragma once
 
 #include <initializer_list>
+#include <algorithm>
 
 namespace std
 {
@@ -148,12 +149,9 @@ namespace std
         {
             T* block = new T[size];
 
-            if(_data != nullptr)
+            if(_data)
             {
-                for(int i = 0; i < _size; i++)
-                {
-                    block[i] = _data[i];
-                }
+                std::copy(_data, _data + size, block);
 
                 delete[] _data;
             }

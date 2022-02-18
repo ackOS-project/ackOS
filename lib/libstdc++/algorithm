@@ -1,0 +1,40 @@
+#pragma once
+
+namespace std
+{
+    template <typename InputIt, typename OutputIt>
+    OutputIt copy(InputIt first, InputIt last, OutputIt d_first)
+    {
+        while(first != last)
+        {
+            *d_first++ = *first++;
+        }
+
+        return d_first;
+    }
+
+    template <typename InputIt, typename Size, typename OutputIt>
+    OutputIt copy_n(InputIt first, Size size, OutputIt result)
+    {
+        if(size > 0)
+        {
+            *result++ = *first;
+
+            for(Size i = 1; i < size; i++)
+            {
+                *result++ = *++first;
+            }
+        }
+
+        return result;
+    }
+
+    template <typename ForwardIt, typename T>
+    void fill(ForwardIt first, ForwardIt last, const T& value)
+    {
+        for(; first != last; ++first)
+        {
+            *first = value;
+        }
+    }
+}
