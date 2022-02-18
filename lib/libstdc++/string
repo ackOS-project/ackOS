@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstring>
+#include <algorithm>
 
 namespace std
 {
@@ -25,14 +26,16 @@ namespace std
             }
         }
 
-        void copy_string(T* dest, const T* source, size_t size_of_source)
+        void copy_string(T* dest, const T* source, size_t source_size, size_t dest_size, char fill_char = 0)
         {
-            for(int i = 0; i < size_of_source; i++)
+            std::copy(source, source + dest_size, dest);
+
+            if(dest_size > source_size)
             {
-                dest[i] = source[i];
+                std::fill(dest + source_size, dest + dest_size, fill_char);
             }
 
-            dest[size_of_source] = '\0';
+            dest[dest_size] = 0;
         }
 
     public:
@@ -209,8 +212,8 @@ namespace std
 
             size_t str_size = strlen(str);
 
-            if(str_size > _capacity) resize(str_size);
-            copy_string(_str, str, str_size);
+            if(str_size >= _capacity) resize(str_size);
+            copy_string(_str, str, str_size, _size);
         }
 
         void operator=(const basic_string<T>& str)
@@ -227,7 +230,7 @@ namespace std
             size_t old_size = length();
 
             efficient_resize(length() + str.length());
-            copy_string(&_str[old_size], str.c_str(), str.length());
+            copy_string(&_str[old_size], str.c_str(), str.length(), str.length());
 
             return *this;
         }
@@ -239,13 +242,7 @@ namespace std
                 return *this;
             }
 
-            size_t old_size = length();
-            size_t str_size = strlen(cstr);
-
-            efficient_resize(length() + str_size);
-            copy_string(&_str[old_size], cstr, str_size);
-
-            return *this;
+            return append(std::basic_string<T>(cstr));
         }
 
         basic_string<T>& append(size_t n, char c)
@@ -274,22 +271,27 @@ namespace std
             return s;
         }
 
-        void resize(size_t size)
+        void resize(size_t size, char c)
         {
             if(size < 1) return;
 
-            _capacity = size;
-            _size = size;
+            T* new_str = new T[size + 1];
 
-            T* new_str = new T[_capacity + 1];
-
-            if(_str != nullptr)
+            if(_str)
             {
-                copy_string(new_str, _str, size);
+                copy_string(new_str, _str, _size, size, c);
 
                 delete[] _str;
             }
+
             _str = new_str;
+            _size = size;
+            _capacity = size;
+        }
+
+        void resize(size_t size)
+        {
+            resize(size, '\0');
         }
 
         bool operator==(const std::basic_string<T>& other) const
@@ -350,6 +352,7 @@ namespace std
             }
 
             _size = 0;
+            _capacity = 0;
         }
 
         size_t length() const
@@ -394,7 +397,7 @@ namespace std
 
         ~basic_string()
         {
-            if(_str != nullptr)
+            if(_str)
             {
                 delete[] _str;
             }
