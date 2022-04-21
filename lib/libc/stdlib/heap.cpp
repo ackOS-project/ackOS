@@ -247,7 +247,7 @@ static void libmem_init(void* mem, size_t size)
 
 __END_DECLS
 
-#define HEAP_SIZE page_size * 64
+#define HEAP_SIZE page_size * 128
 static uint8_t heap_memory[HEAP_SIZE];
 
 void __stdlib_heap_initialise()

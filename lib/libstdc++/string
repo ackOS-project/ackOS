@@ -13,19 +13,6 @@ namespace std
         size_t _size = 0;
         size_t _capacity = 0;
 
-        void efficient_resize(size_t new_size, size_t extra_space = 10)
-        {
-            if(new_size > _capacity)
-            {
-                resize(new_size + extra_space);
-                _size = new_size;
-            }
-            else
-            {
-                _size = new_size;
-            }
-        }
-
         void copy_string(T* dest, const T* source, size_t source_size, size_t dest_size, char fill_char = 0)
         {
             std::copy(source, source + dest_size, dest);
@@ -165,11 +152,7 @@ namespace std
 
         basic_string()
         {
-            resize(1);
-
-            at(0) = '\0';
-            _size = 0;
-            _capacity = 0;
+            resize(0);
         }
 
         basic_string(const T* str)
@@ -212,13 +195,18 @@ namespace std
 
             size_t str_size = strlen(str);
 
-            if(str_size >= _capacity) resize(str_size);
+            resize(str_size);
             copy_string(_str, str, str_size, _size);
         }
 
         void operator=(const basic_string<T>& str)
         {
-            if(str._str == nullptr) clear();
+            if(str._str == nullptr)
+            {
+                clear();
+
+                return;
+            }
 
             operator=(str.c_str());
         }
@@ -229,8 +217,8 @@ namespace std
 
             size_t old_size = length();
 
-            efficient_resize(length() + str.length());
-            copy_string(&_str[old_size], str.c_str(), str.length(), str.length());
+            resize(length() + str.length());
+            copy_string(_str + old_size, str.c_str(), str.length(), str.length());
 
             return *this;
         }
@@ -252,14 +240,14 @@ namespace std
             return *this;
         }
 
-        void operator+=(const std::basic_string<T>& str)
+        std::basic_string<T>& operator+=(const std::basic_string<T>& str)
         {
-            append(str);
+            return append(str);
         }
 
-        void operator+=(const T* str)
+        std::basic_string<T>& operator+=(const T* str)
         {
-            append(str);
+            return append(str);
         }
 
         std::basic_string<T> operator+(const std::basic_string<T>& rhs)
@@ -273,20 +261,46 @@ namespace std
 
         void resize(size_t size, char c)
         {
-            if(size < 1) return;
+            // things to consider:
+            // - if the string is null, then we need to allocate a new string
+            // - we dont want to copy the string if the new size is smaller than the old size
+            // - we must append the c character to the end of the string.
+            // - never forger to add a null terminator!
 
-            T* new_str = new T[size + 1];
-
-            if(_str)
+            if(_str == nullptr || size == 0)
             {
-                copy_string(new_str, _str, _size, size, c);
+                _str = new T[size + 1];
+                _capacity = size;
+                _size = size;
 
-                delete[] _str;
+                std::fill(_str, _str + _size, c);
+            }
+            else if(size < _capacity || size < _size)
+            {
+                if(size < _size && c != 0)
+                {
+                    std::fill(_str + size, _str + _size, c);
+                }
+
+                _size = size;
+            }
+            else
+            {
+                T* new_str = new T[size + 1];
+
+                if(_str)
+                {
+                    copy_string(new_str, _str, _size, size, c);
+
+                    delete[] _str;
+                }
+
+                _str = new_str;
+                _size = size;
+                _capacity = size;
             }
 
-            _str = new_str;
-            _size = size;
-            _capacity = size;
+            _str[_size] = 0;
         }
 
         void resize(size_t size)
@@ -341,18 +355,7 @@ namespace std
 
         void clear()
         {
-            if(_str == nullptr)
-            {
-                resize(1);
-            }
-
-            for(int i = 0; i < _size; i++)
-            {
-                _str[i] = '\0';
-            }
-
-            _size = 0;
-            _capacity = 0;
+            resize(0);
         }
 
         size_t length() const
