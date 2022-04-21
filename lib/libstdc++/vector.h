@@ -147,18 +147,25 @@ namespace std
 
         void resize(size_t size)
         {
-            T* block = new T[size];
-
-            if(_data)
+            if(size <= _capacity)
             {
-                std::copy(_data, _data + size, block);
-
-                delete[] _data;
+                _size = size;
             }
+            else
+            {
+                T* block = new T[size];
 
-            _size = size;
-            _capacity = size;
-            _data = block;
+                if(_data)
+                {
+                    std::copy(_data, _data + _size, block);
+
+                    delete[] _data;
+                }
+
+                _size = size;
+                _capacity = size;
+                _data = block;
+            }
         }
 
         void push_back(const T& data)

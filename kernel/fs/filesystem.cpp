@@ -105,8 +105,6 @@ void filesystem_info_t::link(const char* p, fs_node* link_node)
             }
         }
     }
-
-    puts("reached end of link(). Yay!");
 }
 
 void filesystem_initialise()
