@@ -5,3 +5,6 @@ symbol-file %s
 break %s
 
 layout src
+
+continue
+

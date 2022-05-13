@@ -1,0 +1,3 @@
+This is ackOS, it features basic system IO, paging and a virtual ramdisk filesystem which this message is stored on.
+
+More coming soon 🥳

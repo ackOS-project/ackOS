@@ -1,5 +1,5 @@
 #include "kernel/dev/early_console.h"
-#include "kernel/arch/x86_64/features/com_dev.h"
+#include "kernel/arch/x86_64/feat/com_dev.h"
 #include "kernel/proc/process.h"
 
 #include <fcntl.h>

@@ -197,9 +197,7 @@ namespace std
 
         void clear()
         {
-            resize(1);
-
-            _size = 0;
+            resize(0);
         }
 
         iterator begin()

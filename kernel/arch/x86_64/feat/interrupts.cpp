@@ -1,8 +1,9 @@
-#include "kernel/arch/x86_64/features/interrupts.h"
-#include "kernel/arch/x86_64/features/instructions.h"
-#include "kernel/arch/x86_64/features/pic_8259.h"
-#include "kernel/arch/x86_64/features/ps2_keyboard.h"
+#include "kernel/arch/x86_64/feat/interrupts.h"
+#include "kernel/arch/x86_64/feat/asm.h"
+#include "kernel/arch/x86_64/feat/pic_8259.h"
+#include "kernel/arch/x86_64/feat/ps2_keyboard.h"
 #include "kernel/sys/panic.h"
+#include "kernel/sys/logger.h"
 
 #include <cstdio>
 
@@ -85,7 +86,7 @@ namespace x86_64
         stack_frame* current = frame;
         int i = 0;
 
-        puts("stacktrace: ");
+        log_info("trace", "Start of call trace:");
 
         while(current != nullptr && i++ < size)
         {
@@ -94,11 +95,11 @@ namespace x86_64
 
             if(name)
             {
-                printf("    [0x%x] <%s+0x%x>\n", current->rip, name, offset);
+                log_info("trace", "  [0x%x] %s+0x%x", current->rip, name, offset);
             }
             else
             {
-                printf("    [0x%x]\n", current->rip);
+                log_info("trace", "  [0x%x]", current->rip);
             }
 
             current = current->rbp;
@@ -106,17 +107,18 @@ namespace x86_64
 
         if(i == 0)
         {
-            puts("    (empty)");
+            log_info("trace", "  (empty)");
         }
     }
 
-    void dump_stackframe()
+    void dump_stackframe(void* addr)
     {
-        uintptr_t* base_ptr;
+        if(addr == nullptr)
+        {
+            addr = (void*)get_bp();
+        }
 
-        asm volatile("movq %%rbp, %0" : "=g"(base_ptr) :: "memory");
-
-        print_stack_trace(reinterpret_cast<stack_frame*>(base_ptr), STACKFRAME_MAX);
+        print_stack_trace((stack_frame*)addr, STACKFRAME_MAX);
 
         putchar('\n');
     }
@@ -141,11 +143,9 @@ namespace x86_64
                    frame->rip, frame->cs, frame->rflags, frame->rsp, frame->ss,
                    get_cr0(), get_cr2(), get_cr3(), get_cr4());
 
-            print_stack_trace(reinterpret_cast<stack_frame*>(frame->rbp), STACKFRAME_MAX);
-
             putchar('\n');
 
-            kpanic(exception_names[frame->int_num], false);
+            kpanic(exception_names[frame->int_num], (void*)frame->rbp);
         }
     }
 

@@ -5,7 +5,6 @@
 #include "kernel/proc/process.h"
 
 #include <cstring>
-#include <cstdio>
 #include <fcntl.h>
 
 #include <filesystem>
@@ -61,16 +60,10 @@ void ramdisk_mount(const char* mount_point, void* addr, ramdisk_type type)
 
             if(header == nullptr) break;
 
-            //printf("%s\n", header->filename);
-
             if(header->type_flag == TAR_REGULAR)
             {
                 char* data = (char*)header + 512;
                 size_t size = tar_get_file_size(header);
-
-                //tar_node_t* node = new tar_node_t(data, size);
-                //process_get_from_pid(0)->get_fd_table().append_node(node, O_RDWR);
-                printf("%s\n", header->filename);
 
                 filesystem_info_t fs;
                 fs.link(header->filename, new tar_node_t(data, size));

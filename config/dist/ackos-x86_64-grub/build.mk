@@ -1,7 +1,7 @@
 $(BIN_FOLDER)/$(ISONAME): $(BIN_FOLDER)/kernel.elf $(BIN_FOLDER)/ramdisk.tar.gz
 	@mkdir -p $(@D)
 
-	@echo [ creating media ] grub-mkrescue
+	@echo "Creating GRUB image"
 
 	@mkdir -p $(BIN_FOLDER)/isodir/boot/grub
 	@cp $(DIST_FOLDER)/grub.cfg $(BIN_FOLDER)/isodir/boot/grub

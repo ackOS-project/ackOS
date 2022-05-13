@@ -1,7 +1,7 @@
-#include "kernel/arch/x86_64/features/idt.h"
-#include "kernel/arch/x86_64/features/gdt.h"
-#include "kernel/arch/x86_64/features/pic_8259.h"
-#include "kernel/arch/x86_64/features/io.h"
+#include "kernel/arch/x86_64/feat/idt.h"
+#include "kernel/arch/x86_64/feat/gdt.h"
+#include "kernel/arch/x86_64/feat/pic_8259.h"
+#include "kernel/arch/x86_64/feat/io.h"
 
 #define INTERRUPT_GATE32 0x8E
 #define TRAP_GATE32 0xEF

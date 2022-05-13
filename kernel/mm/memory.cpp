@@ -5,7 +5,6 @@
 #include "kernel/sys/panic.h"
 
 #include <liback/utils/storage_size.h>
-#include <cstdio>
 
 static memory_info mem_info;
 static bool memory_initialised = false;

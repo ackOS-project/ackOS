@@ -3,6 +3,8 @@
 #include <cerrno>
 #include <liback/syscalls.h>
 
+#include <cstdio>
+
 int open(const char* path, int flags, ...)
 {
     va_list args;
@@ -11,6 +13,22 @@ int open(const char* path, int flags, ...)
     int fd;
 
     utils::result result = ackos::sys_wrapper::stream_open(&fd, path, flags);
+
+    errno = 0;
+
+    if(!result)
+    {
+        if(result == utils::result::ERR_NO_SUCH_FILE_OR_DIRECTORY)
+        {
+            errno = ENOENT;
+        }
+        else if(result == utils::result::ERR_UNIMPLEMENTED)
+        {
+            errno = ENOSYS;
+        }
+
+        return -1;
+    }
 
     va_end(args);
 
@@ -22,7 +40,7 @@ ssize_t read(int fd, void* buff, size_t count)
     size_t read = 0;
     utils::result result = ackos::sys_wrapper::stream_read(fd, buff, count, &read);
 
-    if(result == utils::result::ERR_INVALID_FD)
+    if(result == utils::result::ERR_INVALID_FD || result == utils::result::ERR_OUT_OF_BOUNDS)
     {
         errno = EBADF;
 

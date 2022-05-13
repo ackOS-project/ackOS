@@ -1,9 +1,8 @@
 #include "kernel/fs/directory.h"
+#include "kernel/arch/arch.h"
 
 #include <fcntl.h>
 #include <cstring>
-
-#include <cstdio>
 
 const std::string& file_entry_t::get_filename() const
 {
@@ -61,7 +60,6 @@ utils::result directory_node_t::link(const char* filename, fs_node* node)
     {
         return utils::result::ERR_FILE_EXISTS;
     }
-
 
     _files.push_back(file_entry_t(filename, node));
 

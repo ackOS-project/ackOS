@@ -77,5 +77,5 @@ int syscalls_dispatch(process* proc, int call, void* arg1, void* arg2, void* arg
         }
     }
 
-    return result;
+    return result.get_error_code();
 }

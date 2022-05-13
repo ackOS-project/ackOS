@@ -1,5 +1,6 @@
-#include "kernel/sys/logger.h"
 #include <cstdio>
+
+#include "kernel/sys/logger.h"
 
 #define COLOUR_BLUE "\033[0;34m"
 #define COLOUR_BLUE_BOLD "\033[1;34m"
@@ -15,6 +16,7 @@
 void vlog(log_level level, const char* module_name, const char* fmt, va_list args)
 {
     const char* level_str;
+
     switch(level)
     {
     case log_level::INFO:

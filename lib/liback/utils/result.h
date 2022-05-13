@@ -27,8 +27,8 @@ namespace utils
         bool operator==(int code);
         bool operator!=(int code);
 
-        explicit operator int();
         operator bool();
+        explicit operator int();
 
         const char* to_string();
         const char* get_description();
@@ -45,11 +45,12 @@ namespace utils
     public:
         result_tuple(result res)
         :
-        _result(res)
+        _result(res),
+        _data()
         {
         }
 
-        result_tuple(T data)
+        result_tuple(const T& data)
         :
         _result(result::SUCCESS),
         _data(data)

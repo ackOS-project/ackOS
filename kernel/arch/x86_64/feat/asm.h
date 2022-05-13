@@ -10,6 +10,8 @@ namespace x86_64
 
     void halt();
 
+    uint64_t get_bp();
+
     uint64_t get_cr0();
 #if 0
     // CR1 is reserved

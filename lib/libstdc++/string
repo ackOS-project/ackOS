@@ -261,21 +261,7 @@ namespace std
 
         void resize(size_t size, char c)
         {
-            // things to consider:
-            // - if the string is null, then we need to allocate a new string
-            // - we dont want to copy the string if the new size is smaller than the old size
-            // - we must append the c character to the end of the string.
-            // - never forger to add a null terminator!
-
-            if(_str == nullptr || size == 0)
-            {
-                _str = new T[size + 1];
-                _capacity = size;
-                _size = size;
-
-                std::fill(_str, _str + _size, c);
-            }
-            else if(size < _capacity || size < _size)
+            if(size <= _capacity && _str)
             {
                 if(size < _size && c != 0)
                 {

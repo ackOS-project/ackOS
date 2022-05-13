@@ -4,7 +4,6 @@
 
 #include <liback/utils/bitmap.h>
 #include <cstring>
-#include <cstdio>
 
 #define PAGE_SIZE (arch::page_size)
 

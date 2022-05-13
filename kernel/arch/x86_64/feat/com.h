@@ -1,5 +1,8 @@
 #pragma once
 
+#include <cstdint>
+#include <cstddef>
+
 namespace x86_64
 {
     enum
@@ -15,4 +18,6 @@ namespace x86_64
     void com_putc(int addr, char c);
 
     char com_getc(int addr);
+
+    void com_write(int addr, const char* s, size_t size);
 }

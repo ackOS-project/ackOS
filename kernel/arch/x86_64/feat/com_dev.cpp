@@ -1,5 +1,5 @@
-#include "kernel/arch/x86_64/features/com.h"
-#include "kernel/arch/x86_64/features/com_dev.h"
+#include "kernel/arch/x86_64/feat/com.h"
+#include "kernel/arch/x86_64/feat/com_dev.h"
 
 static int com_port_to_address(int port)
 {
@@ -66,12 +66,9 @@ utils::result com_port::write(const void* buff, size_t size, size_t* total_writt
 {
     const char* str = (const char*)buff;
 
-    for(int i = 0; i < size; i++)
-    {
-        x86_64::com_putc(_addr, str[i]);
+    x86_64::com_write(_addr, str, size);
 
-        ++*total_written;
-    }
+    *total_written = size;
 
     return utils::result::SUCCESS;
 }

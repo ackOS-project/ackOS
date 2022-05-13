@@ -39,12 +39,31 @@ FILE* fdopen(int fd, const char* mode)
     return file;
 }
 
+FILE* fopen(const char *filename, const char *mode)
+{
+    int fd = open(filename, O_RDWR);
+
+    if(fd < 0) return nullptr;
+
+    return fdopen(fd, mode);
+}
+
 size_t fread(void* buff, size_t size, size_t count, FILE* file)
 {
-    size_t bytes = count * size;
-    size_t bytes_read = read(file->fd, buff, bytes);
+    if(size == 0 || count == 0 || file == nullptr)
+    {
+        return 0;
+    }
 
-    return count;
+    size_t bytes = count * size;
+    ssize_t bytes_read = read(file->fd, buff, bytes);
+
+    if(bytes_read < 0)
+    {
+        return 0;
+    }
+
+    return bytes_read;
 }
 
 size_t fwrite(const void* buff, size_t size, size_t count, FILE* file)
