@@ -1,5 +1,5 @@
-#include "kernel/arch/x86_64/features/com.h"
-#include "kernel/arch/x86_64/features/io.h"
+#include "kernel/arch/x86_64/feat/com.h"
+#include "kernel/arch/x86_64/feat/io.h"
 
 #include <cstring>
 #include <cstdlib>
@@ -36,5 +36,13 @@ namespace x86_64
         while((x86_64::inb(addr + 5) & 1) == 0);
  
         return x86_64::inb(addr);
+    }
+
+    void com_write(int addr, const char* s, size_t size)
+    {
+        for(int i = 0; i < size; i++)
+        {
+            com_putc(addr, s[i]);
+        }
     }
 } 

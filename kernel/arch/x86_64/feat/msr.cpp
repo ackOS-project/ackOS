@@ -1,5 +1,5 @@
-#include "kernel/arch/x86_64/features/msr.h"
-#include "kernel/arch/x86_64/features/cpuid.h"
+#include "kernel/arch/x86_64/feat/msr.h"
+#include "kernel/arch/x86_64/feat/cpuid.h"
 
 namespace x86_64
 {

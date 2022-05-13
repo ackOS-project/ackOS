@@ -4,10 +4,17 @@
 #include <cstdio>
 #include <sys/cdefs.h>
 #include "kernel/arch/arch.h"
+#include "kernel/sys/logger.h"
+
 
 __BEGIN_DECLS
 
 static constexpr const int page_size = 4096;
+
+#define MODULE_NAME "heap"
+#define HEAP_SIZE (page_size * 256)
+
+static uint8_t heap_memory[HEAP_SIZE];
 
 void* libmem_alloc_pages(int pages)
 {
@@ -30,7 +37,7 @@ struct libmem_header_t
 {
     uint32_t magic;
     size_t size;
-    size_t allocated_size;
+    size_t avail_size;
 
     libmem_header_t* last_split;
 
@@ -45,7 +52,8 @@ enum libmem_err_t
     LIBMEM_SUCCESS,
     LIBMEM_ERR_NULL_HEADERS,
     LIBMEM_ERR_UNLINKED,
-    LIBMEM_ERR_NO_MAGIC
+    LIBMEM_ERR_NO_MAGIC,
+    LIBMEM_ERR_CORRUPTED
 };
 
 static void libmem_print_error(libmem_err_t err)
@@ -56,31 +64,35 @@ static void libmem_print_error(libmem_err_t err)
     }
     else if(err == LIBMEM_ERR_NULL_HEADERS)
     {
-        fputs("heap error: cannot merge: headers are nullptr\n", stderr);
+        log_error(MODULE_NAME, "cannot merge because headers are nullptr");
     }
     else if(err == LIBMEM_ERR_UNLINKED)
     {
-        fputs("heap error: cannot merge: headers are not linked\n", stderr);
+        log_error(MODULE_NAME, "cannot merge because headers are not linked");
     }
     else if(err == LIBMEM_ERR_NO_MAGIC)
     {
-        fputs("heap error: cannot merge: headers do not contain magic number\n", stderr);
+        log_error(MODULE_NAME, "cannot merge because headers do not contain magic number");
+    }
+    else if(err == LIBMEM_ERR_CORRUPTED)
+    {
+        log_error(MODULE_NAME, "cannot merge because headers are corrupted. Maybe it's a double free?");
     }
     else
     {
-        fputs("heap error: error unknown\n", stderr);
+        log_error(MODULE_NAME, "unknown error");
     }
 
-    arch::stacktrace_dump();
+    arch::stacktrace_dump(nullptr);
 }
 
-static libmem_header_t libmem_create_header(size_t size, size_t allocated_size, libmem_header_t* prev, libmem_header_t* next)
+static libmem_header_t libmem_create_header(size_t size, size_t avail_size, libmem_header_t* prev, libmem_header_t* next)
 {
     return
     {
         .magic = MAGIC_NUMBER,
         .size = size,
-        .allocated_size = allocated_size,
+        .avail_size = avail_size,
         .last_split = nullptr,
         .prev = prev,
         .next = next
@@ -91,14 +103,14 @@ static libmem_header_t* libmem_split(libmem_header_t* header, size_t size)
 {
     if(!header) return nullptr;
 
-    size_t lhs_size = header->allocated_size - (size + sizeof(libmem_header_t));
+    size_t lhs_size = header->avail_size - (size + sizeof(libmem_header_t));
 
-    if(lhs_size < header->size || lhs_size > header->allocated_size || header->magic != MAGIC_NUMBER)
+    if(lhs_size < header->size || lhs_size > header->avail_size || header->magic != MAGIC_NUMBER)
     {
         return nullptr;
     }
 
-    header->allocated_size = lhs_size;
+    header->avail_size = lhs_size;
 
     libmem_header_t* split_header = (libmem_header_t*)(((uintptr_t)header) + sizeof(libmem_header_t) + lhs_size);
     libmem_header_t* last_split = header->last_split ? header->last_split : header;
@@ -111,6 +123,11 @@ static libmem_header_t* libmem_split(libmem_header_t* header, size_t size)
     return split_header;
 }
 
+static bool libmem_check_bounds(libmem_header_t* header)
+{
+    return !(header < (void*)heap_memory || header > (void*)((uintptr_t)heap_memory + HEAP_SIZE));
+}
+
 static void libmem_merge(libmem_header_t* header1, libmem_header_t* header2)
 {
     libmem_err_t err = LIBMEM_SUCCESS;
@@ -118,6 +135,10 @@ static void libmem_merge(libmem_header_t* header1, libmem_header_t* header2)
     if(header1 == nullptr || header2 == nullptr)
     {
         err = LIBMEM_ERR_NULL_HEADERS;
+    }
+    else if(!libmem_check_bounds(header1) || !libmem_check_bounds(header2))
+    {
+        err = LIBMEM_ERR_CORRUPTED;
     }
     else if(header1->next != header2 || header2->prev != header1)
     {
@@ -135,7 +156,7 @@ static void libmem_merge(libmem_header_t* header1, libmem_header_t* header2)
         return;
     }
 
-    header1->allocated_size += header2->allocated_size + sizeof(libmem_header_t);
+    header1->avail_size += header2->avail_size + sizeof(libmem_header_t);
     header1->next = header2->next;
 
     if(header1->prev)
@@ -164,7 +185,7 @@ static libmem_header_t* libmem_find_free_header(libmem_header_t* header, size_t 
 
     while(true)
     {
-        if(hdr->size == 0 && hdr->allocated_size >= size)
+        if(hdr->size == 0 && hdr->avail_size >= size)
         {
             hdr->size = size;
 
@@ -179,7 +200,7 @@ static libmem_header_t* libmem_find_free_header(libmem_header_t* header, size_t 
         }
         else
         {
-            fputs("heap error: cannot split: heap overflow detected\n", stderr);
+            log_error(MODULE_NAME, "not enough memory; could not allocate memory");
 
             return nullptr;
         }
@@ -222,7 +243,7 @@ void* realloc(void* mem, size_t new_size)
         return nullptr;
     }
 
-    if(new_size < header->allocated_size)
+    if(new_size < header->avail_size)
     {
         header->size = new_size;
     }
@@ -246,9 +267,6 @@ static void libmem_init(void* mem, size_t size)
 }
 
 __END_DECLS
-
-#define HEAP_SIZE page_size * 128
-static uint8_t heap_memory[HEAP_SIZE];
 
 void __stdlib_heap_initialise()
 {

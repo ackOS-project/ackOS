@@ -21,7 +21,7 @@ namespace ackos
 
         utils::result stream_close(int fd)
         {
-            return syscall_dispatch(SYSCALL_STREAM_OPEN, &fd, NULL, NULL, NULL, NULL, NULL);
+            return syscall_dispatch(SYSCALL_STREAM_CLOSE, &fd, NULL, NULL, NULL, NULL, NULL);
         }
 
         utils::result stream_iocall(int fd, int request, void* arg)

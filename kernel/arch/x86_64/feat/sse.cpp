@@ -1,5 +1,5 @@
-#include "kernel/arch/x86_64/features/cpuid.h"
-#include "kernel/arch/x86_64/features/sse.h"
+#include "kernel/arch/x86_64/feat/cpuid.h"
+#include "kernel/arch/x86_64/feat/sse.h"
 
 namespace x86_64
 {

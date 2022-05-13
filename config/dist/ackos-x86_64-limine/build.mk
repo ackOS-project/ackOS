@@ -4,7 +4,7 @@ LIMINE_INSTALL := $(LIMINE_BIN)/limine-install-linux-x86_64
 $(BIN_FOLDER)/$(ISONAME): $(BIN_FOLDER)/kernel.elf $(BIN_FOLDER)/ramdisk.tar.gz
 	@mkdir -p $(@D)
 
-	@echo [ creating media ] limine-install
+	@echo "Creating LIMINE image"
 
 	@mkdir -p $(BIN_FOLDER)/isodir/boot/limine
 	@mkdir -p $(BIN_FOLDER)/isodir/EFI/BOOT

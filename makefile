@@ -21,7 +21,7 @@ AR := $(ARCH)-ackos-ar
 ROOT_DIRECTORY := $(shell pwd)
 
 BIN_FOLDER = bin
-SYSROOT_FOLDER = sysroot
+SYSROOT_FOLDER = $(BIN_FOLDER)/sysroot
 LIBS_FOLDER = $(BIN_FOLDER)/lib
 
 DIST_FOLDER = config/dist/$(DIST)
@@ -58,6 +58,7 @@ endif
 ifeq ($(DEBUG_ENABLED), yes)
 	CFLAGS += -g
 	TARGETS += strip-symbols
+	OPTIMISATION_LEVEL := 0
 endif
 
 LFLAGS += \
@@ -90,7 +91,7 @@ check-multiboot2: all
 strip-symbols:
 	@mkdir -p $(BIN_FOLDER)
 	@make --no-print-directory $(BIN_FOLDER)/kernel.elf DEBUG_ENABLED=no >/dev/null
-	@echo "[ stripping symbols ] objcopy"
+	@echo "Stripping symbols"
 	@$(OBJCOPY) --only-keep-debug $(BIN_FOLDER)/kernel.elf $(DEBUG_SYMBOL_FILE)
 	@rm -rf $(BIN_FOLDER)/symlist.cpp; \
 	 export SYMFILE="$(shell mktemp)"; \
@@ -104,15 +105,17 @@ strip-symbols:
 	 rm $$ADDRFILE
 
 build-sysroot:
-	@mkdir -p sysroot
-	@mkdir -p sysroot/usr/lib/static sysroot/usr/lib/headers
+	@rm -rf $(SYSROOT_FOLDER)
+	@mkdir $(SYSROOT_FOLDER)
+	@mkdir -p $(SYSROOT_FOLDER)/usr/lib/static $(SYSROOT_FOLDER)/usr/lib/headers
 
-	@cd lib; cp --parents $(shell cd lib; find -name \*.h*) $(ROOT_DIRECTORY)/sysroot/usr/lib/headers
-	@cp $(LIBS_FOLDER)/* sysroot/usr/lib/static 2>/dev/null || :
+	@cd lib; cp --parents $(shell cd lib; find -name \*.h*) $(ROOT_DIRECTORY)/$(SYSROOT_FOLDER)/usr/lib/headers
+	@cp $(LIBS_FOLDER)/* $(SYSROOT_FOLDER)/usr/lib/static 2>/dev/null || :
+	@cp -r sysroot/* $(SYSROOT_FOLDER) 2>/dev/null || :
 
 clean:
 	@rm -rf $(BIN_FOLDER)
-	@rm -rf sysroot
+	@rm -rf $(SYSROOT_FOLDER)
 	@rm -f *.iso
 
 clean-sysroot:
@@ -131,7 +134,7 @@ include $(DIST_FOLDER)/build.mk
 
 $(BIN_FOLDER)/kernel.elf: $(KERNEL_OBJECTS) $(TARGETS)
 	@mkdir -p $(@D)
-	@echo [ linking kernel ] $(LD)
+	@echo Linking $@
 	@if [ -f "$(SYMLIST_FILE)" ]; \
 	 then \
 	 	$(CXX) -c "$(SYMLIST_FILE)" -o $(BIN_FOLDER)/symlist.o -Wno-write-strings $(CFLAGS); \
@@ -145,25 +148,25 @@ $(BIN_FOLDER)/kernel.elf: $(KERNEL_OBJECTS) $(TARGETS)
 
 $(BIN_FOLDER)/%.o: %.cpp $(KERNEL_HEADERS)
 	@mkdir -p $(@D)
-	@echo [ compiling target $@ ] C++
+	@echo "Building $<"
 	@$(CXX) -c $< -o $@ $(CFLAGS)
 
 $(BIN_FOLDER)/%.32.o: %.32.cpp $(KERNEL_HEADERS)
 	@mkdir -p $(@D)
-	@echo [ compiling 32-bit target $@ ] C++
+	@echo "Building 32-bit $<"
 	@$(CXX) -c $< -o $@ $(CFLAGS) -m32
 	@$(OBJCOPY) -O elf64-x86-64 $@ $@
 
 $(BIN_FOLDER)/%.asm.o: %.asm
 	@mkdir -p $(@D)
-	@echo [ assemling target $@ ] Assembly
+	@echo "Assembling $<"
 	@$(NASM) -f elf64 $< -o $@
 
 $(BIN_FOLDER)/fonts/%.o: fonts/%.psf
 	@mkdir -p $(BIN_FOLDER)/fonts
-	@echo [ creating font object $@ ] PC Screen Font
+	@echo "Converting $< to an object"
 	@objcopy -O elf64-x86-64 -I binary $< $@
 
 $(BIN_FOLDER)/ramdisk.tar.gz: build-sysroot
-	@echo [ creating ramdisk $@ ] tar
+	@echo "Creating tar ramdisk $<"
 	@cd $(SYSROOT_FOLDER); tar -czf $(ROOT_DIRECTORY)/$@ .

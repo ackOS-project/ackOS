@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstddef>
 
 // Architecture independent functions
 
@@ -11,7 +12,7 @@ namespace arch
     void interrupts_enable();
     void interrupts_disable();
 
-    void stacktrace_dump();
+    void stacktrace_dump(void* addr);
 
     void halt();
 
@@ -22,5 +23,6 @@ namespace arch
 
     void early_print(const char* s);
     void early_print_char(char c);
+    size_t early_write(const char* s, size_t len);
     char early_getchar();
 }

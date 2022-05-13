@@ -1,6 +1,6 @@
-#include "kernel/arch/x86_64/features/acpi/apic.h"
-#include "kernel/arch/x86_64/features/msr.h"
-#include "kernel/arch/x86_64/features/cpuid.h"
+#include "kernel/arch/x86_64/feat/acpi/apic.h"
+#include "kernel/arch/x86_64/feat/msr.h"
+#include "kernel/arch/x86_64/feat/cpuid.h"
 #include "kernel/arch/arch.h"
 
 static volatile uint32_t* lapic_addr = nullptr;

@@ -4,8 +4,8 @@ pic_8259.cpp: For legacy PIC controllers
 #include <stdint.h>
 #include <stddef.h>
 
-#include "kernel/arch/x86_64/features/pic_8259.h"
-#include "kernel/arch/x86_64/features/io.h"
+#include "kernel/arch/x86_64/feat/pic_8259.h"
+#include "kernel/arch/x86_64/feat/io.h"
 
 #define PIC_MASTER_COMMAND 0x20
 #define PIC_MASTER_DATA 0x21

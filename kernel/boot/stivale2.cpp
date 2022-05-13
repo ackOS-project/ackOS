@@ -1,7 +1,6 @@
 #include <cstdint>
 #include <cstddef>
 #include <cstring>
-#include <cstdio>
 
 #include "kernel/boot/stivale2.h"
 #include "kernel/boot/uniheader.h"

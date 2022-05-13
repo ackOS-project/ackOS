@@ -11,14 +11,44 @@
 #include "kernel/proc/process.h"
 #include "kernel/psf.h"
 #include "kernel/sys/sys_info.h"
+#include "kernel/sys/logger.h"
 #include "kernel/fs/filesystem.h"
+#include "kernel/arch/arch.h"
 
 #include <cstdio>
 
 void print_greeting()
 {
     ackos::system_info os_info = get_system_info();
-    printf("Welcome to %s %s built on %s.\n%s\n", os_info.os_name.c_str(), os_info.os_release.c_str(), os_info.build_date.c_str(), os_info.copyright.c_str());
+    log_info("kernel", "Welcome to %s %s built on %s", os_info.os_name.c_str(), os_info.os_release.c_str(), os_info.build_date.c_str());
+    log_info("kernel", os_info.copyright.c_str());
+
+    const char* filename = "/ackos.txt";
+    FILE* file = fopen(filename, "rw");
+
+    printf("$ cat %s\n", filename);
+
+    if(file == nullptr)
+    {
+        printf("%s: failed to open file - errno %d\n", filename, errno);
+    }
+    else
+    {
+        size_t size = 256;
+        size_t count = 1;
+        char buff[size * count + 1];
+
+        size_t read = fread(buff, size, count, file);
+
+        if(read)
+        {
+            printf("%s\n", buff);
+        }
+        else
+        {
+            printf("%s: could not read file - errno %d\n", filename, errno);
+        }
+    }
 }
 
 void kmain(uniheader& header)
@@ -28,10 +58,10 @@ void kmain(uniheader& header)
     memory_initialise(&header);
     boot_modules_initialise(&header);
 
-    print_greeting();
     memory_dump();
+    print_greeting();
 
-    putchar('\n'); // leave a new line at the end
+    putchar('\n'); /* write a newline if hasn't been printed already */
 
-    while(true);
+    arch::halt();
 }

@@ -1,5 +1,5 @@
-#include "kernel/arch/x86_64/features/acpi/madt.h"
-#include "kernel/arch/x86_64/features/acpi/rsdt.h"
+#include "kernel/arch/x86_64/feat/acpi/madt.h"
+#include "kernel/arch/x86_64/feat/acpi/rsdt.h"
 
 namespace x86_64
 {

@@ -80,5 +80,5 @@ namespace x86_64
         INT_SECONDARY_ATA
     };
 
-    void dump_stackframe();
+    void dump_stackframe(void* addr);
 }

@@ -19,7 +19,6 @@ toolchain/build
 toolchain/gcc
 toolchain/binutils
 toolchain/local
-sysroot
 
 # Misc
 *.old

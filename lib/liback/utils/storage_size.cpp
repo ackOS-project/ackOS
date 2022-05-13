@@ -1,6 +1,5 @@
 #include "liback/utils/storage_size.h"
 #include <cstdlib>
-#include <cstdio>
 
 #define KB_SIZE (1024L)
 #define MB_SIZE (KB_SIZE * KB_SIZE)

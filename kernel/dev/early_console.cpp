@@ -29,12 +29,7 @@ utils::result early_console_device::write(const void* buff, size_t size, size_t*
 {
     const char* str = (const char*)buff;
 
-    for(int i = 0; i < size; i++)
-    {
-        arch::early_print_char(str[i]);
-
-        ++*total_written;
-    }
+    *total_written = arch::early_write(str, size);
 
     return utils::result::SUCCESS;
 }

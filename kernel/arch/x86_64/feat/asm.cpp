@@ -1,4 +1,4 @@
-#include "kernel/arch/x86_64/features/instructions.h"
+#include "kernel/arch/x86_64/feat/asm.h"
 
 namespace x86_64
 {
@@ -15,6 +15,14 @@ namespace x86_64
     void halt()
     {
         asm volatile("hlt");
+    }
+
+    uint64_t get_bp()
+    {
+        uint64_t bp;
+        asm volatile("movq %%rbp, %0" : "=g"(bp) :: "memory");
+
+        return bp;
     }
 
     uint64_t get_cr0()

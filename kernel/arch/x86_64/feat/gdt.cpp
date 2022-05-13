@@ -1,4 +1,4 @@
-#include "kernel/arch/x86_64/features/gdt.h"
+#include "kernel/arch/x86_64/feat/gdt.h"
 
 #define MODULE_NAME "gdt"
 

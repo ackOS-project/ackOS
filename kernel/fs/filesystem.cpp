@@ -51,11 +51,10 @@ fs_node* filesystem_info_t::find(const char* p)
 utils::result_tuple<fs_node*> filesystem_info_t::open(const char* path, int flags)
 {
     fs_node* node = find(path);
-    int err = utils::result::ERR_NO_SUCH_FILE_OR_DIRECTORY;
 
     if(!node)
     {
-        return utils::result_tuple<fs_node*>(err);
+        return utils::result_tuple<fs_node*>(utils::result::ERR_NO_SUCH_FILE_OR_DIRECTORY);
     }
 
     return utils::result_tuple<fs_node*>(node);

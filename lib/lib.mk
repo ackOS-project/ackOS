@@ -24,12 +24,12 @@ KERNEL_OBJECTS += $$($(1)_OBJECTS)
 
 $$($(1)_LIB): $$($(1)_OBJECTS)
 	@mkdir -p $$(@D)
-	@echo [ creating library archive $@ for $$($(1)_NAME) ] $(AR)
+	@echo "Creating library archive $$@ for $$($(1)_NAME)"
 	@$(AR) -rsc $$@ $$^
 
 $$(BIN_FOLDER)/lib/$($(1)_NAME)/%.o: lib/$$($(1)_NAME)/%.cpp $($(1)_HEADERS)
 	@mkdir -p $$(@D)
-	@echo [ compiling target $$@ ] C++
+	@echo "Building $$<"
 	@$(CXX) -c $$< -o $$@ $(CFLAGS)
 
 endef
