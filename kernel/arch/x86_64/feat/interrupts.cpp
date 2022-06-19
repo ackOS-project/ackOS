@@ -1,6 +1,7 @@
 #include "kernel/arch/x86_64/feat/interrupts.h"
 #include "kernel/arch/x86_64/feat/asm.h"
 #include "kernel/arch/x86_64/feat/pic_8259.h"
+#include "kernel/arch/x86_64/feat/io.h"
 #include "kernel/arch/x86_64/feat/ps2_keyboard.h"
 #include "kernel/sys/panic.h"
 #include "kernel/sys/logger.h"
@@ -71,16 +72,6 @@ namespace x86_64
         return nullptr;
     }
 
-    static void keyboard_handler(x86_64::interrupt_stack_frame* frame)
-    {
-        x86_64::keyboard_scancode scancode = x86_64::kbps2_get_scancode();
-
-        puts("ps/2 keyboard");
-        printf("scancode=0x%x; press_type=%s; ascii='%c'\n\n", scancode, (bool)kbps2_get_key_state(scancode) ? "released" : "down", kbps2_scancode_to_ascii(scancode));
-
-        x86_64::pic8259_master_eoi();
-    }
-
     void print_stack_trace(stack_frame* frame, size_t size)
     {
         stack_frame* current = frame;
@@ -127,17 +118,17 @@ namespace x86_64
     {
         if(frame->int_num < 32)
         {
-            printf("CPU exception! %s(0x%x) error_code=0x%x\n", exception_names[frame->int_num], frame->int_num, frame->err);
+            printf("CPU exception! %s(0x%x) error_code=0x%lx\n", exception_names[frame->int_num], frame->int_num, frame->err);
 
             if(frame->int_num == INT_PAGE_FAULT)
             {
                 printf("caused by virtual address 0x%x\n", get_cr2());
             }
 
-            printf("\nR8=0x%x R9=0x%x R10=0x%x R11=0x%x R12=0x%x R13=0x%x R14=0x%x R15=0x%x,\n"
-                   "RAX=0x%x RBX=0x%x RCX=0x%x RDX=0x%x RSI=0x%x RDI=0x%x RBP=0x%x\n"
-                   "RIP=0x%x CS=0x%x RFLAGS=0x%x RSP=0x%x SS=0x%x\n"
-                   "CR0=0x%x CR2=0x%x CR3=0x%x CR4=0x%x\n\n",
+            printf("\nR8=0x%lx R9=0x%lx R10=0x%lx R11=0x%lx R12=0x%lx R13=0x%lx R14=0x%lx R15=0x%lx,\n"
+                   "RAX=0x%lx RBX=0x%lx RCX=0x%lx RDX=0x%lx RSI=0x%lx RDI=0x%lx RBP=0x%lx\n"
+                   "RIP=0x%lx CS=0x%lx RFLAGS=0x%lx RSP=0x%lx SS=0x%lx\n"
+                   "CR0=0x%lx CR2=0x%lx CR3=0x%lx CR4=0x%lx\n\n",
                    frame->r8, frame->r9, frame->r10, frame->r11, frame->r12, frame->r13, frame->r14, frame->r15,
                    frame->rax, frame->rbx, frame->rcx, frame->rdx, frame->rsi, frame->rdi, frame->rbp,
                    frame->rip, frame->cs, frame->rflags, frame->rsp, frame->ss,
@@ -149,15 +140,22 @@ namespace x86_64
         }
     }
 
-    extern "C" void interrupt_handler(x86_64::interrupt_stack_frame* frame)
+    extern "C" x86_64::interrupt_stack_frame* x86_interrupt_handler(x86_64::interrupt_stack_frame* frame)
     {
         if(frame->int_num == INT_KEYBOARD)
         {
-            keyboard_handler(frame);
+            keyboard_scancode scancode = (keyboard_scancode)inb(0x60);
+
+            puts("ps/2 keyboard");
+            printf("scancode=0x%x; press_type=%s; ascii='%c'\n\n", scancode, (bool)kbps2_get_key_state(scancode) ? "released" : "down", kbps2_scancode_to_ascii(scancode));
+    
+            x86_64::pic8259_master_eoi();
         }
         else
         {
             dump_interrupt_info(frame);
         }
+
+        return frame;
     }
 }

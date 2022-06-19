@@ -8,10 +8,10 @@ void exit(int status)
     _exit(status);
 }
 
-void* calloc(size_t size)
+void* calloc(size_t count, size_t size)
 {
-    void* mem = malloc(size);
-    memset(mem, 0, size);
+    void* mem = malloc(count * size);
+    memset(mem, 0, count * size);
 
     return mem;
 }

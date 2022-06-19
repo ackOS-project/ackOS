@@ -87,7 +87,7 @@ int dup(int old_fd)
 {
     int new_fd = -1;
 
-    utils::result result = ackos::sys_wrapper::stream_clone(&new_fd, old_fd);
+    utils::result result = ackos::sys_wrapper::stream_clone(old_fd, 0, &new_fd, false);
 
     switch((int)result)
     {
@@ -120,7 +120,9 @@ int dup(int old_fd)
 
 int dup2(int old_fd, int new_fd)
 {
-    utils::result result = ackos::sys_wrapper::stream_clone(old_fd, new_fd);
+    int res_fd = -1;
+
+    utils::result result = ackos::sys_wrapper::stream_clone(old_fd, new_fd, &res_fd, true);
 
     switch((int)result)
     {
@@ -151,7 +153,7 @@ int dup2(int old_fd, int new_fd)
         break;
     }
 
-    return new_fd;
+    return res_fd;
 }
 
 void _exit(int status)

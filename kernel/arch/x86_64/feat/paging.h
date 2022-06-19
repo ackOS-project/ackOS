@@ -87,6 +87,8 @@ namespace x86_64
 
         void set_physical_address(uint64_t addr);
         uint64_t get_physical_address() const;
+
+        uint64_t raw() const { return _raw; }
     };
 
     struct pml_t
@@ -96,13 +98,15 @@ namespace x86_64
 
     static_assert(sizeof(pml_entry) == sizeof(uint64_t), "pml_entry must be 64 bits wide");
 
-    void paging_switch_directory(pml_t* pd);
+    void paging_switch_table(uintptr_t table);
 
     void paging_flush();
 
-    void paging_map(uintptr_t virtual_addr, uintptr_t phys_addr, uint32_t flags);
+    void paging_map(uintptr_t table, uintptr_t virtual_addr, uintptr_t phys_addr, uint32_t flags);
 
-    void paging_unmap(uintptr_t virtual_addr);
+    void paging_unmap(uintptr_t table, uintptr_t virtual_addr);
 
-    void paging_initialise();
+    uintptr_t paging_table_create();
+
+    void paging_dump(uintptr_t table);
 }

@@ -10,6 +10,10 @@ __BEGIN_DECLS
 #define STDOUT_FILENO 1
 #define STDERR_FILENO 2
 
+#define SEEK_SET 0
+#define SEEK_CUR 1
+#define SEEK_END 2
+
 int open(const char* path, int flags, ...);
 
 ssize_t read(int fd, void* buff, size_t count);

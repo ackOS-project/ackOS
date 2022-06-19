@@ -126,7 +126,6 @@ namespace x86_64
         RELEASED
     };
 
-    keyboard_scancode kbps2_get_scancode();
     char kbps2_scancode_to_ascii(keyboard_scancode scancode);
     key_state kbps2_get_key_state(keyboard_scancode scancode);
 }

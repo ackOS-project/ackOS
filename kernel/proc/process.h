@@ -1,6 +1,7 @@
 #pragma once
 
 #include "kernel/io/fd_table.h"
+#include "kernel/fs/filesystem.h"
 
 #include <sys/types.h>
 #include <liback/utils/result.h>
@@ -15,37 +16,24 @@ enum class process_state
     STOPPED
 };
 
-class process
+class process_t
 {
-private:
-    process* _parent_process;
-    pid_t _pid;
-    fd_table _fd_table;
-    process_state _state = process_state::ZOMBIE;
-    uintptr_t _memory_start = 0;
-    uintptr_t _memory_end = 0;
-
 public:
-    pid_t get_pid() const { return _pid; }
-    process* get_parent_pid() const { return _parent_process; }
-    fd_table& get_fd_table() { return _fd_table; }
-    const fd_table& get_fd_table() const { return _fd_table; }
-
-    void set_memory_region(uintptr_t start, uintptr_t end)
-    {
-        _memory_start = start;
-        _memory_end = end;
-    }
+    process_t* parent_proc;
+    pid_t pid;
+    fd_table_t fd_table;
+    process_state state = process_state::ZOMBIE;
+    uintptr_t page_table;
 
     utils::result send_signal(int signal);
 
-    friend process* process_start(process* parent, const char* name, void* entry_point);
+    friend process_t* process_create(process_t* parent, const char* name, void* entry_point);
 };
 
-process* process_get_from_pid(pid_t pid);
+process_t* process_get_from_pid(pid_t pid);
 
-int process_destroy(process* process);
+int process_destroy(process_t* process);
 
-process* process_start(process* parent, const char* name, void* entry_point);
+process_t* process_create(process_t* parent, const char* name, void* entry_point);
 
 void processes_initialise();

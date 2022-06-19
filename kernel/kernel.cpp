@@ -13,6 +13,7 @@
 #include "kernel/sys/sys_info.h"
 #include "kernel/sys/logger.h"
 #include "kernel/fs/filesystem.h"
+#include "kernel/dev/devices.h"
 #include "kernel/arch/arch.h"
 
 #include <cstdio>
@@ -40,7 +41,9 @@ void print_greeting()
 
         size_t read = fread(buff, size, count, file);
 
-        if(read)
+        buff[read] = '\0';
+
+        if(errno == 0)
         {
             printf("%s\n", buff);
         }
@@ -57,11 +60,17 @@ void kmain(uniheader& header)
     processes_initialise();
     memory_initialise(&header);
     boot_modules_initialise(&header);
+    devices_initialise(&header);
+
+    psf_write_to_fb("Hello, World! Welcome to ackOS!");
 
     memory_dump();
     print_greeting();
 
     putchar('\n'); /* write a newline if hasn't been printed already */
 
-    arch::halt();
+    while(true)
+    {
+        arch::halt();
+    }
 }

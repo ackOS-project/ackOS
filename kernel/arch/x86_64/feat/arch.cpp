@@ -31,19 +31,24 @@ namespace arch
         x86_64::halt();
     }
 
-    void paging_init()
+    uintptr_t paging_create_table()
     {
-        x86_64::paging_initialise();
+        return x86_64::paging_table_create();
     }
 
-    void paging_map(uintptr_t virtual_addr, uintptr_t phys_addr, uint32_t flags)
+    void paging_load_table(uintptr_t table)
     {
-        x86_64::paging_map(virtual_addr, phys_addr, flags);
+        x86_64::paging_switch_table(table);
     }
 
-    void paging_unmap(uintptr_t virtual_addr)
+    void paging_map(uintptr_t table, uintptr_t virtual_addr, uintptr_t phys_addr, uint32_t flags)
     {
-        x86_64::paging_unmap(virtual_addr);
+        x86_64::paging_map(table, virtual_addr, phys_addr, flags);
+    }
+
+    void paging_unmap(uintptr_t table, uintptr_t virtual_addr)
+    {
+        x86_64::paging_unmap(table, virtual_addr);
     }
 
     void paging_flush()

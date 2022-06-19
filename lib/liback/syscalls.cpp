@@ -7,7 +7,9 @@ namespace ackos
     utils::result syscall_dispatch(int call, void* arg1, void* arg2, void* arg3, void* arg4, void* arg5, void* arg6)
     {
         // FIXME: hard coded pid
-        utils::result result = syscalls_dispatch(process_get_from_pid(0), call, arg1, arg2, arg3, arg4, arg5, arg6);
+        process_t* p = process_get_from_pid(0);
+
+        utils::result result = syscalls_dispatch(p, call, arg1, arg2, arg3, arg4, arg5, arg6);
 
         return result;
     }
@@ -29,14 +31,9 @@ namespace ackos
             return syscall_dispatch(SYSCALL_STREAM_IOCALL, &fd, &request, &arg, NULL, NULL, NULL);
         }
 
-        utils::result stream_clone(int* new_fd, int old_fd)
+        utils::result stream_clone(int old_fd, int new_fd, int* res_fd, bool replace)
         {
-            return syscall_dispatch(SYSCALL_STREAM_CLONE1, &new_fd, &old_fd, NULL, NULL, NULL, NULL);
-        }
-
-        utils::result stream_clone(int old_fd, int new_fd)
-        {
-            return syscall_dispatch(SYSCALL_STREAM_CLONE2, &old_fd, &new_fd, NULL, NULL, NULL, NULL);
+            return syscall_dispatch(SYSCALL_STREAM_CLONE, &old_fd, &new_fd, &res_fd, &replace, NULL, NULL);
         }
 
         utils::result stream_read(int fd, void** buff, size_t size, size_t* total_read)

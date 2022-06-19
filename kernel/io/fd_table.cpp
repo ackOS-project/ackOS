@@ -4,188 +4,181 @@
 #include <fcntl.h>
 #include <liback/utils/result.h>
 
-int fd_table::insert_node_at(int fd, fs_node* node, int flags)
+fs_node* fd_table_t::get_node(int fd)
 {
+    if(fd > 0 && fd < _nodes.size())
+    {
+        return _nodes[fd];
+    }
+
+    return nullptr;
+}
+
+int fd_table_t::insert_node_at(int fd, fs_node* node)
+{
+    if(fd >= _nodes.size())
+    {
+        size_t cur_size = _nodes.size();
+
+        _nodes.resize(fd + 1);
+
+        for(size_t i = cur_size; i < fd; i++)
+        {
+            _nodes[i] = nullptr;
+        }
+    }
+
     _nodes[fd] = node;
 
     return fd;
 }
 
-int fd_table::append_node(fs_node* node, int flags)
+int fd_table_t::append_node(fs_node* node)
 {
     int fd = -1;
 
-    for(int i = 0; i < HANDLE_LIMIT; i++)
+    for(int i = 0; i < _nodes.size(); i++)
     {
         if(_nodes[i] == nullptr)
         {
-            fd = insert_node_at(i, node, flags);
-
+            fd = i;
+            _nodes[i] = node;
             break;
         }
+    }
+
+    if(fd == -1)
+    {
+        fd = _nodes.size();
+        _nodes.push_back(node);
     }
 
     return fd; 
 }
 
-utils::result fd_table::remove_node(int fd)
+utils::result fd_table_t::remove_node(int fd)
 {
-    utils::result result;
-
-    if(_nodes[fd] != nullptr)
+    utils::result result = utils::result::ERR_INVALID_FD;
+        
+    if(fd > 0 && fd < _nodes.size())
     {
-        delete _nodes[fd];
-        _nodes[fd] = NULL;
-    }
-    else
-    {
-        result = utils::result::ERR_INVALID_FD;
+        if(_nodes[fd] != nullptr)
+        {
+            _nodes[fd] = nullptr;
+            result = utils::result::SUCCESS;
+        }
     }
 
     return result;
 }
 
-utils::result fd_table::read(int fd, void* buff, size_t size, size_t* total_read)
+utils::result fd_table_t::read(int fd, void* buff, size_t size, size_t* total_read)
 {
+    fs_node* node = get_node(fd);
+
     *total_read = 0; /* make sure it's set to zero */
 
-    if(fd > HANDLE_LIMIT || fd < 0)
-    {
-        return utils::result::ERR_OUT_OF_BOUNDS;
-    }
-    else if(_nodes[fd] == nullptr)
+    if(node == nullptr)
     {
         return utils::result::ERR_INVALID_FD;
     }
 
-    return _nodes[fd]->read(buff, size, total_read);
+    return node->read(buff, size, total_read);
 }
 
-utils::result fd_table::write(int fd, const void* buff, size_t size, size_t* total_written)
+utils::result fd_table_t::write(int fd, const void* buff, size_t size, size_t* total_written)
 {
+    fs_node* node = get_node(fd);
+
     *total_written = 0;
 
-    if(fd > HANDLE_LIMIT || fd < 0)
-    {
-        return utils::result::ERR_OUT_OF_BOUNDS;
-    }
-    else if(_nodes[fd] == nullptr)
+    if(node == nullptr)
     {
         return utils::result::ERR_INVALID_FD;
     }
 
-    return _nodes[fd]->write(buff, size, total_written);
+    return node->write(buff, size, total_written);
 }
 
-utils::result fd_table::io_call(int fd, int request, void* arg)
+utils::result fd_table_t::io_call(int fd, int request, void* arg)
 {
-    if(fd > HANDLE_LIMIT || fd < 0)
-    {
-        return utils::result::ERR_OUT_OF_BOUNDS;
-    }
-    else if(_nodes[fd] == nullptr)
+    fs_node* node = get_node(fd);
+
+    if(node == nullptr)
     {
         return utils::result::ERR_INVALID_FD;
     }
 
-    return _nodes[fd]->io_call(request, arg);
+    return node->io_call(request, arg);
 }
 
-utils::result fd_table::clone(int old_fd, int new_fd)
+utils::result fd_table_t::clone(int old_fd, int new_fd)
 {
     if(old_fd == new_fd)
     {
         return utils::result::ERR_INVALID_ARGUMENT;
     }
 
-    if((old_fd > HANDLE_LIMIT || old_fd < 0) || (new_fd > HANDLE_LIMIT || new_fd < 0))
-    {
-        return utils::result::ERR_OUT_OF_BOUNDS;
-    }
-    else if(_nodes[old_fd] == nullptr)
+    fs_node* old_node = get_node(old_fd), *new_node = get_node(new_fd);
+
+    if(old_node == nullptr)
     {
         return utils::result::ERR_INVALID_FD;
     }
 
-    if(_nodes[new_fd] != nullptr)
+    if(new_node != nullptr)
     {
         remove_node(new_fd);
     }
 
-    _nodes[new_fd] = _nodes[old_fd];
+    insert_node_at(new_fd, old_node);
 
     return utils::result::SUCCESS;
 }
 
-utils::result fd_table::clone(int* new_fd, int old_fd)
+utils::result fd_table_t::clone(int* new_fd, int old_fd)
 {
+    *new_fd = -1;
+
     if(new_fd == nullptr)
     {
         return utils::result::ERR_INVALID_ADDRESS;
     }
-
-    if(_nodes[old_fd] == nullptr)
+    else if(get_node(old_fd) == nullptr)
     {
-        *new_fd = -1;
-
         return utils::result::ERR_INVALID_FD;
     }
 
-    for(int i = 0; i < HANDLE_LIMIT; i++)
-    {
-        if(_nodes[i] == nullptr)
-        {
-            utils::result result = clone(old_fd, i);
-
-            if(result)
-            {
-                *new_fd = i;
-            }
-            else
-            {
-                *new_fd = -1;
-            }
-
-            return result;
-        }
-    }
+    *new_fd = append_node(get_node(old_fd));
 
     return utils::result::SUCCESS;
 }
 
-utils::result fd_table::open(int* fd, const char* path, int flags)
+utils::result fd_table_t::open(int* fd, const char* path, int flags)
 {
     auto result = _filesystem.open(path, flags);
 
     if(result)
     {
-        *fd = append_node(result.get_value(), flags);
+        *fd = append_node(result.get_value());
     }
 
     return result.get_result();
 }
 
-fd_table::fd_table()
+fd_table_t::fd_table_t()
 {
-    for(int i = 0; i < HANDLE_LIMIT; i++)
-    {
-        _nodes[i] = 0;
-    }
 }
 
-fd_table::~fd_table()
+fd_table_t::~fd_table_t()
 {
-    for(int i = 0; i < HANDLE_LIMIT; i++)
-    {
-        if(_nodes[i] != nullptr) delete _nodes[i];
-    }
 }
 
-void fd_table::dump()
+void fd_table_t::dump()
 {
     log_info("fd", "Open file descriptors: ");
 
-    for(int i = 0; i < HANDLE_LIMIT; i++)
+    for(int i = 0; i < _nodes.size(); i++)
     {
         if(_nodes[i] != nullptr)
         {
@@ -194,12 +187,12 @@ void fd_table::dump()
     }
 }
 
-utils::result fd_table::seek(int fd, off_t off)
+utils::result fd_table_t::seek(int fd, int whence, off_t off)
 {
     if(_nodes[fd] == nullptr)
     {
         return utils::result::ERR_INVALID_FD;
     }
 
-    return _nodes[fd]->set_offset(off);
+    return _nodes[fd]->set_offset(whence, off);
 }

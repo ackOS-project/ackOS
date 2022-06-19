@@ -11,5 +11,5 @@ public:
     utils::result read(void* buff, size_t size, size_t* total_read) const override;
     utils::result write(const void* buff, size_t size, size_t* total_written) override;
 
-    utils::result set_offset(off_t offset) override;
+    utils::result set_offset(int whence, off_t offset) override;
 };

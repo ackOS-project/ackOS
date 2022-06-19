@@ -34,7 +34,7 @@ utils::result early_console_device::write(const void* buff, size_t size, size_t*
     return utils::result::SUCCESS;
 }
 
-utils::result early_console_device::set_offset(off_t offset)
+utils::result early_console_device::set_offset(int whence, off_t offset)
 {
     return utils::result::ERR_IS_TERMINAL;
 }

@@ -6,7 +6,7 @@ ATTRIBUTE_NO_RETURN void kpanic(const char* error, void* stacktrace_addr, const 
 {
     arch::interrupts_disable();
 
-    log_error("panic", "Kernel panic - %s", error);
+    log_error("panic", error);
     log_error("panic", "panicked in file %s:%d:%d in the function '%s()'",
             location.file_name(), location.line(), location.column(), location.function_name());
 

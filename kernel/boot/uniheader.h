@@ -59,6 +59,7 @@ struct uniheader
     uniheader_memory_map memmap;
 
     void dump();
+    void dump_memmap();
     void parse(void* header, uint32_t magic);
 
     uniheader_module modules[UNIHEADER_MODULE_ENTRIES_MAX];

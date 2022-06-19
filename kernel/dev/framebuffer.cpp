@@ -1,10 +1,15 @@
+#include <algorithm>
+
+#include <cstdio>
+#include "kernel/sys/logger.h"
+
 #include "kernel/dev/framebuffer.h"
 
-framebuffer_device::framebuffer_device(void* addr_virtual, int width, int height, int pitch, int bpp)
+framebuffer_device::framebuffer_device(void* addr_physical, int width, int height, int pitch, int bpp)
 :
 fs_node(NODE_TYPE_DEVICE)
 {
-    _addr_virtual = addr_virtual;
+    _addr_virtual = addr_physical;
     _width = width;
     _height = height;
     _pitch = pitch;
@@ -26,14 +31,21 @@ utils::result framebuffer_device::io_call(int request, void* arg)
     {
         const framebuffer_write_data_info* info = (framebuffer_write_data_info*)arg;
 
+        uint32_t* framebuffer = (uint32_t*)_addr_virtual;
+
         for(int y = 0; y < info->buff_height; y++)
         {
             for(int x = 0; x < info->buff_width; x++)
             {
-                int pixel_index = (info->y + y) * (_pitch / 4) + (info->x + x);
-                uint32_t pixel_colour = info->buff[info->buff_width * y + x];
+                uint32_t pixel_colour = info->buff[y * info->buff_width + x];
+                uint32_t index = (info->y + y) * (_pitch / 4) + (info->x + x);
 
-                ((uint32_t*)_addr_virtual)[pixel_index] = pixel_colour;
+                if(index >= _width * _height)
+                {
+                    continue;
+                }
+
+                framebuffer[index] = pixel_colour;
             }
         }
 

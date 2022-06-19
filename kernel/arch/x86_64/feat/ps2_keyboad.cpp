@@ -1,4 +1,3 @@
-#include "kernel/arch/x86_64/feat/io.h"
 #include "kernel/arch/x86_64/feat/ps2_keyboard.h"
 
 namespace x86_64
@@ -12,16 +11,6 @@ namespace x86_64
         0, ' ', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, '7', '8', '9', '-', '4', '5', '6', '+', '1', '2', '3', '0', '.'
     };
-
-    keyboard_scancode kbps2_get_scancode()
-    {
-        if(inb(0x64) & 0x1)
-        {
-            return (keyboard_scancode)inb(0x60);
-        }
-
-        return keyboard_scancode::INVALID;
-    }
 
     char kbps2_scancode_to_ascii(keyboard_scancode scancode)
     {

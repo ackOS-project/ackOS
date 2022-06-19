@@ -43,6 +43,7 @@ CFLAGS += \
 		-ffreestanding \
 		-fno-exceptions \
 		-fno-rtti \
+		-fstack-protector \
 		-O$(OPTIMISATION_LEVEL) \
 		-mno-red-zone \
 		-DBUILD_ARCH_$(ARCH) \
@@ -70,7 +71,7 @@ LFLAGS += \
 		-lgcc
 
 VM_LOGFILE := ackos.log
-VM_MEMORY := 64
+VM_MEMORY := 128
 
 DEBUG_SYMBOL_FILE := $(BIN_FOLDER)/ackos.sym
 DEBUG_BREAKPOINT := kmain

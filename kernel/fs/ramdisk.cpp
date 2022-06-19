@@ -1,13 +1,10 @@
+#include <cstring>
+#include <algorithm>
+
 #include "kernel/fs/ramdisk.h"
 #include "kernel/fs/tar.h"
-#include "kernel/fs/file.h"
 #include "kernel/fs/filesystem.h"
 #include "kernel/proc/process.h"
-
-#include <cstring>
-#include <fcntl.h>
-
-#include <filesystem>
 
 class tar_node_t : public fs_node
 {
@@ -28,16 +25,14 @@ public:
     {
         char* str = (char*)buff;
 
-        for(int i = 0; i < size; i++)
+        *total_read = 0;
+
+        if(_offset < _size)
         {
-            if(i >= _size) break;
+            *total_read = std::min(_size - _offset, size);
 
-            str[i] = _data[i];
-
-            ++*total_read;
+            memcpy(str, _data + _offset, *total_read);
         }
-
-        str[*total_read] = '\0';
 
         return utils::result::SUCCESS;
     }

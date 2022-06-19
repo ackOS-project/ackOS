@@ -136,6 +136,8 @@ void physical_deallocate(void* addr, size_t size)
 
 void physical_initialise(uniheader* uheader)
 {
+    uheader->dump_memmap();
+
     void* largest_free_mem_seg = nullptr;
     size_t largest_free_mem_seg_size = 0;
 

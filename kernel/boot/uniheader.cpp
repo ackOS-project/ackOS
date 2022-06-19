@@ -6,6 +6,7 @@
 #include "kernel/boot/multiboot2.h"
 #include "kernel/boot/stivale2.h"
 #include "kernel/sys/panic.h"
+#include "kernel/sys/logger.h"
 
 static const char* memory_type_strings[] =
 {
@@ -81,6 +82,16 @@ void uniheader::dump()
 
     puts("  }\n"
          "}");
+}
+
+void uniheader::dump_memmap()
+{
+    log_info("boot", "memory map:");
+
+    for(int i = 0; i < memmap.entry_count; i++)
+    {
+        log_info("boot", "  [mem %p - %p] %s", memmap.entries[i].addr, (uintptr_t)memmap.entries[i].addr + memmap.entries[i].length, memory_type_strings[memmap.entries[i].type]);
+    }
 }
 
 uint64_t uniheader::get_usable_memory()
