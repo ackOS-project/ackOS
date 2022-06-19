@@ -3,7 +3,7 @@
 #define ACKOS_NAME_STRING "ackOS"
 #define ACKOS_VERSION_STRING "0.02"
 #define ACKOS_RELEASE_STRING "v0.02-dev"
-#define ACKOS_COPYRIGHT_STRING "Copyright (c) 2020 - 2021 - The ackOS project."
+#define ACKOS_COPYRIGHT_STRING "Copyright (c) 2020 - 2022 - The ackOS project."
 
 ackos::system_info get_system_info()
 {

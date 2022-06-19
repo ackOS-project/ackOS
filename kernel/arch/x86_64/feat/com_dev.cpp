@@ -73,7 +73,7 @@ utils::result com_port::write(const void* buff, size_t size, size_t* total_writt
     return utils::result::SUCCESS;
 }
 
-utils::result com_port::set_offset(off_t offset)
+utils::result com_port::set_offset(int whence, off_t offset)
 {
     return utils::result::ERR_IS_TERMINAL;
 }

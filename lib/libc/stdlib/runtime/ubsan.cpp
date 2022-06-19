@@ -77,6 +77,15 @@ struct ubsan_vla_bound_not_positive_info
     ubsan_type_descriptor* type;
 };
 
+uintptr_t __stack_chk_guard = 0x595e9fbd94fda766;
+ 
+extern "C" __attribute__((noreturn)) void __stack_chk_fail()
+{
+    fputs("Stack smashing detected\n", _ubsan_output);
+
+    while(true);
+}
+
 static void ubsan_log_info(ubsan_source_location* location, const char* fmt, ...)
 {
     fprintf(_ubsan_output, "ubsan! %s:%d:%d\n", location->filename, location->line, location->column);

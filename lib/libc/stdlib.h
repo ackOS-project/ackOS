@@ -15,6 +15,8 @@ void* malloc(size_t size);
 
 void* realloc(void* mem, size_t new_size);
 
+void* calloc(size_t count, size_t size);
+
 void free(void* ptr);
 
 char* ltoa(int64_t value, char* str, int base);

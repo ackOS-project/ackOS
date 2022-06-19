@@ -5,16 +5,16 @@
 
 // PC screen fonts
 
-enum class psf_version_t
+struct psf1_header_t
 {
-    V1,
-    V2,
-    UNKNOWN
+    uint8_t magic[2];
+    uint8_t mode;
+    uint8_t char_size;
 };
 
-struct psf2_header
+struct psf_header_t
 {
-    uint32_t magic[4];
+    uint8_t magic[4];
     uint32_t version;
     uint32_t header_size;
     uint32_t flags;
@@ -24,28 +24,8 @@ struct psf2_header
     uint32_t width; 
 };
 
-struct psf2_font
-{
-    psf2_header header;
-    uint8_t data[];
-};
+psf_header_t* psf_load();
 
-struct psf1_header
-{
-    uint8_t magic[2];
-    uint8_t mode;
-    uint8_t char_size;
-};
+void psf_read_glyph(psf_header_t* header, uint16_t glyph_index, void* pixels, size_t pixel_size, uint32_t fill_colour, uint32_t clear_colour);
 
-struct psf1_font
-{
-    psf1_header header;
-    uint8_t data[];
-};
-
-
-void psf_initialise();
-
-char* psf1_get_character(char c);
-
-char* psf2_get_character(char c);
+void psf_write_to_fb(const char* s);

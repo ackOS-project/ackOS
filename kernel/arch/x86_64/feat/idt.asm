@@ -1,7 +1,7 @@
 bits 64
 section .text
 
-extern interrupt_handler
+extern x86_interrupt_handler
 
 %macro pusha 0
     push rax
@@ -44,11 +44,11 @@ interrupt_common_handler:
     pusha
 
     mov rdi, rsp
-    call interrupt_handler
+    call x86_interrupt_handler
     mov rsp, rax
     popa
 
-    add rsp, 16
+    add rsp, 16 ; pop errcode and interrupt code
 
     iretq
 

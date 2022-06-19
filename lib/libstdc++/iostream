@@ -1,1 +1,8 @@
-#include <iostream.h>
+#include <ostream>
+
+namespace std
+{
+    extern ostream cout;
+    extern ostream cerr;
+    extern ostream clog;
+}

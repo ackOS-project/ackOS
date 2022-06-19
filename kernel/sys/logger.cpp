@@ -20,10 +20,10 @@ void vlog(log_level level, const char* module_name, const char* fmt, va_list arg
     switch(level)
     {
     case log_level::INFO:
-        level_str = COLOUR_BLUE "info" COLOUR_RESET;
+        level_str = COLOUR_BLUE "info " COLOUR_RESET;
         break;
     case log_level::WARN:
-        level_str = COLOUR_YELLOW "warn" COLOUR_RESET;
+        level_str = COLOUR_YELLOW "warn " COLOUR_RESET;
         break;
     case log_level::ERROR:
         level_str = COLOUR_RED "error" COLOUR_RESET;

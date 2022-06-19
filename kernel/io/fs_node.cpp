@@ -1,3 +1,5 @@
+#include <unistd.h>
+
 #include "kernel/io/fs_node.h"
 
 fs_node::fs_node(node_type type)
@@ -20,11 +22,9 @@ utils::result fs_node::io_call(int request, void* arg)
     return utils::result::ERR_UNIMPLEMENTED;
 }
 
-utils::result fs_node::set_offset(off_t off)
-{
-    _offset = off;
-    
-    return utils::result::SUCCESS;
+utils::result fs_node::set_offset(int whence, off_t off)
+{    
+    return utils::result::ERR_UNIMPLEMENTED;
 }
 
 #include "kernel/io/node_types_macro.h"

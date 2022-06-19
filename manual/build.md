@@ -5,7 +5,10 @@ If you're on Ubuntu or any Ubuntu based distro, such as Linux Mint type this
 ```
 sudo apt install build-essential nasm gcc g++ bison flex xorriso qemu-system-x86 libgmp3-dev libmpc-dev libmpfr-dev texinfo libisl-dev
 ```
-Arch users: Sorry but I'm not a btwOS user so don't think I can help you here.
+Or if you are using Arch Linux:
+```
+sudo pacman --needed -S nasm gcc bison flex xorriso mtools qemu-system-x86 qemu-ui-gtk make gmp libmpc libisl mpfr
+```
 
 ## Fetch the submodules
 *This step is IMPORTANT*

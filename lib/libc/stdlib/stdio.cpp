@@ -138,7 +138,7 @@ int puts(const char* str)
 
     return r;
 }
-
+/*
 int vsnprintf(char* buff, size_t n, const char* fmt, va_list args)
 {
     int length = 0;
@@ -260,6 +260,390 @@ int vsnprintf(char* buff, size_t n, const char* fmt, va_list args)
     buff[length] = '\0';
 
     return length;
+}*/
+
+enum
+{
+    PRINTF_STATE_NORMAL,
+    PRINTF_STATE_FLAG,
+    PRINTF_STATE_WIDTH,
+    PRINTF_STATE_LENGTH,
+    PRINTF_STATE_SPECIFIER
+};
+
+enum
+{
+    PRINTF_FLAG_DEFAULT,
+    PRINTF_FLAG_LEFT_JUSTIFY,
+    PRINTF_FLAG_PAD_ZEROES,
+    PRINTF_FLAG_SHOW_SIGN,
+    PRINTF_FLAG_ALTERNATE_FORM
+};
+
+enum
+{
+    PRINTF_LEN_DEFAULT,
+    PRINTF_LEN_SHORT,
+    PRINTF_LEN_SHORT_SHORT,
+    PRINTF_LEN_LONG,
+    PRINTF_LEN_LONG_LONG
+};
+
+template<typename T>
+size_t count_int_ch(T value, int base)
+{
+    if(value == 0)
+    {
+        return 1;
+    }
+
+    size_t count = 0;
+
+    if(value < 0 && base == 10)
+    {
+        count++;
+    }
+
+    while(value)
+    {
+        value /= base;
+        count++;
+    }
+
+    return count;
+}
+
+static int dvsnprintf(char* buff, size_t n, const char* fmt, bool dry_run, va_list args)
+{
+    char* buff_start = buff;
+    int written_len = 0;
+    int state = PRINTF_STATE_NORMAL;
+    int flag = PRINTF_FLAG_DEFAULT;
+    int width = 0;
+    int length = PRINTF_LEN_DEFAULT;
+
+    #define PRINTF_GETSPACE() (n - (size_t)((uintptr_t)buff - (uintptr_t)buff_start))
+    #define PRINTF_TRUNCATE(__len) (PRINTF_GETSPACE() < ((size_t)(__len)) ? PRINTF_GETSPACE() : ((size_t)(__len)))
+    #define PRINTF_APPENDCH(__ch) \
+        if(PRINTF_GETSPACE() > 0 && !dry_run) \
+        { \
+            *(buff++) = (__ch); \
+        } \
+        written_len++;
+    #define PRINTF_JUSTIFYR(__len) \
+        if(flag != PRINTF_FLAG_LEFT_JUSTIFY) \
+        { \
+            size_t len = width >= (__len) ? width - (__len) : 0; \
+            size_t pad_len = PRINTF_TRUNCATE(len); \
+            if(!dry_run) memset(buff, flag == PRINTF_FLAG_PAD_ZEROES ? '0' : ' ', pad_len); \
+            buff += pad_len; \
+            written_len += len; \
+        }
+
+    while(*fmt)
+    {
+        switch(state)
+        {
+            case PRINTF_STATE_NORMAL:
+                if(*fmt == '%')
+                {
+                    state = PRINTF_STATE_FLAG;
+                    fmt++;
+
+                    continue;
+                }
+                else
+                {
+                    PRINTF_APPENDCH(*fmt);
+                    fmt++;
+                }
+
+                break;
+
+            case PRINTF_STATE_FLAG:
+                switch(*fmt)
+                {
+                    case '-':
+                        flag = PRINTF_FLAG_LEFT_JUSTIFY;
+                        fmt++;
+
+                        break;
+                    case '0':
+                        flag = PRINTF_FLAG_PAD_ZEROES;
+                        fmt++;
+
+                        break;
+                    case '+':
+                        flag = PRINTF_FLAG_SHOW_SIGN;
+                        fmt++;
+
+                        break;
+                    case '#':
+                        flag = PRINTF_FLAG_ALTERNATE_FORM;
+                        fmt++;
+
+                        break;
+                    default:
+                        break;
+                }
+
+                break;
+            case PRINTF_STATE_WIDTH:
+            {
+                if(*fmt >= '1' && *fmt <= '9')
+                {
+                    width = atoi(fmt);
+                    fmt += count_int_ch(width, 10);
+                }
+                else if(*fmt == '*')
+                {
+                    width = va_arg(args, int);
+                    fmt++;
+                }
+
+                break;
+            }
+            case PRINTF_STATE_LENGTH:
+                switch(*fmt)
+                {
+                    case 'h':
+                        length = PRINTF_LEN_SHORT;
+
+                        if(*(fmt + 1) == 'h')
+                        {
+                            length = PRINTF_LEN_SHORT_SHORT;
+
+                            fmt++;
+                        }
+
+                        fmt++;
+
+                        break;
+
+                    case 'l':
+                        length = PRINTF_LEN_LONG;
+
+                        if(*(fmt + 1) == 'l')
+                        {
+                            length = PRINTF_LEN_LONG_LONG;
+
+                            fmt++;
+                        }
+
+                        fmt++;
+
+                        break;
+                    default:
+                        break;
+                }
+
+                break;
+            
+            case PRINTF_STATE_SPECIFIER:
+            {
+                switch(*fmt)
+                {
+                    case 'c':
+                    {
+                        char c = (char)va_arg(args, int);
+
+                        PRINTF_JUSTIFYR(1);
+                        PRINTF_APPENDCH(c);
+
+                        break;
+                    }
+                    case 's':
+                    {
+                        char* str = va_arg(args, char*);
+
+                        if(str)
+                        {
+                            size_t str_len = strlen(str);
+                            size_t trunc_len = PRINTF_TRUNCATE(str_len);
+
+                            PRINTF_JUSTIFYR(str_len);
+
+                            if(!dry_run)
+                            {
+                                strncpy(buff, str, trunc_len);
+                            }
+
+                            buff += trunc_len;
+                            written_len += str_len;
+                        }
+
+                        break;
+                    }
+                    case '%':
+                    {
+                        PRINTF_JUSTIFYR(1);
+                        PRINTF_APPENDCH('%');
+
+                        break;
+                    }
+                    #define PRINTF_INT_SPEC(__type, __vtype, __func, __base) \
+                        __type value = (__type)va_arg(args, __vtype); \
+                        size_t est_size = count_int_ch(value, __base); \
+                        PRINTF_JUSTIFYR(est_size); \
+                        size_t trunc_len = PRINTF_TRUNCATE(est_size); \
+                        char tmp[est_size + 1]; \
+                        __func(value, tmp, (__base)); \
+                        if(!dry_run) strncpy(buff, tmp, trunc_len); \
+                        buff += trunc_len; \
+                        written_len += est_size;
+                    #define PRINTF_LEN_SPEC(__base, __signness) \
+                        switch(length) \
+                        { \
+                            case PRINTF_STATE_NORMAL: \
+                            { \
+                                if(__signness == true) \
+                                { \
+                                    PRINTF_INT_SPEC(int32_t, int32_t, itoa, (__base)); \
+                                } \
+                                else \
+                                { \
+                                    PRINTF_INT_SPEC(uint32_t, uint32_t, utoa, (__base)); \
+                                } \
+                                break; \
+                            } \
+                            case PRINTF_LEN_SHORT: \
+                            { \
+                                if(__signness == true) \
+                                { \
+                                    PRINTF_INT_SPEC(int16_t, int32_t, itoa, (__base)); \
+                                } \
+                                else \
+                                { \
+                                    PRINTF_INT_SPEC(uint16_t, uint32_t, utoa, (__base)); \
+                                } \
+                                break; \
+                            } \
+                            case PRINTF_LEN_SHORT_SHORT: \
+                            { \
+                                if(__signness == true) \
+                                { \
+                                    PRINTF_INT_SPEC(int8_t, int32_t, itoa, (__base)); \
+                                } \
+                                else \
+                                { \
+                                    PRINTF_INT_SPEC(uint8_t, uint32_t, utoa, (__base)); \
+                                } \
+                                break; \
+                            } \
+                            case PRINTF_LEN_LONG_LONG: \
+                            case PRINTF_LEN_LONG: \
+                            { \
+                                if(__signness == true) \
+                                { \
+                                    PRINTF_INT_SPEC(int64_t, int64_t, ltoa, (__base)); \
+                                } \
+                                else \
+                                { \
+                                    PRINTF_INT_SPEC(uint64_t, uint64_t, ultoa, (__base)); \
+                                } \
+                                break; \
+                            } \
+                            default: \
+                                break; \
+                        }
+
+                    case 'i':
+                    case 'd':
+                    {
+                        PRINTF_LEN_SPEC(10, true);
+
+                        break;
+                    }
+                    case 'u':
+                    {
+                        PRINTF_LEN_SPEC(10, false);
+
+                        break;
+                    }
+                    case 'o':
+                    {
+                        PRINTF_LEN_SPEC(8, false);
+
+                        break;
+                    }
+                    case 'x':
+                    {
+                        PRINTF_LEN_SPEC(16, false);
+
+                        break;
+                    }
+                    case 'p':
+                    {
+                        uintptr_t value = (uintptr_t)va_arg(args, void*);
+                        size_t est_size = count_int_ch(value, 16);
+
+                        if(flag != PRINTF_FLAG_PAD_ZEROES)
+                        {
+                            PRINTF_JUSTIFYR(est_size + 2);
+                        }
+
+                        PRINTF_APPENDCH('0');
+                        PRINTF_APPENDCH('x');
+
+                        if(flag == PRINTF_FLAG_PAD_ZEROES)
+                        {
+                            PRINTF_JUSTIFYR(est_size);
+                        }
+
+                        size_t trunc_len = PRINTF_TRUNCATE(est_size);
+                        char tmp[est_size + 1];
+
+                        ultoa(value, tmp, 16);
+
+                        if(!dry_run)
+                        {
+                            strncpy(buff, tmp, trunc_len);
+                        }
+
+                        buff += trunc_len;
+                        written_len += est_size;
+
+                        break;
+                    }
+                    default:
+                        break;
+                }
+
+                fmt++;
+                break;
+            }
+
+            default:
+                break;
+        }
+
+        if(state != PRINTF_STATE_NORMAL && state < PRINTF_STATE_SPECIFIER)
+        {
+            state++;
+        }
+        else
+        {
+            state = PRINTF_STATE_NORMAL;
+            flag = PRINTF_FLAG_DEFAULT;
+            width = 0;
+            length = PRINTF_LEN_DEFAULT;
+        }
+    }
+
+    if(!dry_run) *buff = '\0';
+
+    #undef PRINTF_APPENDCH
+    #undef PRINTF_JUSTIFYR
+    #undef PRINTF_TRUNCATE
+    #undef PRINTF_INT_SPEC
+    #undef PRINTF_LEN_SPEC
+
+    return written_len;
+}
+
+int vsnprintf(char* buff, size_t n, const char* fmt, va_list args)
+{
+    return dvsnprintf(buff, n, fmt, false, args);
 }
 
 int vsprintf(char* buff, const char* fmt, va_list args)
@@ -291,98 +675,11 @@ int sprintf(char* buff, const char* fmt, ...)
     return length;
 }
 
-static size_t calculate_vfprintf_buff_size(const char* fmt, va_list args)
-{
-    size_t length = 0;
-    size_t fmt_len = strlen(fmt);
-
-    while(char ch = *fmt++)
-    {
-        if(ch == '%')
-        {
-            switch(ch = *fmt++)
-            {
-                case '%':
-                {
-                    length++;
-
-                    break;
-                }
-                case 'c':
-                {
-                    char c = va_arg(args, int);
-
-                    if(c != 0)
-                    {
-                        length++;
-                    }
-
-                    break;
-                }
-                case 's':
-                {
-                    char* str = va_arg(args, char*);
-
-                    length += strlen(str);
-
-                    break;
-                }
-                case 'd':
-                {
-                    length += 128;
-
-                    break;
-                }
-                case 'x':
-                {
-                    length += 128;
-
-                    break;
-                }
-                case 'l':
-                {
-                    if((fmt_len - strlen(fmt)) < fmt_len)
-                    {
-                        ch = *fmt++;
-
-                        switch(ch)
-                        {
-                            default:
-                            {
-                                length++;
-                                ch = *fmt--;
-
-                                break;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        length++;
-                    }
-
-                    break;
-                }
-                default:
-                {
-                    length++;
-                }
-            }
-        }
-        else
-        {
-            length++;
-        }
-    }
-
-    return length;
-}
-
 int vfprintf(FILE* file, const char* fmt, va_list args) 
 {
     va_list new_list;
     va_copy(new_list, args);
-    size_t size = calculate_vfprintf_buff_size(fmt, new_list);
+    size_t size = dvsnprintf(nullptr, 10, fmt, true, new_list);
 
     char buff[size];
     int length = vsnprintf(buff, size, fmt, args);

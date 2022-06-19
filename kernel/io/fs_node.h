@@ -20,7 +20,9 @@ class fs_node
 {
 private:
     node_type _type;
-    off_t _offset = 0;
+
+protected:
+    int _offset = 0;
 
 public:
     fs_node(node_type type = NODE_TYPE_NONE);
@@ -29,7 +31,7 @@ public:
     node_type get_type() const { return _type; }
 
     off_t get_offset() const { return _offset; }
-    virtual utils::result set_offset(off_t off);
+    virtual utils::result set_offset(int whence, off_t off);
 
     virtual utils::result read(void* buff, size_t size, size_t* total_read) const;
     virtual utils::result write(const void* buff, size_t size, size_t* total_written);

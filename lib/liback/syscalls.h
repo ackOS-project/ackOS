@@ -16,8 +16,7 @@ namespace ackos
         SYSCALL_STREAM_OPEN,
         SYSCALL_STREAM_CLOSE,
         SYSCALL_STREAM_IOCALL,
-        SYSCALL_STREAM_CLONE1,
-        SYSCALL_STREAM_CLONE2,
+        SYSCALL_STREAM_CLONE,
         SYSCALL_SYSTEM_GET_INFO
     };
 
@@ -30,8 +29,7 @@ namespace ackos
         utils::result stream_open(int* fd, const char* filename, int flags); /* unimplemented */
         utils::result stream_close(int fd); /* also unimplemented */
         utils::result stream_iocall(int fd, int request, void* arg);
-        utils::result stream_clone(int* new_fd, int old_fd);
-        utils::result stream_clone(int old_fd, int new_fd);
+        utils::result stream_clone(int old_fd, int new_fd, int* res_fd, bool replace);
 
         utils::result system_get_info(system_info* info);
     }

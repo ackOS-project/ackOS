@@ -1,15 +1,19 @@
 #pragma once
 
+#include <cstdint>
+
 #include "kernel/io/fs_node.h"
+
+#define KERNEL_DEVICE_FRAMEBUFFER "/dev/fb0"
 
 struct framebuffer_write_data_info
 {
     uint32_t* buff = nullptr;
-    int buff_width = 0;
-    int buff_height = 0;
+    uint32_t buff_width = 0;
+    uint32_t buff_height = 0;
 
-    int x;
-    int y;
+    int x = 0;
+    int y = 0;
 };
 
 struct framebuffer_get_fb_info
@@ -36,7 +40,7 @@ private:
     int _bpp;
 
 public:
-    framebuffer_device(void* addr_physical, int width, int height, int pitch, int bpp);
+    framebuffer_device(void* addr_virtual, int width, int height, int pitch, int bpp);
     ~framebuffer_device();
 
     utils::result io_call(int request, void* arg) override;
