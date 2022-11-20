@@ -1,0 +1,22 @@
+module lib
+{
+    import "lib/**/*.build";
+}
+
+module kernel
+{
+    use lib;
+
+    targets = [
+        "kernel/**/*.cpp"
+    ]
+
+    foreach *.cpp -> *.o
+    {
+        echo $INPUT -> $OUT
+    }
+    -> kernel.elf
+    {
+        echo $INPUT
+    }
+}

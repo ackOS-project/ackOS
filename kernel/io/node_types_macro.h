@@ -1,8 +1,0 @@
-#define NODE_TYPE_MACRO(X) \
-    X(NODE_TYPE_NONE)      \
-    X(NODE_TYPE_REGULAR)    \
-    X(NODE_TYPE_DIRECTORY)  \
-    X(NODE_TYPE_SYMBOLIC_LINK) \
-    X(NODE_TYPE_PIPE)        \
-    X(NODE_TYPE_SOCKET)      \
-    X(NODE_TYPE_DEVICE)

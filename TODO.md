@@ -1,18 +1,14 @@
-# ackOS overall progress
-A more detailed to do list is available on the projects tab of GitHub
+# ackOS Rewrite To-Do
+## Stage #0
+* [ ] Setup build system
+* [ ] Boot into a higher half 64 bit environment (using limine)
+* [ ] Write a "Hello World" kernel
 
-## Step #1
-* [x] Make use of x86 functionality
-* [x] Memory Management
-* [x] Basic Filesystem
-* [ ] ACPI/APIC
-* [ ] SMP
-* [x] System calls
-* [x] Libraries (libc, libstdcpp)
+# Stage #1
+* [ ] Load a GDT
+* [ ] Load a IDT and configure interrupts
+* [ ] Read memory map from bootloader and initalise memory
+* [ ] Page mapping 
 
-## Step #2
-* [ ] Userspace
-* [ ] Software (e.g shell, coreutils)
-* [ ] GUI
-* [ ] Devices (sound, USB, network)
-* [ ] and beyond that...
+## Stage #2
+* [ ] Fix issue [#2](https://github.com/ackOS-project/ackOS/issues/2) and make a better logo

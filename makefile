@@ -44,8 +44,11 @@ CFLAGS += \
 		-fno-exceptions \
 		-fno-rtti \
 		-fstack-protector \
+		-g \
 		-O$(OPTIMISATION_LEVEL) \
+		-m64 \
 		-mno-red-zone \
+		-mcmodel=kernel \
 		-DBUILD_ARCH_$(ARCH) \
 		-DBUILD_HOST_ARCH=\"$(shell uname --machine)\" \
 		-DBUILD_TIME='"$(shell date)"' \
@@ -97,8 +100,8 @@ strip-symbols:
 	@rm -rf $(BIN_FOLDER)/symlist.cpp; \
 	 export SYMFILE="$(shell mktemp)"; \
 	 export ADDRFILE="$(shell mktemp)"; \
-	 $(OBJDUMP) -t bin/kernel.elf | sed '/\bd\b/d' | sort | grep "\.text" | awk 'NF{ print $$NF }' > $$SYMFILE; \
-	 $(OBJDUMP) -t bin/kernel.elf | sed '/\bd\b/d' | sort | grep "\.text" | cut -d' ' -f1 > $$ADDRFILE; \
+	 nm -f bsd -vC $(BIN_FOLDER)/kernel.elf | cut --complement -d ' ' -f 1 | cut --complement -d ' ' -f 1 > $$SYMFILE; \
+	 nm -f bsd -vC $(BIN_FOLDER)/kernel.elf | cut -d " " -f 1 > $$ADDRFILE; \
 	 printf "#include <cstdint>\n\nstruct symtab_entry_t\n{\n    char* name;\n    uintptr_t addr;\n};\n\nsymtab_entry_t _kernel_symbol_table[] =\n{\n" >> $(SYMLIST_FILE); \
 	 paste -d'$$' "$$SYMFILE" "$$ADDRFILE" | sed 's/^/    { "/g' | sed 's/\$$/", 0x/g' | sed 's/$$/ },/g' >> $(SYMLIST_FILE); \
 	 printf "    { \"\", 0xffffffffffffffff }\n};\n" >> $(SYMLIST_FILE); \

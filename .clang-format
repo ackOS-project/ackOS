@@ -8,6 +8,9 @@ UseTab: Never
 IndentWidth: 4
 TabWidth: 4
 
+NamespaceIndentation: All
+FixNamespaceComments: false
+
 DerivePointerAlignment: false
 PointerAlignment: Left
 
@@ -23,6 +26,8 @@ AllowShortFunctionsOnASingleLine: None
 AlwaysBreakTemplateDeclarations: Yes
 
 AllowShortLoopsOnASingleLine: true
+
+AccessModifierOffset: -4
 
 BinPackArguments: false
 
