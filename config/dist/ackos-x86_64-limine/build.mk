@@ -1,24 +1,28 @@
-LIMINE_BIN := submodules/limine
-LIMINE_INSTALL := $(LIMINE_BIN)/limine-install-linux-x86_64
+LIMINE_OBJ_DIR := $(OBJ_DIR)/limine
+LIMINE_DIR := submodules/limine
+LIMINE_DEPLOY := $(LIMINE_DIR)/limine-deploy
 
-$(BIN_FOLDER)/$(ISONAME): $(BIN_FOLDER)/kernel.elf $(BIN_FOLDER)/ramdisk.tar.gz
+OS_IMAGE = $(BIN_DIR)/$(DIST).iso
+
+$(LIMINE_DEPLOY):
+	@echo Building limine deploy tool
+	@make -C $(LIMINE_DIR) limine-deploy
+
+$(OS_IMAGE): $(KERNEL_BIN) $(LIMINE_DEPLOY) config/dist/$(DIST)/limine.cfg
 	@mkdir -p $(@D)
 
 	@echo "Creating LIMINE image"
 
-	@mkdir -p $(BIN_FOLDER)/isodir/boot/limine
-	@mkdir -p $(BIN_FOLDER)/isodir/EFI/BOOT
-	@cp $(DIST_FOLDER)/limine.cfg $(BIN_FOLDER)/isodir/boot
-	@cp -r $(DIST_FOLDER)/resources $(BIN_FOLDER)/isodir/boot
-	@cp $(BIN_FOLDER)/kernel.elf $(BIN_FOLDER)/isodir/boot
-	@cp $(BIN_FOLDER)/ramdisk.tar.gz $(BIN_FOLDER)/isodir/boot
+	@mkdir -p $(LIMINE_OBJ_DIR)
+	@cp config/dist/$(DIST)/limine.cfg $(LIMINE_OBJ_DIR)
+	@cp -r config/dist/$(DIST)/resources $(LIMINE_OBJ_DIR)
+	@cp $(KERNEL_BIN) $(LIMINE_OBJ_DIR)
 
-	@cp $(LIMINE_BIN)/limine-cd.bin $(LIMINE_BIN)/limine-eltorito-efi.bin $(BIN_FOLDER)/isodir/boot/limine
-	@cp $(LIMINE_BIN)/limine.sys $(BIN_FOLDER)/isodir/boot
-	@cp $(LIMINE_BIN)/BOOTX64.EFI $(BIN_FOLDER)/isodir/EFI/BOOT
+	@cp $(LIMINE_DIR)/limine.sys $(LIMINE_DIR)/limine-cd.bin $(LIMINE_DIR)/limine-cd-efi.bin $(LIMINE_OBJ_DIR)
 
-	@xorriso -as mkisofs -b boot/limine/limine-cd.bin \
-	        -no-emul-boot -boot-load-size 4 -boot-info-table -part_like_isohybrid \
-	        -eltorito-alt-boot -e boot/limine/limine-eltorito-efi.bin \
-	        -no-emul-boot $(BIN_FOLDER)/isodir -isohybrid-gpt-basdat -o $@
-	@$(LIMINE_INSTALL) $@
+	@xorriso -as mkisofs -b limine-cd.bin \
+	        -no-emul-boot -boot-load-size 4 -boot-info-table \
+	        --efi-boot limine-cd-efi.bin \
+			-efi-boot-part --efi-boot-image --protective-msdos-label \
+	        $(LIMINE_OBJ_DIR) -o $@
+	@$(LIMINE_DEPLOY) $@
