@@ -35,8 +35,8 @@ CFLAGS := -g \
 		  -ffreestanding \
 		  -std=c11 \
 		  -Wall \
-		  -Wextra \
-		  -Wimplicit-function-declaration
+		  -Werror \
+		  -Wstrict-prototypes
 ASFLAGS :=
 LDFLAGS := -nostdlib -static
 

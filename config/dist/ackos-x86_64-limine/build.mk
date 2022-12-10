@@ -10,6 +10,7 @@ $(LIMINE_DEPLOY):
 
 $(OS_IMAGE): $(KERNEL_BIN) $(LIMINE_DEPLOY) config/dist/$(DIST)/limine.cfg
 	@mkdir -p $(@D)
+	@mkdir -p config/dist/$(DIST)/resources
 
 	@echo "Creating LIMINE image"
 

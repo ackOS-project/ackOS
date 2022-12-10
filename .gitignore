@@ -27,3 +27,4 @@ toolchain/local
 *.log
 bx_enh_dbg.ini
 .gdb_history
+**/.DS_Store

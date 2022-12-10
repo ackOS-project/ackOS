@@ -13,7 +13,7 @@ This is the rewrite branch of ackOS.
 [View the to do list here](TODO.md)
 
 ## How do I build ackOS?
-[click here for the build guide](manual/build.md)
+[click here for the build guide](docs/build.md)
 
 
 ## Links
