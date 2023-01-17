@@ -114,9 +114,9 @@ size_t strlen(const char* str)
 
 size_t strnlen(const char* str, size_t len)
 {
-    size_t i;
+    size_t i = 0;
 
-    for(i = 0; i < len; i++)
+    for(; i < len; i++)
     {
         if(str[i] == '\0')
         {

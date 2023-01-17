@@ -15,7 +15,7 @@ GCC_DIR=gcc
 
 DIR="$(dirname $(readlink -f $0))"
 
-cd $DIR
+cd "$DIR"
 
 if [ ! -e $BINUTILS_WGET_LOC ]; then
 	echo Downloading binutils

@@ -21,7 +21,7 @@ enum
 enum
 {
     PRINTF_FLAG_DEFAULT,
-    PRINTF_FLAG_LEFT_JUSTIFY,
+    PRINTF_FLAG_RIGHT_JUSTIFY,
     PRINTF_FLAG_PAD_ZEROES = 1 << 1,
     PRINTF_FLAG_SHOW_SIGN = 1 << 2,
     PRINTF_FLAG_ALTERNATE_FORM = 1 << 3
@@ -33,7 +33,8 @@ enum
     PRINTF_LEN_SHORT,
     PRINTF_LEN_SHORT_SHORT,
     PRINTF_LEN_LONG,
-    PRINTF_LEN_LONG_LONG
+    PRINTF_LEN_LONG_LONG,
+    PRINTF_LEN_SIZE_TYPE
 };
 
 
@@ -70,8 +71,14 @@ static size_t NAME_(T_ value, char* dest, int base, int padding, char pad_char, 
         } \
     } \
     char* num_start = dest; \
-    T_ n = abs(value); \
+    T_ n = ABS(value); \
     /* take digits and write them to the buffer */ \
+    /* if the value is 0 then write a 0 */ \
+    if(value == 0) \
+    { \
+        if(!dry_run) *(dest++) = '0'; \
+        len++; \
+    } \
     while(n != 0) \
     { \
         if(!dry_run) \
@@ -86,7 +93,7 @@ static size_t NAME_(T_ value, char* dest, int base, int padding, char pad_char, 
     if(padding && pad_char) \
     { \
         size_t real_len = len + prefix_len + sign_len; \
-        size_t padding_len = MAX(real_len, padding) - MIN(real_len, padding); \
+        size_t padding_len = padding < real_len ? 0 : padding - real_len; \
         if(!dry_run) \
         { \
             memset(dest, pad_char, padding_len); \
@@ -126,10 +133,11 @@ INT_TO_STRING_FUNC(unsigned long, ulint_to_string)
 INT_TO_STRING_FUNC(long long, llint_to_string)
 INT_TO_STRING_FUNC(unsigned long long, ullint_to_string)
 
-static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* fmt, bool dry_run, va_list args)
+static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* prefix, const char* fmt, bool dry_run, va_list args)
 {
     char* buff_start = buff;
     int total_len = 0;
+    size_t indent = 0;
     int state = PRINTF_STATE_NORMAL;
     int flag = PRINTF_FLAG_DEFAULT;
     int width = 0;
@@ -144,7 +152,7 @@ static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* fmt
         } \
         total_len++;
     #define PRINTF_JUSTIFYR(__len) \
-        if(!(flag & PRINTF_FLAG_LEFT_JUSTIFY)) \
+        if(flag & PRINTF_FLAG_RIGHT_JUSTIFY) \
         { \
             size_t len = width >= (__len) ? width - (__len) : 0; \
             size_t pad_len = PRINTF_TRUNCATE(len); \
@@ -155,6 +163,34 @@ static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* fmt
             } \
             total_len += len; \
         }
+    #define PRINTF_JUSTIFYL(__len) \
+        if(!(flag & PRINTF_FLAG_PAD_ZEROES) && !(flag & PRINTF_FLAG_RIGHT_JUSTIFY)) \
+        { \
+            size_t len = width >= (__len) ? width - (__len) : 0; \
+            size_t pad_len = PRINTF_TRUNCATE(len); \
+            if(!dry_run) \
+            { \
+                memset(buff, ' ', pad_len); \
+                buff += pad_len; \
+            } \
+            total_len += len; \
+        }
+
+    if(prefix)
+    {
+        size_t prefix_len = strlen(prefix);
+
+        if(!dry_run)
+        {
+            size_t trunc_len = PRINTF_TRUNCATE(prefix_len);
+
+            strncpy(buff, prefix, trunc_len);
+            buff += trunc_len;
+        }
+
+        total_len += prefix_len;
+        indent = prefix_len;
+    }
 
     while(*fmt)
     {
@@ -171,39 +207,62 @@ static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* fmt
                 else
                 {
                     PRINTF_APPENDCH(*fmt);
+
+                    if(indent > 0 && *fmt == '\n' && *(fmt + 1))
+                    {
+                        size_t indent_len = PRINTF_TRUNCATE(indent);
+
+                        if(!dry_run)
+                        {
+                            memset(buff, ' ', indent_len);
+                            buff += indent_len;
+                        }
+
+                        total_len += indent;
+                    }
+
                     fmt++;
                 }
 
                 break;
 
             case PRINTF_STATE_FLAG:
-                switch(*fmt)
+            {
+                bool is_flag = true;
+
+                while(is_flag)
                 {
-                    case '-':
-                        flag |= PRINTF_FLAG_LEFT_JUSTIFY;
-                        fmt++;
+                    switch(*fmt)
+                    {
+                        case '-':
+                            flag |= PRINTF_FLAG_RIGHT_JUSTIFY;
+                            fmt++;
 
-                        break;
-                    case '0':
-                        flag |= PRINTF_FLAG_PAD_ZEROES;
-                        fmt++;
+                            break;
+                        case '0':
+                            flag |= PRINTF_FLAG_PAD_ZEROES;
+                            fmt++;
 
-                        break;
-                    case '+':
-                        flag |= PRINTF_FLAG_SHOW_SIGN;
-                        fmt++;
+                            break;
+                        case '+':
+                            flag |= PRINTF_FLAG_SHOW_SIGN;
+                            fmt++;
 
-                        break;
-                    case '#':
-                        flag |= PRINTF_FLAG_ALTERNATE_FORM;
-                        fmt++;
+                            break;
+                        case '#':
+                            flag |= PRINTF_FLAG_ALTERNATE_FORM;
+                            fmt++;
 
-                        break;
-                    default:
-                        break;
+                            break;
+                        default:
+                            is_flag = false;
+
+                            break;
+                    }
                 }
 
                 break;
+            }
             case PRINTF_STATE_WIDTH:
             {
                 if(*fmt >= '1' && *fmt <= '9')
@@ -250,6 +309,12 @@ static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* fmt
                         fmt++;
 
                         break;
+                    case 'z':
+                        length = PRINTF_LEN_SIZE_TYPE;
+
+                        fmt++;
+
+                        break;
                     default:
                         break;
                 }
@@ -264,8 +329,9 @@ static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* fmt
                     {
                         char c = (char)va_arg(args, int);
 
-                        PRINTF_JUSTIFYR(1);
+                        PRINTF_JUSTIFYL(1);
                         PRINTF_APPENDCH(c);
+                        PRINTF_JUSTIFYR(1);
 
                         break;
                     }
@@ -278,7 +344,7 @@ static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* fmt
                             size_t str_len = strlen(str);
                             size_t trunc_len = PRINTF_TRUNCATE(str_len);
 
-                            PRINTF_JUSTIFYR(str_len);
+                            PRINTF_JUSTIFYL(str_len);
 
                             if(!dry_run)
                             {
@@ -288,6 +354,8 @@ static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* fmt
                             }
 
                             total_len += str_len;
+
+                            PRINTF_JUSTIFYR(str_len);
                         }
                         else
                         {
@@ -295,7 +363,7 @@ static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* fmt
                             size_t msg_len = strlen(str);
                             size_t trunc_len = PRINTF_TRUNCATE(msg_len);
 
-                            PRINTF_JUSTIFYR(msg_len);
+                            PRINTF_JUSTIFYL(msg_len);
 
                             if(!dry_run)
                             {
@@ -305,6 +373,8 @@ static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* fmt
                             }
 
                             total_len += msg_len;
+
+                            PRINTF_JUSTIFYR(msg_len);
                         }
 
                         break;
@@ -319,7 +389,7 @@ static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* fmt
                     #define PRINTF_INT_SPEC(__type, __vtype, __func, __base, __prefix, __use_uppercase) \
                         __type value = (__type)va_arg(args, __vtype); \
                         size_t est_size = __func(value, NULL, (__base), width, flag & PRINTF_FLAG_PAD_ZEROES ? '0' : '\0', (__prefix), flag & PRINTF_FLAG_SHOW_SIGN, (__use_uppercase), true); \
-                        PRINTF_JUSTIFYR(est_size); \
+                        PRINTF_JUSTIFYL(est_size); \
                         size_t trunc_len = PRINTF_TRUNCATE(est_size); \
                         char tmp[est_size + 1]; \
                         __func(value, tmp, (__base), width, flag & PRINTF_FLAG_PAD_ZEROES ? '0' : '\0', (__prefix), flag & PRINTF_FLAG_SHOW_SIGN, (__use_uppercase), false); \
@@ -328,7 +398,8 @@ static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* fmt
                             strncpy(buff, tmp, trunc_len); \
                             buff += trunc_len; \
                         } \
-                        total_len += est_size;
+                        total_len += est_size; \
+                        PRINTF_JUSTIFYL(est_size);
                     #define PRINTF_LEN_SPEC(__base, __use_uppercase, __prefix, __signness) \
                         switch(length) \
                         { \
@@ -336,11 +407,11 @@ static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* fmt
                             { \
                                 if(__signness == true) \
                                 { \
-                                    PRINTF_INT_SPEC(signed int, signed int, int_to_string, __base, __prefix, __use_uppercase); \
+                                    PRINTF_INT_SPEC(signed int, signed int, int_to_string, __base, __prefix, __use_uppercase) \
                                 } \
                                 else \
                                 { \
-                                    PRINTF_INT_SPEC(unsigned int, unsigned int, uint_to_string, __base, __prefix, __use_uppercase); \
+                                    PRINTF_INT_SPEC(unsigned int, unsigned int, uint_to_string, __base, __prefix, __use_uppercase) \
                                 } \
                                 break; \
                             } \
@@ -348,11 +419,11 @@ static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* fmt
                             { \
                                 if(__signness == true) \
                                 { \
-                                    PRINTF_INT_SPEC(signed short, signed int, sint_to_string, __base, __prefix, __use_uppercase); \
+                                    PRINTF_INT_SPEC(signed short, signed int, sint_to_string, __base, __prefix, __use_uppercase) \
                                 } \
                                 else \
                                 { \
-                                    PRINTF_INT_SPEC(unsigned short, unsigned int, usint_to_string, __base, __prefix, __use_uppercase); \
+                                    PRINTF_INT_SPEC(unsigned short, unsigned int, usint_to_string, __base, __prefix, __use_uppercase) \
                                 } \
                                 break; \
                             } \
@@ -360,11 +431,11 @@ static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* fmt
                             { \
                                 if(__signness == true) \
                                 { \
-                                    PRINTF_INT_SPEC(signed char, signed int, char_to_string, __base, __prefix, __use_uppercase); \
+                                    PRINTF_INT_SPEC(signed char, signed int, char_to_string, __base, __prefix, __use_uppercase) \
                                 } \
                                 else \
                                 { \
-                                    PRINTF_INT_SPEC(unsigned char, unsigned int, uchar_to_string, __base, __prefix, __use_uppercase); \
+                                    PRINTF_INT_SPEC(unsigned char, unsigned int, uchar_to_string, __base, __prefix, __use_uppercase) \
                                 } \
                                 break; \
                             } \
@@ -372,11 +443,11 @@ static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* fmt
                             { \
                                 if(__signness == true) \
                                 { \
-                                    PRINTF_INT_SPEC(signed long long, signed long long, llint_to_string, __base, __prefix, __use_uppercase); \
+                                    PRINTF_INT_SPEC(signed long long, signed long long, llint_to_string, __base, __prefix, __use_uppercase) \
                                 } \
                                 else \
                                 { \
-                                    PRINTF_INT_SPEC(unsigned long long, unsigned long long, ullint_to_string, __base, __prefix, __use_uppercase); \
+                                    PRINTF_INT_SPEC(unsigned long long, unsigned long long, ullint_to_string, __base, __prefix, __use_uppercase) \
                                 } \
                                 break; \
                             } \
@@ -384,11 +455,23 @@ static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* fmt
                             { \
                                 if(__signness == true) \
                                 { \
-                                    PRINTF_INT_SPEC(signed long, signed long, lint_to_string, __base, __prefix, __use_uppercase); \
+                                    PRINTF_INT_SPEC(signed long, signed long, lint_to_string, __base, __prefix, __use_uppercase) \
                                 } \
                                 else \
                                 { \
-                                    PRINTF_INT_SPEC(unsigned long, unsigned long, ulint_to_string, __base, __prefix, __use_uppercase); \
+                                    PRINTF_INT_SPEC(unsigned long, unsigned long, ulint_to_string, __base, __prefix, __use_uppercase) \
+                                } \
+                                break; \
+                            } \
+                            case PRINTF_LEN_SIZE_TYPE: \
+                            { \
+                                if(__signness == true) \
+                                { \
+                                    PRINTF_INT_SPEC(ssize_t, ssize_t, lint_to_string, __base, __prefix, __use_uppercase) \
+                                } \
+                                else \
+                                { \
+                                    PRINTF_INT_SPEC(size_t, size_t, ulint_to_string, __base, __prefix, __use_uppercase) \
                                 } \
                                 break; \
                             } \
@@ -435,7 +518,7 @@ static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* fmt
                     }
                     case 'p':
                     {
-                        PRINTF_LEN_SPEC(16, false, "0x", false);
+                        PRINTF_INT_SPEC(unsigned long, unsigned long, ulint_to_string, 16, "0x", false);
 
                         break;
                     }
@@ -484,7 +567,7 @@ int vsnprintf(char* buff, size_t n, const char* fmt, va_list args)
 {
     size_t written_len = 0;
 
-    dvsnprintf(buff, n, &written_len, fmt, false, args);
+    dvsnprintf(buff, n, &written_len, (const char*)NULL, fmt, false, args);
 
     return written_len;
 }
@@ -518,20 +601,74 @@ int sprintf(char* buff, const char* fmt, ...)
     return length;
 }
 
+enum kprintf_action
+{
+    KPRINTF_ACTION_NONE,
+    KPRINTF_ACTION_INFO,
+    KPRINTF_ACTION_WARN,
+    KPRINTF_ACTION_PANIC,
+    KPRINTF_ACTION_DEBUG
+};
+
+static const char* action_to_string(enum kprintf_action action)
+{
+    switch(action)
+    {
+    case KPRINTF_ACTION_INFO:
+        return "INFO  ";
+        break;
+    case KPRINTF_ACTION_WARN:
+        return "WARN  ";
+        break;
+    case KPRINTF_ACTION_DEBUG:
+        return "DEBUG ";
+        break;
+    case KPRINTF_ACTION_PANIC:
+        return "PANIC ";
+        break;
+
+    default:
+        break;
+    }
+
+    return (const char*)NULL;
+}
+
 int kvprintf(const char* fmt, va_list args)
 {
     va_list args_clone;
     va_copy(args_clone, args);
 
-    size_t written_len = 0;
-    size_t est_len = dvsnprintf((char*)NULL, 0, (size_t*)NULL, fmt, true, args_clone);
+    const char* status_msg = (const char*)NULL;
+    enum kprintf_action action = KPRINTF_ACTION_NONE;
 
-    va_end(args_clone);
+    size_t fmt_len = strlen(fmt);
+
+    if(fmt_len >= 2 && fmt[0] == '\e')
+    {
+        action = fmt[1];
+        status_msg = action_to_string(action);
+
+        if(status_msg)
+        {
+            fmt += 2;
+        }
+    }
+
+    size_t written_len = 0;
+    size_t est_len = dvsnprintf((char*)NULL, 0, (size_t*)NULL, status_msg, fmt, true, args_clone);
 
     char buff[est_len + 1];
 
-    dvsnprintf(buff, est_len, &written_len, fmt, false, args);
+    dvsnprintf(buff, est_len, &written_len, status_msg, fmt, false, args);
     kputs(buff);
+
+    if(action == KPRINTF_ACTION_PANIC)
+    {
+        kpanic();
+    }
+
+    va_end(args_clone);
 
     return written_len;
 }

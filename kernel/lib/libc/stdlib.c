@@ -96,7 +96,6 @@ void free(void* ptr)
     free_list[free_list_size++] = ptr - sizeof(size_t);
 }
 
-
 //////////////////
 static const char strtoint_lookup_table[] = "0123456789abcdefghijklmnopqrstuvwxyz";
 
@@ -155,12 +154,11 @@ long int strtol(const char* str, char** endptr, int base)
     {
         int d = strtoint_lut_find(str[i], base);
 
-        if(d >= 0)
-        {
-            res = (res * base) + d;
+        if(d < 0) break;
 
-            (*endptr)++;
-        }
+        res = (res * base) + d;
+
+        (*endptr)++;
     }
 
     if(str[0] == '-')
@@ -208,6 +206,13 @@ TEST test_strtol_hex()
     const char* str = "FEDCBA09";
     CHECK(strtol(str, &endp, 16) == 0xFEDCBA09);
 }
+
+TEST test_strtol_termination()
+{
+    char* endp = NULL;
+    const char* str = "123 241";
+    CHECK(strtol(str, &endp, 16) == 123);
+}
 */
 
 unsigned long int strtoul(const char* str, char** endptr, int base)
@@ -239,12 +244,11 @@ unsigned long int strtoul(const char* str, char** endptr, int base)
     {
         int d = strtoint_lut_find(str[i], base);
 
-        if(d >= 0)
-        {
-            res = (res * base) + d;
+        if(d < 0) break;
 
-            (*endptr)++;
-        }
+        res = (res * base) + d;
+
+        (*endptr)++;
     }
 
     if(str[0] == '-')
@@ -276,10 +280,9 @@ int atoi(const char* str)
     {
         int d = strtoint_lut_find(str[i], 10);
 
-        if(d >= 0)
-        {
-            res = (res * 10) + d;
-        }
+        if(d < 0) break;
+
+        res = (res * 10) + d;
     }
 
     if(str[0] == '-')

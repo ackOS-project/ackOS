@@ -13,4 +13,4 @@ qemu-no-kvm: all
 	@qemu-system-x86_64 $(QEMU_FLAGS) -cdrom $(OS_IMAGE)
 
 qemu-debug: all
-	@qemu-system-x86_64 $(QEMU_FLAGS) -cdrom $(OS_IMAGE) -s -S -d int -no-reboot -monitor telnet:127.0.0.1:55555,server,nowait;
+	@qemu-system-x86_64 $(QEMU_FLAGS) -cdrom $(OS_IMAGE) -s -S -d int -no-reboot -monitor telnet:127.0.0.1:55555,server,nowait

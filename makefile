@@ -64,5 +64,5 @@ $(OBJ_DIR)/%.c.o: %.c
 $(OBJ_DIR)/%.s.o: %.s
 	$(CREATE_DIRS)
 	@echo "Building $<"
-	$(V)$(AS) $(ASFLAGS) -c $< -o $@
+	$(V)$(CC) $(CFLAGS) -c $< -o $@
 

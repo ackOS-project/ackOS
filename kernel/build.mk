@@ -9,7 +9,7 @@ KERNEL_TARGETS += $(KERNEL_C:%.c=$(OBJ_DIR)/%.c.o) $(KERNEL_S:%.s=$(OBJ_DIR)/%.s
 
 KERNEL_BIN := $(BIN_DIR)/kernel.elf
 
-CFLAGS += -I . -I submodules -I kernel/lib/libc
+CFLAGS += -I . -I submodules -I kernel/lib/libc -D KERNEL_DEBUG
 
 include kernel/arch/$(ARCH)/build.mk
 

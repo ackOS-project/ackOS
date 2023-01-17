@@ -3,36 +3,9 @@
     {
         "*.cpp": "cpp",
         "*.c": "c",
-        "*.tcc": "c",
-        "string.h": "c",
-        "cstdint": "cpp",
-        "cstdlib": "cpp",
-        "sstream": "c",
-        "optional": "c",
-        "ratio": "c",
-        "system_error": "c",
-        "array": "c",
-        "functional": "c",
-        "tuple": "c",
-        "type_traits": "c",
-        "utility": "c",
-        "variant": "c",
-        "__bit_reference": "c",
-        "__node_handle": "c",
-        "atomic": "c",
-        "bitset": "c",
-        "cstddef": "c",
-        "deque": "c",
-        "__memory": "c",
-        "limits": "c",
-        "locale": "c",
-        "vector": "c",
-        "__hash_table": "c",
-        "__tree": "c",
-        "list": "c",
-        "map": "c",
-        "set": "c"
+        "*.h": "c"
     },
+    "C_Cpp.autoAddFileAssociations": false,
 
     "search.exclude":
     {
@@ -46,5 +19,22 @@
         "**/toolchain": true,
         "**/bin": true
     },
-    "explorer.sortOrder": "type"
+    "explorer.sortOrder": "type",
+    "editor.detectIndentation": true,
+    "editor.insertSpaces": true,
+    "makefile.configurations": [
+        
+    ],
+    "makefile.launchConfigurations": [
+        {
+            "cwd": "${workspaceFolder}",
+            "binaryPath": "/usr/bin/make",
+            "binaryArgs": [ "qemu" ]
+        },
+        {
+            "cwd": "${workspaceFolder}",
+            "binaryPath": "/usr/bin/make",
+            "binaryArgs": [ "qemu-debug" ]
+        }
+    ]
 }
