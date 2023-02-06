@@ -35,10 +35,11 @@ int kvprintf(const char* fmt, va_list args);
 * z  - changes the type to size_t
 *
 * supported format modifiers:
-* '-x' - justify text to the right x many spaces at maximum
-* '0x' - place x many 0s before a number at maximum
+* '-x' - justify text to the right at least x many spaces
+* '0x' - place at least x many 0s before a number
 * '+'  - always show the positive sign on positive numbers
 * '#'  - alternative form; for the o, x, X specifiers this modifier prepends a '0o' or '0x' repectively.
+* `'`  - places spaces in between digits to separate thousands, millions places, etc
 */
 ATTR_FORMAT(printf, 1, 2) int kprintf(const char* fmt, ...);
 

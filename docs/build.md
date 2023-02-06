@@ -60,7 +60,7 @@ make qemu-debug
 ```
 and start gdb with 
 ```
-make gdb
+make gdb DEBUG_BREAKPOINT=kmain
 ```
 or you could select the 'Attach to QEMU with GDB' option from the VSCode debug sidebar.
 

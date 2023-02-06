@@ -24,7 +24,8 @@ enum
     PRINTF_FLAG_RIGHT_JUSTIFY,
     PRINTF_FLAG_PAD_ZEROES = 1 << 1,
     PRINTF_FLAG_SHOW_SIGN = 1 << 2,
-    PRINTF_FLAG_ALTERNATE_FORM = 1 << 3
+    PRINTF_FLAG_ALTERNATE_FORM = 1 << 3,
+    PRINTF_FLAG_DIGIT_SEPARATE = 1 << 4
 };
 
 enum
@@ -40,7 +41,7 @@ enum
 
 // Using a macro here, so we can duplicate it for different interger types
 #define INT_TO_STRING_FUNC(T_, NAME_) \
-static size_t NAME_(T_ value, char* dest, int base, int padding, char pad_char, const char* prefix, bool show_pos_sign, bool use_uppercase, bool dry_run) \
+static size_t NAME_(T_ value, char* dest, int base, int padding, char pad_char, const char* prefix, char digit_separator, bool show_pos_sign, bool use_uppercase, bool dry_run) \
 { \
     size_t len = 0; \
     static const char lookup_table[] = "0123456789abcdefghijklmnopqrstuvwxyz"; \
@@ -79,7 +80,7 @@ static size_t NAME_(T_ value, char* dest, int base, int padding, char pad_char, 
         if(!dry_run) *(dest++) = '0'; \
         len++; \
     } \
-    while(n != 0) \
+    for(size_t i = 1; n != 0; i++) \
     { \
         if(!dry_run) \
         { \
@@ -89,6 +90,11 @@ static size_t NAME_(T_ value, char* dest, int base, int padding, char pad_char, 
         } \
         len++; \
         n /= base; \
+        if(i % 3 == 0 && digit_separator && n != 0) \
+        { \
+            if(!dry_run) *(dest++) = digit_separator; \
+            len++;\
+        } \
     } \
     if(padding && pad_char) \
     { \
@@ -254,6 +260,11 @@ static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* pre
                             fmt++;
 
                             break;
+                        case '\'':
+                            flag |= PRINTF_FLAG_DIGIT_SEPARATE;
+                            fmt++;
+                            
+                            break;
                         default:
                             is_flag = false;
 
@@ -388,11 +399,11 @@ static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* pre
                     }
                     #define PRINTF_INT_SPEC(__type, __vtype, __func, __base, __prefix, __use_uppercase) \
                         __type value = (__type)va_arg(args, __vtype); \
-                        size_t est_size = __func(value, NULL, (__base), width, flag & PRINTF_FLAG_PAD_ZEROES ? '0' : '\0', (__prefix), flag & PRINTF_FLAG_SHOW_SIGN, (__use_uppercase), true); \
+                        size_t est_size = __func(value, NULL, (__base), width, flag & PRINTF_FLAG_PAD_ZEROES ? '0' : '\0', (__prefix), flag & PRINTF_FLAG_DIGIT_SEPARATE ? ' ' : '\0', flag & PRINTF_FLAG_SHOW_SIGN, (__use_uppercase), true); \
                         PRINTF_JUSTIFYL(est_size); \
                         size_t trunc_len = PRINTF_TRUNCATE(est_size); \
                         char tmp[est_size + 1]; \
-                        __func(value, tmp, (__base), width, flag & PRINTF_FLAG_PAD_ZEROES ? '0' : '\0', (__prefix), flag & PRINTF_FLAG_SHOW_SIGN, (__use_uppercase), false); \
+                        __func(value, tmp, (__base), width, flag & PRINTF_FLAG_PAD_ZEROES ? '0' : '\0', (__prefix), flag & PRINTF_FLAG_DIGIT_SEPARATE ? ' ' : '\0', flag & PRINTF_FLAG_SHOW_SIGN, (__use_uppercase), false); \
                         if(!dry_run) \
                         { \
                             strncpy(buff, tmp, trunc_len); \
@@ -654,6 +665,13 @@ int kvprintf(const char* fmt, va_list args)
             fmt += 2;
         }
     }
+
+#ifndef BUILD_CONFIG_DEBUG
+    if(action == KPRINTF_ACTION_DEBUG)
+    {
+        return 0;
+    }
+#endif
 
     size_t written_len = 0;
     size_t est_len = dvsnprintf((char*)NULL, 0, (size_t*)NULL, status_msg, fmt, true, args_clone);

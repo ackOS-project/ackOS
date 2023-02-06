@@ -24,6 +24,11 @@ void x86_begin(void)
     init_com(COM_PORT1, 115200);
 
     init_gdt();
+    init_idt();
+
+#pragma GCC diagnostic ignored "-Wdiv-by-zero"
+    int i = 0 / 0;
+    (void)i;
 
     kprintf("Hello, ackOS World!\n");
 

@@ -25,28 +25,38 @@ static struct gdt_descriptor gdt_desc = (struct gdt_descriptor) {
     .addr = (uint64_t)&gdt
 };
 
-static struct gdt_entry create_gdt_entry(bool rw, bool is_exec, bool long_mode, bool data_size_mode, uint8_t priv)
+enum gdt_flags
+{
+    GDT_READ_WRITE = 1,
+    GDT_EXECUTABLE = 1 << 1,
+    GDT_LONG_MODE = 1 << 2,
+    GDT_DATA32 = 1 << 3,
+    GDT_GRANUALARITY4KiB = 1 << 4
+};
+
+static struct gdt_entry create_gdt_entry(uint32_t limit, uint32_t base, uint8_t priv, int flags)
 {
     struct gdt_entry entry;
 
-    entry.limit_low = 0;
-    entry.limit_high = 0;
-    entry.base_low = 0;
-    entry.base_mid = 0;
-    entry.base_high = 0;
+    entry.limit_low = (uint16_t)limit;
+    entry.limit_high = (uint8_t)(limit >> 16);
+
+    entry.base_low = (uint16_t)base;
+    entry.base_mid = (uint8_t)(base >> 16);
+    entry.base_high = (uint8_t)(base >> 24);
 
     entry.accessed = 0;
-    entry.read_write = rw;
+    entry.read_write = (flags & GDT_READ_WRITE) != 0;
     entry.direction = 0;
-    entry.executable = is_exec;
+    entry.executable = (flags & GDT_EXECUTABLE) != 0;
     entry.is_segment = 1;
     entry.privilege_level = priv;
     entry.present = 1;
 
     entry.available = 0;
-    entry.long_mode = long_mode;
-    entry.data_size = data_size_mode;
-    entry.granualarity = 1;
+    entry.long_mode = (flags & GDT_LONG_MODE) != 0;
+    entry.data_size = (flags & GDT_DATA32) != 0;
+    entry.granualarity = (flags & GDT_GRANUALARITY4KiB) != 0;
 
     return entry;
 }
@@ -57,6 +67,7 @@ static struct gdt_entry create_null_gdt_entry(void)
 
     entry.limit_low = 0;
     entry.limit_high = 0;
+
     entry.base_low = 0;
     entry.base_mid = 0;
     entry.base_high = 0;
@@ -93,17 +104,19 @@ static struct tss_entry create_tss(void)
     };
 }
 
-static void print_gdt_entry(uint16_t index)
+static void print_gdt_entry(struct gdt_entries* entries, uint16_t index)
 {
-    const struct gdt_entry* entry = &gdt.entries[index];
+    const struct gdt_entry* entry = &entries->entries[index];
 
     kprintf(KERN_DEBUG
-            "GDT index %#04hx {\n"
-            "    limit_low:   %#hx\n"
-            "    limit_high:  %#hx\n"
-            "    base_low:    %#hx\n"
-            "    base_mid:    %#hhx\n"
-            "    base_high:   %#hhx\n"
+            "GDT index %#04lx {\n"
+            "    limit:       %#x\n"
+            "        limit_low:    %#hx\n"
+            "        limit_high:   %#hx\n"
+            "    base:        %#x\n"
+            "        base_low:     %#hx\n"
+            "        base_mid:     %#hhx\n"
+            "        base_high:    %#hhx\n"
             "    access_byte: %#hhx\n"
             "        accessed:     %#hhx\n"
             "        read_write:   %#hhx\n"
@@ -118,9 +131,11 @@ static void print_gdt_entry(uint16_t index)
             "        data_size:    %#hhx\n"
             "        granualarity: %#hhx\n"
             "}\n",
-            index * 8,
+            index * sizeof(struct gdt_entry),
+            entry->limit_high << 16 | entry->limit_low,
             entry->limit_low,
             entry->limit_high,
+            entry->base_high << 24 | entry->base_mid << 16 | entry->base_low,
             entry->base_low,
             entry->base_mid,
             entry->base_high,
@@ -177,33 +192,43 @@ static void print_gdt_desc(struct gdt_descriptor desc)
 
 void init_gdt(void)
 {
+    // The limine protocol requires in addition to 64-bit GDT entries, 16-bit and 32-bit are also defined
+
     gdt.entries[0] = create_null_gdt_entry();
 
-    gdt.entries[KERNEL_CS / 8] = create_gdt_entry(true, true, true, false, DPL0);
-    gdt.entries[KERNEL_DS / 8] = create_gdt_entry(true, false, false, true, DPL0);
+    gdt.entries[KERNEL16_CS / 8] = create_gdt_entry(0xffff, 0x0, DPL0, GDT_EXECUTABLE | GDT_READ_WRITE);
+    gdt.entries[KERNEL16_DS / 8] = create_gdt_entry(0xffff, 0x0, DPL0, GDT_READ_WRITE);
 
-    gdt.entries[USER_CS / 8] = create_gdt_entry(true, true, true, false, DPL3);
-    gdt.entries[USER_DS / 8] = create_gdt_entry(true, false, false, true, DPL3);
+    gdt.entries[KERNEL32_CS / 8] = create_gdt_entry(0xfffff, 0x0, DPL0, GDT_EXECUTABLE | GDT_READ_WRITE | GDT_DATA32 | GDT_GRANUALARITY4KiB);
+    gdt.entries[KERNEL32_DS / 8] = create_gdt_entry(0xfffff, 0x0, DPL0, GDT_READ_WRITE | GDT_DATA32 | GDT_GRANUALARITY4KiB);
+
+    gdt.entries[KERNEL64_CS / 8] = create_gdt_entry(0x0, 0x0, DPL0, GDT_READ_WRITE | GDT_EXECUTABLE | GDT_LONG_MODE);
+    gdt.entries[KERNEL64_DS / 8] = create_gdt_entry(0x0, 0x0, DPL0, GDT_READ_WRITE);
+
+    gdt.entries[KERNEL_SYSENTER_CS / 8] = create_null_gdt_entry();
+    gdt.entries[KERNEL_SYSENTER_DS / 8] = create_null_gdt_entry();
+
+    gdt.entries[USER_CS / 8] = create_gdt_entry(0x0, 0x0, DPL3, GDT_READ_WRITE | GDT_EXECUTABLE | GDT_LONG_MODE);
+    gdt.entries[USER_DS / 8] = create_gdt_entry(0x0, 0x0, DPL3, GDT_READ_WRITE);
 
     gdt.tss = create_tss();
 
-    print_gdt_entry(0);
-    print_gdt_entry(1);
-    print_gdt_entry(2);
-    print_gdt_entry(3);
-    print_gdt_entry(4);
+/*
+    print_gdt_entry(&gdt, 0);
+    print_gdt_entry(&gdt, 1);
+    print_gdt_entry(&gdt, 2);
+    print_gdt_entry(&gdt, 3);
+    print_gdt_entry(&gdt, 4);
+    print_gdt_entry(&gdt, 5);
+    print_gdt_entry(&gdt, 6);
+    print_gdt_entry(&gdt, 7);
+    print_gdt_entry(&gdt, 8);
+    print_gdt_entry(&gdt, 9);
+    print_gdt_entry(&gdt, 10);
+
     print_tss(&gdt.tss);
     print_gdt_desc(gdt_desc);
+*/
 
-    gdt_load(&gdt_desc, KERNEL_CS, KERNEL_DS);
-
-    kprintf(KERN_DEBUG "Current segment registers:\n" 
-                       "cs=%#04hx\n"
-                       "ds=%#04hx\n",
-                        reg_get_cs(),
-                        reg_get_ds());
-
-    kprintf(KERN_DEBUG "Loaded GDT:\n");
-    
-    print_gdt_desc(reg_get_gdtr());
+    gdt_load(&gdt_desc, KERNEL64_CS, KERNEL64_DS);
 }

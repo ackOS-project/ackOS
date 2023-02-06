@@ -2,10 +2,16 @@
 
 #include "kernel/lib/util.h"
 
-#define KERNEL_CS 0x08
-#define KERNEL_DS 0x10
-#define USER_CS 0x18
-#define USER_DS 0x20
+#define KERNEL16_CS 0x08
+#define KERNEL16_DS 0x10
+#define KERNEL32_CS 0x18
+#define KERNEL32_DS 0x20
+#define KERNEL64_CS 0x28
+#define KERNEL64_DS 0x30
+#define KERNEL_SYSENTER_CS 0x38
+#define KERNEL_SYSENTER_DS 0x40
+#define USER_CS 0x48
+#define USER_DS 0x50
 
 // Privilege levels are defined using "rings" from 0 to 3. Ring 0 is the most privileged and 3 is the least privileged
 // Terminology -
@@ -22,20 +28,16 @@ enum
     SYS_DESC_TSS_BUSY = 0xB
 };
 
-// Originally, the GDT was intented for segmentation
-// When long mode was introduced, segmentation was replaced by more modern 
-// memory management techniques such as paging.
-// Some fields in the GDT have been repurposed but most are ignored and should be set to 0
 struct ATTR_PACKED gdt_entry
 {
-    uint16_t limit_low; /*  0 */
-    uint16_t base_low; /* 0 */
-    uint8_t base_mid; /* 0 */
+    uint16_t limit_low;
+    uint16_t base_low;
+    uint8_t base_mid;
     union {
         struct {
             uint8_t accessed : 1,
                     read_write : 1,
-                    direction : 1, /* 0 */
+                    direction : 1,
                     executable : 1,
                     is_segment : 1,
                     privilege_level : 2,
@@ -45,10 +47,10 @@ struct ATTR_PACKED gdt_entry
     };
     union {
         struct {
-            uint8_t limit_high : 4, /* 0 */
-                    available : 1, /* 0 */
+            uint8_t limit_high : 4,
+                    available : 1,
                     long_mode : 1,
-                    data_size : 1, /* must be 0; value 1 reserved for future use */
+                    data_size : 1,
                     granualarity : 1;
         };
         struct {
@@ -56,7 +58,7 @@ struct ATTR_PACKED gdt_entry
                     flags_byte : 4;
         };
     };
-    uint8_t base_high; /* 0 */
+    uint8_t base_high;
 };
 
 struct ATTR_PACKED tss_descriptor
@@ -85,7 +87,7 @@ struct ATTR_PACKED tss_entry
 
 struct ATTR_PACKED gdt_entries
 {
-    struct gdt_entry entries[5];
+    struct gdt_entry entries[11];
     struct tss_entry tss;
 };
 

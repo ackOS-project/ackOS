@@ -7,9 +7,10 @@ KERNEL_S += $(filter-out $(call rwildcard,kernel/arch,*.s), $(call rwildcard,ker
 
 KERNEL_TARGETS += $(KERNEL_C:%.c=$(OBJ_DIR)/%.c.o) $(KERNEL_S:%.s=$(OBJ_DIR)/%.s.o)
 
-KERNEL_BIN := $(BIN_DIR)/kernel.elf
+KERNEL_BIN := $(BIN_DIR)/$(OS_DIST).elf
+KERNEL_SYMS := $(BIN_DIR)/$(OS_DIST).sym
 
-CFLAGS += -I . -I submodules -I kernel/lib/libc -D KERNEL_DEBUG
+CFLAGS += -I . -I submodules -I kernel/lib/libc
 
 include kernel/arch/$(ARCH)/build.mk
 
@@ -17,3 +18,8 @@ $(KERNEL_BIN): $(KERNEL_TARGETS)
 	$(CREATE_DIRS)
 	@echo "Linking kernel"
 	$(V)$(LD) $(LDFLAGS) -o $@ $(KERNEL_TARGETS)
+
+$(KERNEL_SYMS): $(KERNEL_BIN)
+	$(CREATE_DIRS)
+	@echo "Stripping kernel symbols"
+	@$(OBJCOPY) --only-keep-debug $(KERNEL_BIN) $@

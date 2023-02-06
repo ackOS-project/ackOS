@@ -25,7 +25,7 @@
         .zero1 = 0 \
     }
 
-#define IDT_INT_ENTRY(HANDLER_) IDT_HANDLER_ENTRY(HANDLER_, KERNEL_CS, GATE_INTERRUPT, DPL0)
+#define IDT_INT_ENTRY(HANDLER_) IDT_HANDLER_ENTRY(HANDLER_, KERNEL64_CS, GATE_INTERRUPT, DPL0)
 
 extern const uintptr_t idt_vect_list[];
 static struct idt_entry idt_entries[IDT_ENTRIES] = { IDT_INT_ENTRY(NULL) };
@@ -78,25 +78,25 @@ static inline const char* get_exception_name(int index)
 
 void interrupt_handler(struct int_frame* frame)
 {
-    kprintf(KERN_PANIC "INTERRUPT %s {\n"
-                       "    rax: %#lx\n"
-                       "    rbx: %#lx\n"
-                       "    rcx: %#lx\n"
-                       "    rdx: %#lx\n"
-                       "    rsi: %#lx\n"
-                       "    rdi: %#lx\n"
-                       "    rbp: %#lx\n"
-                       "    r8:  %#lx\n"
-                       "    r9:  %#lx\n"
-                       "    r10: %#lx\n"
-                       "    r11: %#lx\n"
-                       "    r12: %#lx\n"
-                       "    r13: %#lx\n"
-                       "    r14: %#lx\n"
-                       "    r15: %#lx\n"
+    kprintf(KERN_PANIC "%s INT\n"
+                       "    rax:      %#lx\n"
+                       "    rbx:      %#lx\n"
+                       "    rcx:      %#lx\n"
+                       "    rdx:      %#lx\n"
+                       "    rsi:      %#lx\n"
+                       "    rdi:      %#lx\n"
+                       "    rbp:      %#lx\n"
+                       "    r8:       %#lx\n"
+                       "    r9:       %#lx\n"
+                       "    r10:      %#lx\n"
+                       "    r11:      %#lx\n"
+                       "    r12:      %#lx\n"
+                       "    r13:      %#lx\n"
+                       "    r14:      %#lx\n"
+                       "    r15:      %#lx\n"
                        "    int_num:  %lu\n"
-                       "    err_code: %#lx\n"
-                       "}", get_exception_name(frame->int_num),
+                       "    err_code: %#lx\n", 
+                            get_exception_name(frame->int_num),
                             frame->rax,
                             frame->rbx,
                             frame->rcx,
@@ -169,6 +169,7 @@ void init_idt(void)
         idt_entries[i] = entry;
     }
 
+/*
     // Just print the first three entries; we can assume that the rest are fine
     for(size_t i = 0; i < 3; i++)
     {
@@ -176,6 +177,7 @@ void init_idt(void)
     }
 
     print_idt_desc();
+*/
 
     __asm__ volatile("lidtq %0" :: "m"(idt_desc));
 }

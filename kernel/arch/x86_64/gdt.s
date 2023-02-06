@@ -2,6 +2,7 @@
 
 .globl gdt_load
 
+/*FFFFFFFF80006BF0*/
 /*
 desc: rdi, code: si, data: dx
 */
@@ -10,14 +11,14 @@ gdt_load:
     movzwq %si, %rsi
     movzwq %dx, %rdx
 
-    lgdt (%rdi)
-
     /* save stack */
     pushq %rbp
     movq %rsp, %rbp
 
+    lgdt (%rdi)
+
     pushq %rdx /* push stack segment (same as data segment) */
-    pushq %rsp /* push stack pointer */
+    pushq %rbp /* push stack pointer */
     pushfq /* push rflags register */
     pushq %rsi /* push code segment */
     pushq $trampoline /* ireq will pop 'trampoline' into the instruction pointer and start executing */
@@ -25,6 +26,7 @@ gdt_load:
     iretq
 
 trampoline:
+    movq %rbp, %rsp
     popq %rbp
 
     /* flush the segment registers with the new data segment */
@@ -33,6 +35,12 @@ trampoline:
     movw %dx, %fs
     movw %dx, %ds
     movw %dx, %es
+
+    popq %rdi
+
+    //xchgw %bx, %bx
+
+    jmpq *%rdi
 
     retq
     
