@@ -13,6 +13,7 @@
 #include "kernel/arch/x86_64/idt.h"
 #include "kernel/arch/x86_64/cpuid.h"
 #include "kernel/arch/x86_64/instr.h"
+#include "kernel/arch/x86_64/mem.h"
 
 void kpanic(void)
 {
@@ -26,9 +27,11 @@ void x86_begin(void)
     init_gdt();
     init_idt();
 
-#pragma GCC diagnostic ignored "-Wdiv-by-zero"
+/* #pragma GCC diagnostic ignored "-Wdiv-by-zero"
     int i = 0 / 0;
-    (void)i;
+    (void)i; */
+
+    init_memory();
 
     kprintf("Hello, ackOS World!\n");
 

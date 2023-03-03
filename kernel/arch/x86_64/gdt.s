@@ -36,11 +36,5 @@ trampoline:
     movw %dx, %ds
     movw %dx, %es
 
-    popq %rdi
-
-    //xchgw %bx, %bx
-
-    jmpq *%rdi
-
     retq
     

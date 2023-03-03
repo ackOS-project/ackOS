@@ -41,7 +41,7 @@ enum
 
 // Using a macro here, so we can duplicate it for different interger types
 #define INT_TO_STRING_FUNC(T_, NAME_) \
-static size_t NAME_(T_ value, char* dest, int base, int padding, char pad_char, const char* prefix, char digit_separator, bool show_pos_sign, bool use_uppercase, bool dry_run) \
+static size_t NAME_(T_ value, char* dest, int base, int padding, char pad_char, const char* prefix, char digit_separator, bool show_pos_sign, bool use_uppercase, bool quantify, bool dry_run) \
 { \
     size_t len = 0; \
     static const char lookup_table[] = "0123456789abcdefghijklmnopqrstuvwxyz"; \
@@ -50,16 +50,45 @@ static size_t NAME_(T_ value, char* dest, int base, int padding, char pad_char, 
         if(!dry_run) *dest = '\0'; \
         return 0; \
     } \
+    const char* quantifier = NULL; \
+    if(quantify) \
+    { \
+        size_t v = (size_t)value; \
+        if(v / (1 TiB)) \
+        { \
+            value = (T_)(v / (1 TiB)); /* make the compiler happy */ \
+            quantifier = "TiB"; \
+        } \
+        else if(v / (1 GiB)) \
+        { \
+            value = (T_)(v / (1 GiB)); \
+            quantifier = "GiB"; \
+        } \
+        else if(v / (1 MiB)) \
+        { \
+            value = (T_)(v / (1 MiB)); \
+            quantifier = "MiB"; \
+        } \
+        else if(v / (1 KiB)) \
+        { \
+            value = (T_)(v / (1 KiB)); \
+            quantifier = "KiB"; \
+        } \
+        else \
+        { \
+            quantifier = "B"; \
+        } \
+    } \
     size_t prefix_len = 0; \
     size_t sign_len = 0; \
-    if(value < 0 && !dry_run) \
+    if(value < 0) \
     { \
-        *(dest++) = '-'; \
+        if(!dry_run) *(dest++) = '-'; \
         sign_len++; \
     } \
-    else if(show_pos_sign && !dry_run) \
+    else if(show_pos_sign) \
     { \
-        *(dest++) = '+'; \
+        if(!dry_run) *(dest++) = '+'; \
         sign_len++; \
     } \
     if(prefix) \
@@ -121,6 +150,16 @@ static size_t NAME_(T_ value, char* dest, int base, int padding, char pad_char, 
     } \
     len += prefix_len; \
     len += sign_len; \
+    if(quantifier) \
+    { \
+        size_t quantifier_len = strlen(quantifier); \
+        if(!dry_run) \
+        { \
+            memcpy(dest, quantifier, quantifier_len); \
+            dest += quantifier_len; \
+        } \
+        len += quantifier_len; \
+    } \
     if(!dry_run) \
     { \
         *dest = '\0'; \
@@ -399,11 +438,11 @@ static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* pre
                     }
                     #define PRINTF_INT_SPEC(__type, __vtype, __func, __base, __prefix, __use_uppercase) \
                         __type value = (__type)va_arg(args, __vtype); \
-                        size_t est_size = __func(value, NULL, (__base), width, flag & PRINTF_FLAG_PAD_ZEROES ? '0' : '\0', (__prefix), flag & PRINTF_FLAG_DIGIT_SEPARATE ? ' ' : '\0', flag & PRINTF_FLAG_SHOW_SIGN, (__use_uppercase), true); \
+                        size_t est_size = __func(value, NULL, (__base), width, flag & PRINTF_FLAG_PAD_ZEROES ? '0' : '\0', (__prefix), flag & PRINTF_FLAG_DIGIT_SEPARATE ? ' ' : '\0', flag & PRINTF_FLAG_SHOW_SIGN, (__use_uppercase), length == PRINTF_LEN_SIZE_TYPE && (flag & PRINTF_FLAG_DIGIT_SEPARATE), true); \
                         PRINTF_JUSTIFYL(est_size); \
                         size_t trunc_len = PRINTF_TRUNCATE(est_size); \
                         char tmp[est_size + 1]; \
-                        __func(value, tmp, (__base), width, flag & PRINTF_FLAG_PAD_ZEROES ? '0' : '\0', (__prefix), flag & PRINTF_FLAG_DIGIT_SEPARATE ? ' ' : '\0', flag & PRINTF_FLAG_SHOW_SIGN, (__use_uppercase), false); \
+                        __func(value, tmp, (__base), width, flag & PRINTF_FLAG_PAD_ZEROES ? '0' : '\0', (__prefix), flag & PRINTF_FLAG_DIGIT_SEPARATE ? ' ' : '\0', flag & PRINTF_FLAG_SHOW_SIGN, (__use_uppercase), length == PRINTF_LEN_SIZE_TYPE && (flag & PRINTF_FLAG_DIGIT_SEPARATE), false); \
                         if(!dry_run) \
                         { \
                             strncpy(buff, tmp, trunc_len); \

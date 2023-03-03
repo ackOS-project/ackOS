@@ -39,7 +39,7 @@ int kvprintf(const char* fmt, va_list args);
 * '0x' - place at least x many 0s before a number
 * '+'  - always show the positive sign on positive numbers
 * '#'  - alternative form; for the o, x, X specifiers this modifier prepends a '0o' or '0x' repectively.
-* `'`  - places spaces in between digits to separate thousands, millions places, etc
+* `'`  - places spaces in between digits to separate thousands, millions places, etc. When using the 'z' size specifier, it will also quantise the value with a unit such as KiB, MiB, GiB
 */
 ATTR_FORMAT(printf, 1, 2) int kprintf(const char* fmt, ...);
 
