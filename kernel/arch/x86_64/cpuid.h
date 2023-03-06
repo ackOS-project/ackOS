@@ -63,3 +63,19 @@ enum cpu_feature
     FEAT_EDX_IA64 = 1 << 30,
     FEAT_EDX_PBE = 1 << 31
 };
+
+void cpuid_do(uint32_t leaf, uint32_t* eax_p, uint32_t* ebx_p, uint32_t* ecx_p, uint32_t* edx_p);
+void cpuid_do_with_subleaf(uint32_t leaf, uint32_t subleaf, uint32_t* eax_p, uint32_t* ebx_p, uint32_t* ecx_p, uint32_t* edx_p);
+
+uint32_t cpuid_eax(uint32_t leaf);
+uint32_t cpuid_ebx(uint32_t leaf);
+uint32_t cpuid_ecx(uint32_t leaf);
+uint32_t cpuid_edx(uint32_t leaf);
+
+uint32_t cpuid_eax_with_subleaf(uint32_t leaf, uint32_t subleaf);
+uint32_t cpuid_ebx_with_subleaf(uint32_t leaf, uint32_t subleaf);
+uint32_t cpuid_ecx_with_subleaf(uint32_t leaf, uint32_t subleaf);
+uint32_t cpuid_edx_with_subleaf(uint32_t leaf, uint32_t subleaf);
+
+char* cpuid_get_vendor_id(char (*res)[13]);
+char* cpuid_get_brand_string(char (*res)[49]);

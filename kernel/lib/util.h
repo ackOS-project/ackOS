@@ -6,7 +6,7 @@
 
 #define KiB * 0x400
 #define MiB * 0x100000
-#define GiB * 0x40000000
+#define GiB * 0x40000000L
 #define TiB * 0x10000000000L
 
 #define ATTR_PACKED __attribute__((__packed__))

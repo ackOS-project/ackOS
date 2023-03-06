@@ -33,6 +33,10 @@ void x86_begin(void)
 
     init_memory();
 
+    char brand_str[49];
+
+    kprintf(KERN_INFO "CPUID brand string: \033[0;33m%s\033[0m\n", cpuid_get_brand_string(&brand_str));
+
     kprintf("Hello, ackOS World!\n");
 
     halt();

@@ -44,6 +44,7 @@ CFLAGS := -ffreestanding \
 		  -Wall \
 		  -Werror \
 		  -Wstrict-prototypes \
+		  -Wno-unused-variable \
 		  --warn-no-unused-function \
 		  -D BUILD_CONFIG_$(shell echo $(CONFIG) | tr a-z A-Z) \
 		  -D BUILD_VERSION=$(VERSION)

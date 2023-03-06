@@ -20,4 +20,3 @@ void kputs(const char* msg)
 
     com_write(COM_PORT1, msg, msg_len);
 }
-

@@ -39,6 +39,18 @@ enum
 };
 
 
+// an unoffical feauture which converts plurals in parentheses
+// to the corresponding pluralisation/single for a number
+// example:
+// ("%i cat(s)", 1) => "1 cat"
+// ("%i cat(s)", 3) => "3 cats"
+enum
+{
+    PRINTF_PLURAL_DEFAULT,
+    PRINTF_PLURAL_YES,
+    PRINTF_PLURAL_NO
+};
+
 // Using a macro here, so we can duplicate it for different interger types
 #define INT_TO_STRING_FUNC(T_, NAME_) \
 static size_t NAME_(T_ value, char* dest, int base, int padding, char pad_char, const char* prefix, char digit_separator, bool show_pos_sign, bool use_uppercase, bool quantify, bool dry_run) \
@@ -187,6 +199,7 @@ static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* pre
     int flag = PRINTF_FLAG_DEFAULT;
     int width = 0;
     int length = PRINTF_LEN_DEFAULT;
+    int pluralisation = PRINTF_PLURAL_DEFAULT;
 
     #define PRINTF_GETSPACE() (n - (size_t)((uintptr_t)buff - (uintptr_t)buff_start))
     #define PRINTF_TRUNCATE(__len) (PRINTF_GETSPACE() < ((size_t)(__len)) ? PRINTF_GETSPACE() : ((size_t)(__len)))
@@ -245,9 +258,20 @@ static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* pre
                 if(*fmt == '%')
                 {
                     state = PRINTF_STATE_FLAG;
+                    pluralisation = PRINTF_PLURAL_DEFAULT;
                     fmt++;
 
                     continue;
+                }
+                else if(pluralisation != PRINTF_PLURAL_DEFAULT && *fmt == '(' && *(fmt + 1) == 's' && *(fmt + 2) == ')')
+                {
+                    // ^ the above code is fine
+                    fmt += 3;
+
+                    if(pluralisation == PRINTF_PLURAL_YES)
+                    {
+                        PRINTF_APPENDCH('s');
+                    }
                 }
                 else
                 {
@@ -436,7 +460,7 @@ static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* pre
 
                         break;
                     }
-                    #define PRINTF_INT_SPEC(__type, __vtype, __func, __base, __prefix, __use_uppercase) \
+                    #define PRINTF_INT_SPEC(__type, __vtype, __func, __signedness, __base, __prefix, __use_uppercase) \
                         __type value = (__type)va_arg(args, __vtype); \
                         size_t est_size = __func(value, NULL, (__base), width, flag & PRINTF_FLAG_PAD_ZEROES ? '0' : '\0', (__prefix), flag & PRINTF_FLAG_DIGIT_SEPARATE ? ' ' : '\0', flag & PRINTF_FLAG_SHOW_SIGN, (__use_uppercase), length == PRINTF_LEN_SIZE_TYPE && (flag & PRINTF_FLAG_DIGIT_SEPARATE), true); \
                         PRINTF_JUSTIFYL(est_size); \
@@ -449,79 +473,87 @@ static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* pre
                             buff += trunc_len; \
                         } \
                         total_len += est_size; \
-                        PRINTF_JUSTIFYL(est_size);
-                    #define PRINTF_LEN_SPEC(__base, __use_uppercase, __prefix, __signness) \
+                        PRINTF_JUSTIFYR(est_size); \
+                        if(((__signedness) && value < -1) || value == 0 || value > 1) \
+                        { \
+                            pluralisation = PRINTF_PLURAL_YES; \
+                        } \
+                        else \
+                        { \
+                            pluralisation = PRINTF_PLURAL_NO; \
+                        }
+                    #define PRINTF_LEN_SPEC(__base, __use_uppercase, __prefix, __signedness) \
                         switch(length) \
                         { \
                             case PRINTF_STATE_NORMAL: \
                             { \
-                                if(__signness == true) \
+                                if(__signedness == true) \
                                 { \
-                                    PRINTF_INT_SPEC(signed int, signed int, int_to_string, __base, __prefix, __use_uppercase) \
+                                    PRINTF_INT_SPEC(signed int, signed int, int_to_string, __signedness, __base, __prefix, __use_uppercase) \
                                 } \
                                 else \
                                 { \
-                                    PRINTF_INT_SPEC(unsigned int, unsigned int, uint_to_string, __base, __prefix, __use_uppercase) \
+                                    PRINTF_INT_SPEC(unsigned int, unsigned int, uint_to_string, __signedness, __base, __prefix, __use_uppercase) \
                                 } \
                                 break; \
                             } \
                             case PRINTF_LEN_SHORT: \
                             { \
-                                if(__signness == true) \
+                                if(__signedness == true) \
                                 { \
-                                    PRINTF_INT_SPEC(signed short, signed int, sint_to_string, __base, __prefix, __use_uppercase) \
+                                    PRINTF_INT_SPEC(signed short, signed int, sint_to_string, __signedness, __base, __prefix, __use_uppercase) \
                                 } \
                                 else \
                                 { \
-                                    PRINTF_INT_SPEC(unsigned short, unsigned int, usint_to_string, __base, __prefix, __use_uppercase) \
+                                    PRINTF_INT_SPEC(unsigned short, unsigned int, usint_to_string, __signedness, __base, __prefix, __use_uppercase) \
                                 } \
                                 break; \
                             } \
                             case PRINTF_LEN_SHORT_SHORT: \
                             { \
-                                if(__signness == true) \
+                                if(__signedness == true) \
                                 { \
-                                    PRINTF_INT_SPEC(signed char, signed int, char_to_string, __base, __prefix, __use_uppercase) \
+                                    PRINTF_INT_SPEC(signed char, signed int, char_to_string, __signedness, __base, __prefix, __use_uppercase) \
                                 } \
                                 else \
                                 { \
-                                    PRINTF_INT_SPEC(unsigned char, unsigned int, uchar_to_string, __base, __prefix, __use_uppercase) \
+                                    PRINTF_INT_SPEC(unsigned char, unsigned int, uchar_to_string, __signedness, __base, __prefix, __use_uppercase) \
                                 } \
                                 break; \
                             } \
                             case PRINTF_LEN_LONG_LONG: \
                             { \
-                                if(__signness == true) \
+                                if(__signedness == true) \
                                 { \
-                                    PRINTF_INT_SPEC(signed long long, signed long long, llint_to_string, __base, __prefix, __use_uppercase) \
+                                    PRINTF_INT_SPEC(signed long long, signed long long, llint_to_string, __signedness, __base, __prefix, __use_uppercase) \
                                 } \
                                 else \
                                 { \
-                                    PRINTF_INT_SPEC(unsigned long long, unsigned long long, ullint_to_string, __base, __prefix, __use_uppercase) \
+                                    PRINTF_INT_SPEC(unsigned long long, unsigned long long, ullint_to_string, __signedness, __base, __prefix, __use_uppercase) \
                                 } \
                                 break; \
                             } \
                             case PRINTF_LEN_LONG: \
                             { \
-                                if(__signness == true) \
+                                if(__signedness == true) \
                                 { \
-                                    PRINTF_INT_SPEC(signed long, signed long, lint_to_string, __base, __prefix, __use_uppercase) \
+                                    PRINTF_INT_SPEC(signed long, signed long, lint_to_string, __signedness, __base, __prefix, __use_uppercase) \
                                 } \
                                 else \
                                 { \
-                                    PRINTF_INT_SPEC(unsigned long, unsigned long, ulint_to_string, __base, __prefix, __use_uppercase) \
+                                    PRINTF_INT_SPEC(unsigned long, unsigned long, ulint_to_string, __signedness, __base, __prefix, __use_uppercase) \
                                 } \
                                 break; \
                             } \
                             case PRINTF_LEN_SIZE_TYPE: \
                             { \
-                                if(__signness == true) \
+                                if(__signedness == true) \
                                 { \
-                                    PRINTF_INT_SPEC(ssize_t, ssize_t, lint_to_string, __base, __prefix, __use_uppercase) \
+                                    PRINTF_INT_SPEC(ssize_t, ssize_t, lint_to_string, __signedness, __base, __prefix, __use_uppercase) \
                                 } \
                                 else \
                                 { \
-                                    PRINTF_INT_SPEC(size_t, size_t, ulint_to_string, __base, __prefix, __use_uppercase) \
+                                    PRINTF_INT_SPEC(size_t, size_t, ulint_to_string, __signedness, __base, __prefix, __use_uppercase) \
                                 } \
                                 break; \
                             } \
@@ -568,7 +600,7 @@ static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* pre
                     }
                     case 'p':
                     {
-                        PRINTF_INT_SPEC(unsigned long, unsigned long, ulint_to_string, 16, "0x", false);
+                        PRINTF_INT_SPEC(unsigned long, unsigned long, ulint_to_string, false, 16, "0x", false);
 
                         break;
                     }

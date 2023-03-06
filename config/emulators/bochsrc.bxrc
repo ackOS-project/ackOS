@@ -9,7 +9,7 @@ cpuid: pcid=false, fsgsbase=false, smep=false, smap=false, mwait=true
 config_interface: textconfig
 display_library: x, options="gui_debug"
 
-megs: 512
+megs: %i
 
 clock: sync=realtime, time0=local
 

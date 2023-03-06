@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <stdarg.h>
 
-int sprintf(char* buff, const char* fmt, ...);
+//int sprintf(char* buff, const char* fmt, ...);
 
 int snprintf(char* buff, size_t n, const char* fmt, ...);
 

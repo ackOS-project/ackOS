@@ -5,20 +5,167 @@
 #include <stddef.h>
 #include <stdint.h>
 
-inline static void halt(void)
+static inline void halt(void)
 {
     __asm__ volatile("hlt");
 }
 
-inline static void int_enable(void)
+static inline void int_enable(void)
 {
     __asm__ volatile("sti");
 }
 
-inline static void int_disable(void)
+static inline void int_disable(void)
 {
     __asm__ volatile("cli");
 }
+
+static inline void invalidate_page(void* virt)
+{
+    __asm__ volatile("invlpg (%0)" :: "r"(virt) : "memory");
+}
+
+static inline uint64_t reg_get_rax(void)
+{
+    uint64_t rax;
+
+    __asm__ volatile("movq %%rax, %0"
+                     : "=g"(rax)::"memory");
+
+    return rax;
+}
+
+static inline uint64_t reg_get_rbx(void)
+{
+    uint64_t rbx;
+
+    __asm__ volatile("movq %%rbx, %0"
+                     : "=g"(rbx)::"memory");
+
+    return rbx;
+}
+
+static inline uint64_t reg_get_rcx(void)
+{
+    uint64_t rcx;
+
+    __asm__ volatile("movq %%rcx, %0"
+                     : "=g"(rcx)::"memory");
+
+    return rcx;
+}
+
+static inline uint64_t reg_get_rdx(void)
+{
+    uint64_t rdx;
+
+    __asm__ volatile("movq %%rdx, %0"
+                     : "=g"(rdx)::"memory");
+
+    return rdx;
+}
+
+static inline uint64_t reg_get_rsi(void)
+{
+    uint64_t rsi;
+
+    __asm__ volatile("movq %%rsi, %0"
+                     : "=g"(rsi)::"memory");
+
+    return rsi;
+}
+
+static inline uint64_t reg_get_rdi(void)
+{
+    uint64_t rdi;
+
+    __asm__ volatile("movq %%rdi, %0"
+                     : "=g"(rdi)::"memory");
+
+    return rdi;
+}
+
+static inline uint64_t reg_get_r8(void)
+{
+    uint64_t r8;
+
+    __asm__ volatile("movq %%r8, %0"
+                     : "=g"(r8)::"memory");
+
+    return r8;
+}
+
+static inline uint64_t reg_get_r9(void)
+{
+    uint64_t r9;
+
+    __asm__ volatile("movq %%r9, %0"
+                     : "=g"(r9)::"memory");
+
+    return r9;
+}
+
+static inline uint64_t reg_get_r10(void)
+{
+    uint64_t r10;
+
+    __asm__ volatile("movq %%r10, %0"
+                     : "=g"(r10)::"memory");
+
+    return r10;
+}
+
+static inline uint64_t reg_get_r11(void)
+{
+    uint64_t r11;
+
+    __asm__ volatile("movq %%r11, %0"
+                     : "=g"(r11)::"memory");
+
+    return r11;
+}
+
+static inline uint64_t reg_get_r12(void)
+{
+    uint64_t r12;
+
+    __asm__ volatile("movq %%r12, %0"
+                     : "=g"(r12)::"memory");
+
+    return r12;
+}
+
+
+static inline uint64_t reg_get_r13(void)
+{
+    uint64_t r13;
+
+    __asm__ volatile("movq %%r13, %0"
+                     : "=g"(r13)::"memory");
+
+    return r13;
+}
+
+static inline uint64_t reg_get_r14(void)
+{
+    uint64_t r14;
+
+    __asm__ volatile("movq %%r14, %0"
+                     : "=g"(r14)::"memory");
+
+    return r14;
+}
+
+static inline uint64_t reg_get_r15(void)
+{
+    uint64_t r15;
+
+    __asm__ volatile("movq %%r15, %0"
+                     : "=g"(r15)::"memory");
+
+    return r15;
+}
+
 
 static inline uint64_t reg_get_bp(void)
 {
@@ -151,3 +298,5 @@ inline static void io_wait(void)
                  "1:jmp 2f\n\t"
                  "2:");
 }
+
+void print_registers(void);
