@@ -15,8 +15,10 @@ enum
     MAP_PAGE_NO_FLUSH = (1 << 3)
 };
 
-uintptr_t pmm_allocate(size_t size);
+typedef uintptr_t phys_addr_t;
+typedef void* virt_addr_t;
 
-void pmm_deallocate(uintptr_t addr, size_t size);
+phys_addr_t pmm_allocate(size_t size);
+void pmm_deallocate(phys_addr_t addr, size_t size);
 
 void init_memory(void);

@@ -33,7 +33,7 @@ OBJDUMP := $(ARCH)-$(SYSTEM)-objdump
 LD := $(ARCH)-$(SYSTEM)-ld
 AR := $(ARCH)-$(SYSTEM)-ar
 
-VM_MEMORY := 128
+VM_MEMORY := 1512
 VM_LOGFILE := ackos.log
 
 BIN_DIR := bin
