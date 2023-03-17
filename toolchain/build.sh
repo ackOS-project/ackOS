@@ -1,19 +1,20 @@
 #!/bin/bash
 set -e
 
-COMPILER_TARGET=x86_64-ackos
+COMPILER_ARCH=x86_64
+COMPILER_TARGET="$COMPILER_ARCH-ackos"
 COMPILER_PREFIX="local"
-COMPILER_SYSROOT="../sysroot"
 
-BINUTILS_VERSION=2.35
+BINUTILS_VERSION=2.39
 BINUTILS_WGET_LOC=binutils.tar.gz
 BINUTILS_DIR=binutils
 
-GCC_VERSION=10.2.0
+GCC_VERSION=12.2.0
 GCC_WGET_LOC=gcc.tar.gz
 GCC_DIR=gcc
 
-DIR="$(dirname $(readlink -f $0))"
+DIR="$(dirname $PWD/$0)"
+OS_DIR="$DIR/.."
 
 cd "$DIR"
 
@@ -26,7 +27,7 @@ fi
 
 if [ ! -e $GCC_WGET_LOC ]; then
 	echo Downloading GCC
-	wget -O $GCC_WGET_LOC "https://ftp.gnu.org/gnu/gcc/gcc-10.2.0/gcc-$GCC_VERSION.tar.gz"
+	wget -O $GCC_WGET_LOC "https://ftp.gnu.org/gnu/gcc/gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.gz"
 else
 	echo "$GCC_WGET_LOC already exists, skipping download"
 fi
@@ -48,12 +49,12 @@ else
 fi
 
 echo Patching binutils -
-./patches/patch.sh --source_directory=$BINUTILS_DIR --patch_directory=patches/binutils
+./patches/patch.sh --source_directory="$BINUTILS_DIR" --patch_directory=patches/binutils
 
 echo Patching GCC -
-./patches/patch.sh --source_directory=$GCC_DIR --patch_directory=patches/gcc
+./patches/patch.sh --source_directory="$GCC_DIR" --patch_directory=patches/gcc
 
-mkdir -p $COMPILER_PREFIX
+mkdir -p "$COMPILER_PREFIX"
 
 if [ -z "$MAKEJOBS" ]; then
     MAKEJOBS=$(nproc)
@@ -88,6 +89,11 @@ if [ ! -d "build/gcc" ]; then
 	echo "Compiling GCC"
 	mkdir -p "build/gcc"
 	pushd "build/gcc"
+		echo "Generating includes"
+		make -C "$OS_DIR" copy-headers-to-sysroot || exit 1
+
+		COMPILER_SYSROOT="$OS_DIR/$(make --no-print-directory -C $OS_DIR print-sysroot-dir ARCH=$COMPILER_ARCH)"
+
 		echo "Configuring GCC"
 		# You must provide the full path when using the configure script
 		"$DIR/$GCC_DIR/configure" \
@@ -98,8 +104,8 @@ if [ ! -d "build/gcc" ]; then
 				--enable-languages=c,c++ \
 				--disable-bootstrap \
 				--with-newlib \
-				--with-sysroot=$DIR/$COMPILER_SYSROOT
-		# make -C "$DIR/../" install-headers || exit 1
+				--with-sysroot=$COMPILER_SYSROOT
+
 
 		echo "Running make all-gcc on GCC"
 		make -j $MAKEJOBS all-gcc
@@ -112,8 +118,6 @@ if [ ! -d "build/gcc" ]; then
 
 		echo "Running make install-target-libgcc on GCC"
 		make install-target-libgcc
-
-		make -C $(DIR)/.. build-sysroot
 
 		# echo "Compiling libstdc++"
 		# make all-target-libstdc++-v3

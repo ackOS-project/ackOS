@@ -1,11 +1,15 @@
 --- a/config.sub
 +++ b/config.sub
-@@ -1366,7 +1366,7 @@
+@@ -1747,11 +1747,11 @@
+ 	     | powermax* | dnix* | nx6 | nx7 | sei* | dragonfly* \
  	     | skyos* | haiku* | rdos* | toppers* | drops* | es* \
  	     | onefs* | tirtos* | phoenix* | fuchsia* | redox* | bme* \
  	     | midnightbsd* | amdhsa* | unleashed* | emscripten* | wasi* \
--	     | nsk* | powerunix)
-+	     | nsk* | powerunix | ackos*)
- 	# Remember, each alternative MUST END IN *, to match a version number.
+ 	     | nsk* | powerunix* | genode* | zvmoe* | qnx* | emx* | zephyr* \
+-	     | fiwix* )
++	     | fiwix* | ackos* )
  		;;
- 	qnx*)
+ 	# This one is extra strict with allowed versions
+ 	sco3.2v2 | sco3.2v[4-9]* | sco5v6*)
+ 		# Don't forget version if it is 3.2v4 or newer.
+ 		;;

@@ -8,7 +8,7 @@ $(LIMINE_DEPLOY):
 	@echo Building limine deploy tool
 	@make -C $(LIMINE_DIR) limine-deploy
 
-$(OS_IMAGE): $(KERNEL_BIN) $(LIMINE_DEPLOY) config/dist/$(DIST)/limine.cfg
+$(OS_IMAGE): $(KERNEL_BIN) build-sysroot $(LIMINE_DEPLOY) config/dist/$(DIST)/limine.cfg
 	$(V)mkdir -p $(@D)
 	$(V)mkdir -p config/dist/$(DIST)/resources
 

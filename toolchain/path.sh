@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DIR=$(dirname $(readlink -f $0))
+DIR=$(dirname $PWD/$0)
 
 TARGET=x86_64
 OPTION=toolchain

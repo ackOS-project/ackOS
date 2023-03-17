@@ -1,3 +1,4 @@
+#include <liback/util.h>
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -6,8 +7,8 @@
 #include <stdlib.h>
 #include <ctype.h>
 
+
 #include "kernel/lib/log.h"
-#include "kernel/lib/util.h"
 
 enum
 {
@@ -697,16 +698,16 @@ static const char* action_to_string(enum kprintf_action action)
     switch(action)
     {
     case KPRINTF_ACTION_INFO:
-        return "INFO  ";
+        return TERM_CYAN "INFO" TERM_RESET_COLOUR "  ";
         break;
     case KPRINTF_ACTION_WARN:
-        return "WARN  ";
+        return TERM_YELLOW "WARN" TERM_RESET_COLOUR "  ";
         break;
     case KPRINTF_ACTION_DEBUG:
-        return "DEBUG ";
+        return TERM_MAGENTA "DEBUG" TERM_RESET_COLOUR " ";
         break;
     case KPRINTF_ACTION_PANIC:
-        return "PANIC ";
+        return TERM_RED_BG "PANIC" TERM_RESET_COLOUR " ";
         break;
 
     default:

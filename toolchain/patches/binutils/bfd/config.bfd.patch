@@ -1,14 +1,34 @@
 --- a/bfd/config.bfd
 +++ b/bfd/config.bfd
-@@ -223,6 +223,11 @@
- case "${targ}" in
- # START OF targmatch.h
- #ifdef BFD64
+@@ -272,10 +272,15 @@
+   aarch64-*-haiku*)
+     targ_defvec=aarch64_elf64_le_vec
+     targ_selvecs="aarch64_elf64_be_vec aarch64_elf32_le_vec aarch64_elf32_be_vec arm_elf32_le_vec arm_elf32_be_vec"
+     want64=true
+     ;;
++  aarch64-*-ackos*)
++    targ_defvec=aarch64_elf64_le_vec
++    targ_selvecs="aarch64_elf64_be_vec aarch64_elf32_le_vec aarch64_elf32_be_vec arm_elf32_le_vec arm_elf32_be_vec"
++    want64=true
++    ;;
+   aarch64-*-linux* | aarch64-*-netbsd*)
+     targ_defvec=aarch64_elf64_le_vec
+     targ_selvecs="aarch64_elf64_be_vec aarch64_elf32_le_vec aarch64_elf32_be_vec arm_elf32_le_vec arm_elf32_be_vec aarch64_pei_vec"
+     want64=true
+     ;;
+@@ -698,10 +703,15 @@
+   x86_64-*-netbsd* | x86_64-*-openbsd*)
+     targ_defvec=x86_64_elf64_vec
+     targ_selvecs="i386_elf32_vec iamcu_elf32_vec i386_coff_vec i386_pei_vec x86_64_pe_vec x86_64_pei_vec"
+     want64=true
+     ;;
 +  x86_64-*-ackos*)
 +    targ_defvec=x86_64_elf64_vec
 +    targ_selvecs=i386_elf32_vec
 +    want64=true
 +    ;;
-   aarch64-*-darwin*)
-     targ_defvec=aarch64_mach_o_vec
-     targ_selvecs="arm_mach_o_vec mach_o_le_vec mach_o_be_vec mach_o_fat_vec"
+   x86_64-*-linux-*)
+     targ_defvec=x86_64_elf64_vec
+     targ_selvecs="i386_elf32_vec iamcu_elf32_vec x86_64_elf32_vec i386_pei_vec x86_64_pe_vec x86_64_pei_vec"
+     want64=true
+     ;;

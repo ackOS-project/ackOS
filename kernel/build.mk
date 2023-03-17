@@ -11,13 +11,14 @@ KERNEL_BIN := $(BIN_DIR)/$(OS_DIST).elf
 KERNEL_SYMS := $(BIN_DIR)/$(OS_DIST).sym
 
 CFLAGS += -I . -I submodules -I kernel/lib/libc
+LDFLAGS += -L$(LIB_ARCHIVE_DIR) -lack -lc
 
 include kernel/arch/$(ARCH)/build.mk
 
-$(KERNEL_BIN): $(KERNEL_TARGETS)
+$(KERNEL_BIN): $(KERNEL_TARGETS) $(LIB_TARGETS)
 	$(CREATE_DIRS)
 	@echo "Linking kernel"
-	$(V)$(LD) $(LDFLAGS) -o $@ $(KERNEL_TARGETS)
+	$(V)$(LD) -o $@ $(KERNEL_TARGETS) $(LDFLAGS)
 
 $(KERNEL_SYMS): $(KERNEL_BIN)
 	$(CREATE_DIRS)

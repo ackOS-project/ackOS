@@ -100,6 +100,23 @@ void* memset(void* ptr, int value, size_t num)
     return ptr;
 }
 
+int memcmp(const void* cmp1, const void* cmp2, size_t len)
+{
+    while(len > 0 && ((*(const char*)cmp1) == (*(const char*)cmp2)))
+    {
+        ++cmp1;
+        ++cmp2;
+        --len;
+    }
+
+    if(len == 0)
+    {
+        return 0;
+    }
+
+    return (*(const char*)cmp1 - *(const char*)cmp2);
+}
+
 size_t strlen(const char* str) 
 {
     size_t len = 0;

@@ -2,12 +2,27 @@
 
 #include <stdarg.h>
 
-#include "kernel/lib/util.h"
+#include <liback/util.h>
 
 #define KERN_INFO "\e\x01"
 #define KERN_WARN "\e\x02"
 #define KERN_PANIC "\e\x03"
 #define KERN_DEBUG "\e\x04"
+
+#define TERM_RESET_COLOUR "\e[0m"
+#define TERM_RED "\e[0;31m"
+#define TERM_GREEN "\e[0;32m"
+#define TERM_YELLOW "\e[0;33m"
+#define TERM_BLUE "\e[0;34m"
+#define TERM_MAGENTA "\e[0;35m"
+#define TERM_CYAN "\e[0;36m"
+
+#define TERM_RED_BG "\e[0;41m"
+#define TERM_GREEN_BG "\e[0;42m"
+#define TERM_YELLOW_BG "\e[0;43m"
+#define TERM_BLUE_BG "\e[0;44m"
+#define TERM_MAGENTA_BG "\e[0;45m"
+#define TERM_CYAN_BG "\e[0;46m"
 
 void kputs(const char* msg);
 

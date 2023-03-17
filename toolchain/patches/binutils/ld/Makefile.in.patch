@@ -1,34 +1,34 @@
 --- a/ld/Makefile.in
 +++ b/ld/Makefile.in
-@@ -765,6 +765,7 @@
- 	eelf32xtensa.c \
- 	eelf32z80.c \
- 	eelf_i386.c \
-+	eelf_i386_ackos.c \
- 	eelf_i386_be.c \
- 	eelf_i386_fbsd.c \
- 	eelf_i386_ldso.c \
-@@ -932,6 +933,7 @@
- 	eelf_k1om.c \
- 	eelf_k1om_fbsd.c \
+@@ -879,6 +879,7 @@
+ 	eaarch64elfb.c \
+ 	eaarch64fbsd.c \
+ 	eaarch64fbsdb.c \
++	eaarch64ackos.c \
+ 	eaarch64haiku.c \
+ 	eaarch64linux.c \
+ 	eaarch64linux32.c \
+@@ -949,6 +950,7 @@
+ 	eelf64tilegx_be.c \
+ 	eelf_mipsel_haiku.c \
  	eelf_x86_64.c \
 +	eelf_x86_64_ackos.c \
  	eelf_x86_64_cloudabi.c \
  	eelf_x86_64_fbsd.c \
- 	eelf_x86_64_sol2.c \
-@@ -1368,6 +1370,7 @@
- @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf64tilegx.Po@am__quote@
- @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf64tilegx_be.Po@am__quote@
- @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_i386.Po@am__quote@
-+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_i386_ackos.Po@am__quote@
- @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_i386_be.Po@am__quote@
- @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_i386_fbsd.Po@am__quote@
- @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_i386_ldso.Po@am__quote@
-@@ -1380,6 +1383,7 @@
- @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_l1om_fbsd.Po@am__quote@
- @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_s390.Po@am__quote@
- @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_x86_64.Po@am__quote@
-+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_x86_64_ackos.Po@am__quote@
- @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_x86_64_cloudabi.Po@am__quote@
- @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_x86_64_fbsd.Po@am__quote@
- @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_x86_64_sol2.Po@am__quote@
+ 	eelf_x86_64_haiku.c \
+@@ -2537,6 +2539,7 @@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaarch64elfb.Pc@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaarch64fbsd.Pc@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaarch64fbsdb.Pc@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaarch64ackos.Pc@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaarch64haiku.Pc@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaarch64linux.Pc@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaarch64linux32.Pc@am__quote@
+@@ -2607,6 +2610,7 @@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf64tilegx_be.Pc@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_mipsel_haiku.Pc@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_x86_64.Pc@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_x86_64_ackos.Pc@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_x86_64_cloudabi.Pc@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_x86_64_fbsd.Pc@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_x86_64_haiku.Pc@am__quote@

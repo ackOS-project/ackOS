@@ -33,7 +33,7 @@ OBJDUMP := $(ARCH)-$(SYSTEM)-objdump
 LD := $(ARCH)-$(SYSTEM)-ld
 AR := $(ARCH)-$(SYSTEM)-ar
 
-VM_MEMORY := 1512
+VM_MEMORY := 128
 VM_LOGFILE := ackos.log
 
 BIN_DIR := bin
@@ -51,6 +51,9 @@ CFLAGS := -ffreestanding \
 ASFLAGS :=
 LDFLAGS := -nostdlib -static
 
+STATIC_SYSROOT_DIR := sysroot
+SYSROOT_DIR := $(OBJ_DIR)/sysroot
+
 ifneq ($(filter release build,$(CONFIG)),)
 	CFLAGS += -O3
 endif
@@ -65,6 +68,7 @@ OS_IMAGE =
 
 SOURCES =
 
+include lib/build.mk
 include kernel/build.mk
 include config/emulators/qemu.mk
 include config/emulators/bochs.mk
@@ -90,3 +94,11 @@ $(OBJ_DIR)/%.s.o: %.s
 	@echo "Building $<"
 	$(V)$(CC) $(CFLAGS) -c $< -o $@
 
+build-sysroot: copy-headers-to-sysroot
+	$(V)cp -r sysroot/* $(SYSROOT_DIR) 2>/dev/null || :
+
+cc-version:
+	@$(CC) --version
+
+print-sysroot-dir:
+	@echo $(SYSROOT_DIR)

@@ -77,5 +77,5 @@ uint32_t cpuid_ebx_with_subleaf(uint32_t leaf, uint32_t subleaf);
 uint32_t cpuid_ecx_with_subleaf(uint32_t leaf, uint32_t subleaf);
 uint32_t cpuid_edx_with_subleaf(uint32_t leaf, uint32_t subleaf);
 
-char* cpuid_get_vendor_id(char (*res)[13]);
-char* cpuid_get_brand_string(char (*res)[49]);
+char* cpuid_get_vendor_id(char res[static 13]);
+char* cpuid_get_brand_string(char res[static 49]);

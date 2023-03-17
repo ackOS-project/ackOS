@@ -3,7 +3,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "kernel/lib/util.h"
+#include <liback/util.h>
 
 struct ATTR_PACKED idt_entry
 {

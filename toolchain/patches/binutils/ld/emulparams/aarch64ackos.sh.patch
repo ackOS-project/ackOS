@@ -1,0 +1,4 @@
+--- /dev/null
++++ b/ld/emulparams/aarch64ackos.sh
+@@ -0,0 +1 @@
++source_sh ${srcdir}/emulparams/aarch64elf.sh

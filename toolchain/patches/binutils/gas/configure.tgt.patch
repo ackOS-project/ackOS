@@ -1,10 +1,18 @@
 --- a/gas/configure.tgt
 +++ b/gas/configure.tgt
-@@ -255,6 +255,7 @@
-   i386-*-*nt*)				fmt=coff em=pe ;;
-   i386-*-rdos*)				fmt=elf ;;
-   i386-*-darwin*)			fmt=macho ;;
+@@ -153,6 +153,7 @@
+ 					fmt=elf  em=freebsd ;;
+   arm-*-freebsd* | armeb-*-freebsd*)	fmt=elf  em=armfbsdeabi ;;
+   arm*-*-freebsd*)			fmt=elf  em=armfbsdvfp ;;
++  arm-*-ackos*)			fmt=elf ;;
+   arm-*-linux-*eabi*)			fmt=elf  em=armlinuxeabi ;;
+   arm-*-linux-*)			fmt=elf  em=linux ;;
+   arm-*-uclinux*eabi*)			fmt=elf  em=armlinuxeabi ;;
+@@ -233,6 +234,7 @@
+   i386-*-knetbsd*-gnu | \
+   i386-*-netbsd* | \
+   i386-*-openbsd*)			fmt=elf em=nbsd ;;
 +  i386-*-ackos*)			fmt=elf ;;
- 
-   ia16-*-elf*)				fmt=elf ;;
- 
+   i386-*-linux-*)			fmt=elf em=linux
+     case ${cpu}-${os} in
+       x86_64*-linux-gnux32)		arch=x86_64:32 ;;

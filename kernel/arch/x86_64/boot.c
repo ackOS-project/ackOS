@@ -14,11 +14,18 @@
 #include "kernel/arch/x86_64/cpuid.h"
 #include "kernel/arch/x86_64/instr.h"
 #include "kernel/arch/x86_64/mem.h"
+#include "kernel/arch/x86_64/acpi.h"
 
 void kpanic(void)
 {
     while(true) halt();
 }
+
+static volatile struct limine_framebuffer_request fb_request =
+{
+    .id = LIMINE_FRAMEBUFFER_REQUEST,
+    .revision = 0
+};
 
 void x86_begin(void)
 {
@@ -32,12 +39,16 @@ void x86_begin(void)
     (void)i; */
 
     init_memory();
+    init_acpi();
 
     char brand_str[49];
 
-    kprintf(KERN_INFO "CPUID brand string: \033[0;33m%s\033[0m\n", cpuid_get_brand_string(&brand_str));
+    kprintf(KERN_INFO "CPUID brand string: \033[0;33m%s\033[0m\n", cpuid_get_brand_string(brand_str));
 
+#ifdef __ackos__
     kprintf("Hello, ackOS World!\n");
+#endif
+
 
     halt();
 }
