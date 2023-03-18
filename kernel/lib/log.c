@@ -191,6 +191,28 @@ INT_TO_STRING_FUNC(unsigned long, ulint_to_string)
 INT_TO_STRING_FUNC(long long, llint_to_string)
 INT_TO_STRING_FUNC(unsigned long long, ullint_to_string)
 
+size_t get_print_width(const char* s)
+{
+    size_t len = 0;
+
+    while(*s)
+    {
+        if(s[0] == '\e' && s[1] == '[')
+        {
+            while(s[0] && s[0] != 'm') s++;
+
+            if(s[0]) s++;
+
+            continue;
+        }
+
+        s++;
+        len++;
+    }
+
+    return len;
+}
+
 static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* prefix, const char* fmt, bool dry_run, va_list args)
 {
     char* buff_start = buff;
@@ -248,7 +270,7 @@ static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* pre
         }
 
         total_len += prefix_len;
-        indent = prefix_len;
+        indent = get_print_width(prefix);
     }
 
     while(*fmt)

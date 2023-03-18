@@ -19,7 +19,7 @@ static volatile struct limine_memmap_request memmap_request =
     .revision = 0,
 };
 
-static volatile struct limine_hhdm_request hhdm_request =
+volatile struct limine_hhdm_request hhdm_request =
 {
     .id = LIMINE_HHDM_REQUEST,
     .revision = 0
@@ -34,9 +34,6 @@ static volatile struct limine_kernel_address_request kern_addr_request =
 static struct {
     uint8_t* bitmap;
     size_t size;
-    size_t used_pages;
-    size_t usable_pages;
-    size_t reserved_pages;
 
     uintptr_t last_freed_page;
 } memory_pages = {0};
@@ -106,23 +103,23 @@ static inline uintptr_t pmm_mark_pages(uintptr_t page_index, size_t page_count, 
     return page_index;
 }
 
-static inline uintptr_t pmm_mark_pages_and_tally(uintptr_t page_index, size_t page_count, bool state)
+static inline uintptr_t pmm_mark_pages_and_tally(struct cpu_context* context, uintptr_t page_index, size_t page_count, bool state)
 {
     if(pmm_mark_pages(page_index, page_count, state) == INVALID_PHYS) return INVALID_PHYS;
 
     if(state) /* reserve */
     {
-        memory_pages.used_pages += page_count;
+        context->used_pages += page_count;
     }
     else /* free */
     {
-        if(page_count > memory_pages.used_pages)
+        if(page_count > context->used_pages)
         {
             // tried to free more pages than have been allocated
             return INVALID_PHYS;
         }
 
-        memory_pages.used_pages -= page_count;
+        context->used_pages -= page_count;
     }
 
     return page_index;
@@ -133,9 +130,9 @@ static inline uintptr_t pmm_mark_addr(phys_addr_t addr, size_t size, bool state)
     return pmm_mark_pages(addr_to_page_index(addr), size_to_num_of_pages(size), state);
 }
 
-static inline uintptr_t pmm_mark_addr_and_tally(phys_addr_t addr, size_t size, bool state)
+static inline uintptr_t pmm_mark_addr_and_tally(struct cpu_context* context, phys_addr_t addr, size_t size, bool state)
 {
-    return pmm_mark_pages_and_tally(addr_to_page_index(addr), size_to_num_of_pages(size), state);
+    return pmm_mark_pages_and_tally(context, addr_to_page_index(addr), size_to_num_of_pages(size), state);
 }
 
 static bool pmm_can_store(uintptr_t page_index, size_t pages_needed)
@@ -164,7 +161,7 @@ uintptr_t pmm_find_pages(size_t pages_needed, uintptr_t start, uintptr_t end)
     return INVALID_PHYS;
 }
 
-phys_addr_t pmm_allocate(size_t size)
+phys_addr_t pmm_allocate(struct cpu_context* context, size_t size)
 {
     size_t pages_needed = size_to_num_of_pages(size);
     uintptr_t page_index = pmm_find_pages(pages_needed, memory_pages.last_freed_page, get_total_pages());
@@ -182,14 +179,14 @@ phys_addr_t pmm_allocate(size_t size)
         return INVALID_PHYS;
     }
 
-    pmm_mark_pages_and_tally(page_index, pages_needed, true);
+    pmm_mark_pages_and_tally(context, page_index, pages_needed, true);
 
     return page_index * PAGE_SIZE;
 }
 
-void pmm_deallocate(phys_addr_t addr, size_t size)
+void pmm_deallocate(struct cpu_context* context, phys_addr_t addr, size_t size)
 {
-    memory_pages.last_freed_page = pmm_mark_addr_and_tally(addr, size, false);
+    memory_pages.last_freed_page = pmm_mark_addr_and_tally(context, addr, size, false);
 }
 
 static inline virt_addr_t physical_to_logical(phys_addr_t addr)
@@ -202,18 +199,18 @@ static inline phys_addr_t logical_to_physical(virt_addr_t addr)
     return (phys_addr_t)(addr - hhdm_request.response->offset);
 }
 
-virt_addr_t pmm_allocate_logical_addr(size_t size)
+virt_addr_t pmm_allocate_logical_addr(struct cpu_context* context, size_t size)
 {
-    phys_addr_t addr = pmm_allocate(size);
+    phys_addr_t addr = pmm_allocate(context, size);
 
     if(addr == INVALID_PHYS) return NULL;
 
     return physical_to_logical(addr);
 }
 
-virt_addr_t pmm_allocate_zeroed_logical_addr(size_t size)
+virt_addr_t pmm_allocate_zeroed_logical_addr(struct cpu_context* context, size_t size)
 {
-    virt_addr_t addr = pmm_allocate_logical_addr(size);
+    virt_addr_t addr = pmm_allocate_logical_addr(context, size);
 
     if(addr != NULL)
     {
@@ -223,9 +220,9 @@ virt_addr_t pmm_allocate_zeroed_logical_addr(size_t size)
     return addr;
 }
 
-void pmm_deallocate_logical_addr(virt_addr_t addr, size_t size)
+void pmm_deallocate_logical_addr(struct cpu_context* context, virt_addr_t addr, size_t size)
 {
-    pmm_deallocate(logical_to_physical(addr), size);
+    pmm_deallocate(context, logical_to_physical(addr), size);
 }
 
 // VMM
@@ -287,14 +284,19 @@ static inline struct level_entry vmm_create_null_level_entry(void)
     return entry;
 }
 
-struct paging_table* vmm_create_table(void)
+static struct paging_table* vmm_create_table(struct cpu_context* context)
 {
-    return pmm_allocate_zeroed_logical_addr(PAGE_SIZE);
+    return (struct paging_table*)pmm_allocate_zeroed_logical_addr(context, PAGE_SIZE);
 }
 
-static inline void vmm_destroy_level(struct paging_table* level)
+static inline void vmm_destroy_level(struct cpu_context* context, struct paging_table* level)
 {
-    pmm_deallocate_logical_addr(level, PAGE_SIZE);
+    pmm_deallocate_logical_addr(context, level, PAGE_SIZE);
+}
+
+void vmm_init(struct cpu_context* context)
+{
+    context->vmm_table = (void*)vmm_create_table(context);
 }
 
 static struct paging_table* vmm_next_table(struct paging_table* table, size_t index)
@@ -316,7 +318,7 @@ static struct paging_table* vmm_next_table(struct paging_table* table, size_t in
     return NULL;
 }
 
-static struct paging_table* vmm_next_table_or_alloc(struct paging_table* table, size_t index, uint32_t flags)
+static struct paging_table* vmm_next_table_or_alloc(struct cpu_context* context, struct paging_table* table, size_t index, uint32_t flags)
 {
     struct paging_table* next_table = NULL;
 
@@ -333,25 +335,26 @@ static struct paging_table* vmm_next_table_or_alloc(struct paging_table* table, 
     }
     else
     {
-        next_table = vmm_create_table();
+        next_table = vmm_create_table(context);
         table->entries[index] = vmm_create_level_entry(logical_to_physical(next_table), flags);
     }
 
     return next_table;
 }
 
-bool vmm_map_page(struct paging_table* table, phys_addr_t phys, virt_addr_t virt, uint32_t flags)
+bool vmm_map_page(struct cpu_context* context, phys_addr_t phys, virt_addr_t virt, uint32_t flags)
 {
+    struct paging_table* table = context->vmm_table;
     struct paging_table* l4 = table;
 
     if(five_level_request.response != NULL)
     {
-        l4 = vmm_next_table_or_alloc(table, L5_INDEX((uintptr_t)virt), MAP_PAGE_USER | MAP_PAGE_WRITE | MAP_PAGE_EXECUTE);
+        l4 = vmm_next_table_or_alloc(context, table, L5_INDEX((uintptr_t)virt), MAP_PAGE_USER | MAP_PAGE_WRITE | MAP_PAGE_EXECUTE);
     }
 
-    struct paging_table* l3 = vmm_next_table_or_alloc(l4, L4_INDEX((uintptr_t)virt), MAP_PAGE_USER | MAP_PAGE_WRITE | MAP_PAGE_EXECUTE);
-    struct paging_table* l2 = vmm_next_table_or_alloc(l3, L3_INDEX((uintptr_t)virt), MAP_PAGE_USER | MAP_PAGE_WRITE | MAP_PAGE_EXECUTE);
-    struct paging_table* l1 = vmm_next_table_or_alloc(l2, L2_INDEX((uintptr_t)virt), MAP_PAGE_USER | MAP_PAGE_WRITE | MAP_PAGE_EXECUTE);
+    struct paging_table* l3 = vmm_next_table_or_alloc(context, l4, L4_INDEX((uintptr_t)virt), MAP_PAGE_USER | MAP_PAGE_WRITE | MAP_PAGE_EXECUTE);
+    struct paging_table* l2 = vmm_next_table_or_alloc(context, l3, L3_INDEX((uintptr_t)virt), MAP_PAGE_USER | MAP_PAGE_WRITE | MAP_PAGE_EXECUTE);
+    struct paging_table* l1 = vmm_next_table_or_alloc(context, l2, L2_INDEX((uintptr_t)virt), MAP_PAGE_USER | MAP_PAGE_WRITE | MAP_PAGE_EXECUTE);
 
     struct level_entry* entry = &l1->entries[L1_INDEX((uintptr_t)virt)];
 
@@ -373,11 +376,11 @@ bool vmm_map_page(struct paging_table* table, phys_addr_t phys, virt_addr_t virt
     return true;
 }
 
-bool vmm_map(struct paging_table* table, phys_addr_t phys, virt_addr_t virt, size_t size, uint32_t flags)
+bool vmm_map(struct cpu_context* context, phys_addr_t phys, virt_addr_t virt, size_t size, uint32_t flags)
 {
     for(size_t off = 0; off < size; off += PAGE_SIZE)
     {
-        if(!vmm_map_page(table, phys + off, (virt_addr_t)(((uintptr_t)virt) + off), flags))
+        if(!vmm_map_page(context, phys + off, (virt_addr_t)(((uintptr_t)virt) + off), flags))
         {
             // TODO: undo previous mappings
 
@@ -388,7 +391,7 @@ bool vmm_map(struct paging_table* table, phys_addr_t phys, virt_addr_t virt, siz
     return true;
 }
 
-static void vmm_free_table_if_needed(struct paging_table* parent, size_t index)
+static void vmm_free_table_if_needed(struct cpu_context* context, struct paging_table* parent, size_t index)
 {
     struct paging_table* table = physical_to_logical(parent->entries[index].phys_page_index * PAGE_SIZE);
 
@@ -400,13 +403,15 @@ static void vmm_free_table_if_needed(struct paging_table* parent, size_t index)
         }
     }
 
-    vmm_destroy_level(table);
+    vmm_destroy_level(context, table);
 
     parent->entries[index] = vmm_create_null_level_entry();
 }
 
-bool vmm_unmap_page(struct paging_table* table, virt_addr_t virt)
+bool vmm_unmap_page(struct cpu_context* context, virt_addr_t virt)
 {
+    struct paging_table* table = context->vmm_table;
+
     if(!table) return false;
     
     struct paging_table* l4 = table;
@@ -439,23 +444,23 @@ bool vmm_unmap_page(struct paging_table* table, virt_addr_t virt)
 
     // we should free the levels if needed
     // but not the top level
-    vmm_free_table_if_needed(l2, L2_INDEX((uintptr_t)virt));
-    vmm_free_table_if_needed(l3, L3_INDEX((uintptr_t)virt));
-    vmm_free_table_if_needed(l4, L4_INDEX((uintptr_t)virt));
+    vmm_free_table_if_needed(context, l2, L2_INDEX((uintptr_t)virt));
+    vmm_free_table_if_needed(context, l3, L3_INDEX((uintptr_t)virt));
+    vmm_free_table_if_needed(context, l4, L4_INDEX((uintptr_t)virt));
 
     if(five_level_request.response != NULL)
     {
-        vmm_free_table_if_needed(table, L5_INDEX((uintptr_t)virt));
+        vmm_free_table_if_needed(context, table, L5_INDEX((uintptr_t)virt));
     }
 
     return true;
 }
 
-bool vmm_unmap(struct paging_table* table, virt_addr_t virt, size_t size)
+bool vmm_unmap(struct cpu_context* context, virt_addr_t virt, size_t size)
 {
     for(size_t off = 0; off < size; off += PAGE_SIZE)
     {
-        if(vmm_unmap_page(table, (virt_addr_t)(((uintptr_t)virt) + off)))
+        if(vmm_unmap_page(context, (virt_addr_t)(((uintptr_t)virt) + off)))
         {
             // TODO: undo previous unmappings
 
@@ -497,30 +502,36 @@ static void vmm_print_level_entry(const struct paging_table* table, size_t index
                         (uint64_t)entry->phys_page_index);
 }
 
-static void vmm_print_mapping(struct paging_table* table, virt_addr_t virt)
+void vmm_print_mapping(struct cpu_context* context, virt_addr_t virt)
 {
+    struct paging_table* table = context->vmm_table;
     struct paging_table* l4 = table;
 
     if(five_level_request.response != NULL)
     {
+        if(!table) return;
         vmm_print_level_entry(table, L5_INDEX((uintptr_t)virt));
 
         l4 = vmm_next_table(table, L5_INDEX((uintptr_t)virt));
     }
 
+    if(!l4) return;
     vmm_print_level_entry(l4, L4_INDEX((uintptr_t)virt));
 
     struct paging_table* l3 = vmm_next_table(l4, L4_INDEX((uintptr_t)virt));
+    if(!l3) return;
     vmm_print_level_entry(l3, L3_INDEX((uintptr_t)virt));
 
     struct paging_table* l2 = vmm_next_table(l3, L3_INDEX((uintptr_t)virt));
+    if(!l2) return;
     vmm_print_level_entry(l2, L2_INDEX((uintptr_t)virt));
 
     struct paging_table* l1 = vmm_next_table(l2, L2_INDEX((uintptr_t)virt));
+    if(!l1) return;
     vmm_print_level_entry(l1, L1_INDEX((uintptr_t)virt));
 }
 
-static void vmm_destroy_table_impl(struct paging_table* level, size_t level_max)
+static void vmm_destroy_table_impl(struct cpu_context* context, struct paging_table* level, size_t level_max)
 {
     if(level_max == 0) return;
 
@@ -528,19 +539,21 @@ static void vmm_destroy_table_impl(struct paging_table* level, size_t level_max)
     {
         if(level->entries[i].present)
         {
-            vmm_destroy_table_impl(physical_to_logical(level->entries[i].phys_page_index * PAGE_SIZE), level_max - 1);
+            vmm_destroy_table_impl(context, physical_to_logical(level->entries[i].phys_page_index * PAGE_SIZE), level_max - 1);
         }
     }
 
-    vmm_destroy_level(level);
+    vmm_destroy_level(context, level);
 }
 
-struct paging_table* vmm_create_kernel_space_table(void)
+void vmm_init_for_kernel_space(struct cpu_context* context)
 {
-    struct paging_table* table = vmm_create_table();
+    struct paging_table* table = vmm_create_table(context);
 
-    vmm_map(table, 0x1000, (virt_addr_t)0x1000, 4 GiB, MAP_PAGE_WRITE | MAP_PAGE_EXECUTE);
-    vmm_map(table, 0x1000, (virt_addr_t)(hhdm_request.response->offset + 0x1000), 4 GiB, MAP_PAGE_WRITE | MAP_PAGE_EXECUTE);
+    context->vmm_table = (void*)table;
+
+    vmm_map(context, 0x1000, (virt_addr_t)0x1000, 4 GiB, MAP_PAGE_WRITE | MAP_PAGE_EXECUTE);
+    vmm_map(context, 0x1000, (virt_addr_t)(hhdm_request.response->offset + 0x1000), 4 GiB, MAP_PAGE_WRITE | MAP_PAGE_EXECUTE);
 
     for(size_t i = 0; i < memmap_request.response->entry_count; i++)
     {
@@ -548,21 +561,21 @@ struct paging_table* vmm_create_kernel_space_table(void)
 
         if(entry->type == LIMINE_MEMMAP_KERNEL_AND_MODULES)
         {
-            vmm_map(table, entry->base, (virt_addr_t)kern_addr_request.response->virtual_base, entry->length, MAP_PAGE_WRITE | MAP_PAGE_EXECUTE);
+            vmm_map(context, entry->base, (virt_addr_t)kern_addr_request.response->virtual_base, entry->length, MAP_PAGE_WRITE | MAP_PAGE_EXECUTE);
         }
     }
-
-    return table;
 }
 
-void vmm_destroy_table(struct paging_table* table)
+void vmm_deinit(struct cpu_context* context)
 {    
-    vmm_destroy_table_impl(table, five_level_request.response != NULL ? 5 : 4);
+    vmm_destroy_table_impl(context, (struct paging_table*)context->vmm_table, five_level_request.response != NULL ? 5 : 4);
+
+    context->vmm_table = NULL;
 }
 
-void vmm_load_table(struct paging_table* table)
+void vmm_load(struct cpu_context* context)
 {
-    reg_set_cr3(logical_to_physical(table));
+    reg_set_cr3(logical_to_physical(context->vmm_table));
 }
 
 const char* get_limine_mem_map_type_as_string(uint64_t type)
@@ -619,6 +632,8 @@ void init_memory()
         return;
     }
 
+    struct cpu_context* context = obtain_kernel_context();
+
     kprintf(KERN_DEBUG "Memory regions:\n");
 
     // The highest address is needed to compute the
@@ -639,11 +654,11 @@ void init_memory()
 
         if(entry->type == LIMINE_MEMMAP_USABLE)
         {
-            memory_pages.usable_pages += entry->length / PAGE_SIZE;
+            context->usable_pages += entry->length / PAGE_SIZE;
         }
         else
         {
-            memory_pages.reserved_pages += entry->length / PAGE_SIZE;
+            context->reserved_pages += entry->length / PAGE_SIZE;
         }
     }
 
@@ -713,21 +728,27 @@ void init_memory()
     }
 
     // reserve bitmap
-    pmm_mark_addr_and_tally(suitable_entry->base, bitmap_size, true);
+    pmm_mark_addr_and_tally(context, suitable_entry->base, bitmap_size, true);
 
     kprintf(KERN_INFO "Initiating virtual memory (this may take a second)\n");
+
+    if(!(cpuid_edx(0x80000001) & (1 << 20)))
+    {
+        kprintf(KERN_PANIC "NX bit not supported by the CPU\n");
+    }
 
     if(five_level_request.response != NULL)
     {
         kprintf(KERN_INFO "5-level paging enabled!\n");
     }
 
-    vmm_load_table(vmm_create_kernel_space_table());
+    vmm_init_for_kernel_space(context);
+    vmm_load(context);
 
     kprintf(KERN_INFO "Used memory:     %'zu\n"
                       "Usable memory:   %'zu\n"
                       "Reserved memory: %'zu\n",
-                      memory_pages.used_pages * PAGE_SIZE,
-                      memory_pages.usable_pages * PAGE_SIZE,
-                      memory_pages.reserved_pages * PAGE_SIZE);
+                      context->used_pages * PAGE_SIZE,
+                      context->usable_pages * PAGE_SIZE,
+                      context->reserved_pages * PAGE_SIZE);
 }

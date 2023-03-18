@@ -2,9 +2,9 @@
 
 #include <liback/util.h>
 
-/* Advanced Configuration and Power Interface
+/* Advanced Configuration and Power Interface (ACPI)
     -> Root System Descriptor Pointer (RSDP)
-        -> System Descriptor Table
+        -> System Descriptor Table (SDT)
             -> Root System Descriptor Table (RSDT)
                 -> Multiple APIC Descriptor Table (MADT)
                 -> Fixed ACPI Description Table (FADT)

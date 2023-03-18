@@ -4,6 +4,7 @@
     pushq %rcx
     pushq %rdx
     pushq %rsi
+    pushq %rdi
     pushq %rbp
     pushq %r8
     pushq %r9
@@ -55,6 +56,7 @@ isr_handler:
     isr\num:
         pushq $0 /* error code: none */
         pushq $\num
+
         jmp isr_handler
 .endm
 

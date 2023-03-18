@@ -3,6 +3,7 @@
 
 #include "kernel/arch/x86_64/idt.h"
 #include "kernel/arch/x86_64/gdt.h"
+#include "kernel/arch/x86_64/mem.h"
 #include "kernel/arch/x86_64/instr.h"
 #include "kernel/lib/log.h"
 
@@ -78,6 +79,23 @@ static inline const char* get_exception_name(int index)
 
 void interrupt_handler(struct int_frame* frame)
 {
+    if(frame->int_num == 14) /* page fault */
+    {
+        if(obtain_kernel_context()->vmm_table)
+        {
+            vmm_print_mapping(obtain_kernel_context(), (virt_addr_t)reg_get_cr2());
+        }
+
+        kprintf(KERN_WARN "%#lx: page %s %s%s %s %s %s\n",
+                          reg_get_cr2(),
+                          frame->err & 1 ? "protection violation" : "not present",
+                          frame->err & (1 << 1) ? "on write" : "on read",
+                          frame->err & (1 << 2) ? " while in usermode" : "",
+                          frame->err & (1 << 3) ? "reserved bits were set" : "",
+                          frame->err & (1 << 3) && frame->err & (1 << 4) ? "and" : "",
+                          frame->err & (1 << 4) ? "tried executing when the NX bit was set" : "");
+    }
+
     kprintf(KERN_PANIC "%s INT\n"
                        "    rax:      %#lx\n"
                        "    rbx:      %#lx\n"
