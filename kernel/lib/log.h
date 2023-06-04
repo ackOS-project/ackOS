@@ -59,3 +59,9 @@ int kvprintf(const char* fmt, va_list args);
 ATTR_FORMAT(printf, 1, 2) int kprintf(const char* fmt, ...);
 
 void kpanic(void);
+
+#ifdef BUILD_CONFIG_DEBUG
+#define EXPECT(EXPR_) (void)((EXPR_) ? 0 : kprintf(KERN_PANIC "ASSERTION FAILED: %s\n", #EXPR_))
+#else
+#define EXPECT(EXPR_) (void)0
+#endif

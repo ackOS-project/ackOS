@@ -35,23 +35,30 @@ static void print_rsdp(const struct acpi_rsd_ptr* rsdp)
                        "    checksum:  %hhu\n"
                        "    oem_id:    \"%c%c%c%c%c%c\"\n"
                        "    revision:  %hhu\n"
-                       "    ext:\n"
-                       "        length:    %u\n"
-                       "        xsdt_addr: %#lx\n"
-                       "        xchecksum: %hhu\n"
+                       "    rsdt_addr: %#x\n"
                        "}\n",
                        rsdp->signature[0], rsdp->signature[1], rsdp->signature[2], rsdp->signature[3], rsdp->signature[4], rsdp->signature[5], rsdp->signature[6], rsdp->signature[7],
                        rsdp->checksum,
                        rsdp->oem_id[0], rsdp->oem_id[1], rsdp->oem_id[2], rsdp->oem_id[3], rsdp->oem_id[4], rsdp->oem_id[5],
                        rsdp->revision,
-                       rsdp->ext.length,
-                       rsdp->ext.xsdt_addr,
-                       rsdp->ext.extended_checksum);
+                       rsdp->rsdt_addr);
+    
+    if(rsdp->revision > 0)
+    {
+        kprintf(KERN_DEBUG "struct acpi_rsd_ptr.ext {\n"
+                           "        length:    %u\n"
+                           "        xsdt_addr: %#lx\n"
+                           "        xchecksum: %hhu\n"
+                           "}\n",
+                           rsdp->ext.length,
+                           rsdp->ext.xsdt_addr,
+                           rsdp->ext.extended_checksum);
+    }
 }
 
 static void print_sdt(const struct acpi_sdt* sdt)
 {
-    kprintf(KERN_DEBUG "struct acpi_sdt {\n"
+    kprintf(KERN_DEBUG "struct acpi_sdt @ %p {\n"
                        "    signature:    \"%c%c%c%c\"\n"
                        "    length:       %u\n"
                        "    revision:     %hhu\n"
@@ -62,6 +69,7 @@ static void print_sdt(const struct acpi_sdt* sdt)
                        "    creator_id:   %u\n"
                        "    creator_rev:  %u\n"
                        "}\n",
+                       sdt,
                        sdt->signature[0], sdt->signature[1], sdt->signature[2], sdt->signature[3],
                        sdt->length,
                        sdt->revision,
@@ -73,6 +81,66 @@ static void print_sdt(const struct acpi_sdt* sdt)
                        sdt->creator_revision);
 }
 
+static void print_rsdt(const struct acpi_sdt* sdt)
+{
+    print_sdt(sdt);
+
+    const uint32_t* entries = (const uint32_t*)(((uintptr_t)sdt) + sizeof(struct acpi_sdt));
+    size_t entry_count = (sdt->length - sizeof(struct acpi_sdt)) / sizeof(uint32_t);
+
+    for(size_t i = 0; i < entry_count; i++)
+    {
+        const struct acpi_sdt* addr = (const struct acpi_sdt*)physical_to_logical((uintptr_t)entries[i]);
+
+        print_sdt(addr);
+    }
+}
+
+static void print_xsdt(const struct acpi_sdt* sdt)
+{
+    print_sdt(sdt);
+
+    const uint64_t* entries = (const uint64_t*)(((uintptr_t)sdt) + sizeof(struct acpi_sdt));
+    size_t entry_count = (sdt->length - sizeof(struct acpi_sdt)) / sizeof(uint64_t);
+
+    for(size_t i = 0; i < entry_count; i++)
+    {
+        const struct acpi_sdt* addr = (const struct acpi_sdt*)physical_to_logical(entries[i]);
+
+        print_sdt(addr);
+    }
+}
+
+static void parse_rsdp(const struct acpi_rsd_ptr* rsdp)
+{
+    if(rsdp->revision == 0)
+    {
+        const struct acpi_sdt* sdt = (const struct acpi_sdt*)physical_to_logical(rsdp->rsdt_addr);
+
+        if(!check_signature(sdt->signature, "RSDT") || !check_checksum(sdt, 0, sdt->length))
+        {
+            kprintf(KERN_PANIC "acpi: invalid RSDT\n");
+        }
+
+        print_rsdt(sdt);
+    }
+    else if(rsdp->revision == 2)
+    {
+        const struct acpi_sdt* sdt = (const struct acpi_sdt*)physical_to_logical(rsdp->ext.xsdt_addr);
+
+        if(!check_signature(sdt->signature, "XSDT") || !check_checksum(sdt, 0, sdt->length))
+        {
+            kprintf(KERN_PANIC "acpi: invalid XSDT\n");
+        }
+
+        print_xsdt(sdt);
+    }
+    else
+    {
+        kprintf(KERN_PANIC "acpi: unknown RSDP revision number %d\n", rsdp->revision);
+    }
+}
+
 void init_acpi(void)
 {
     if(!rsdp_request.response)
@@ -82,7 +150,7 @@ void init_acpi(void)
 
     const struct acpi_rsd_ptr* rsdp = rsdp_request.response->address;
 
-    if(!check_checksum(rsdp, 0, sizeof(*rsdp) - sizeof(rsdp->ext)) || !check_signature(rsdp->signature, "RSD PTR "))
+    if(!check_signature(rsdp->signature, "RSD PTR ") || !check_checksum(rsdp, 0, sizeof(*rsdp) - sizeof(rsdp->ext)))
     {
         kprintf(KERN_PANIC "acpi: invalid RSDP\n");
 
@@ -96,4 +164,5 @@ void init_acpi(void)
     }
 
     print_rsdp(rsdp);
+    parse_rsdp(rsdp);
 }

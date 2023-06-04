@@ -2,7 +2,6 @@
 
 .globl gdt_load
 
-/*FFFFFFFF80006BF0*/
 /*
 desc: rdi, code: si, data: dx
 */
