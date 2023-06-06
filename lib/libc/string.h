@@ -7,6 +7,10 @@ void* memcpy(void *dest, const void *src, size_t len);
 void* memmove(void* dest, const void* src, size_t len);
 void* memset(void *ptr, int value, size_t num);
 
+// potentially unsafe, do not use with different sized/typed objects
+// memcmp(&cat1, &cat2, sizeof(struct cat)) => GOOD
+// memcmp(magic_sequence, "ABC", 4) => BAD
+// use strncmp whenever possible
 int memcmp(const void* cmp1, const void* cmp2, size_t len);
 
 size_t strlen(const char* str);

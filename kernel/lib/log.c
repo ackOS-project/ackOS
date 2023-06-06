@@ -52,6 +52,8 @@ enum
     PRINTF_PLURAL_NO
 };
 
+#define FRAC_MAX_PRECISION 2
+
 // Using a macro here, so we can duplicate it for different interger types
 #define INT_TO_STRING_FUNC(T_, NAME_) \
 static size_t NAME_(T_ value, char* dest, int base, int padding, char pad_char, const char* prefix, char digit_separator, bool show_pos_sign, bool use_uppercase, bool quantify, bool dry_run) \
@@ -63,34 +65,71 @@ static size_t NAME_(T_ value, char* dest, int base, int padding, char pad_char, 
         if(!dry_run) *dest = '\0'; \
         return 0; \
     } \
-    const char* quantifier = NULL; \
+    size_t quantifier_size = 1; \
+    size_t quantifier_frac = 0; \
+    const char* quantifier_name = NULL; \
     if(quantify) \
     { \
-        size_t v = (size_t)value; \
-        if(v / (1 TiB)) \
+        size_t nbytes = (size_t)value; \
+        if(nbytes >= (1 TiB)) \
         { \
-            value = (T_)(v / (1 TiB)); /* make the compiler happy */ \
-            quantifier = "TiB"; \
+            quantifier_size = (1 TiB); \
+            quantifier_name = "TiB"; \
         } \
-        else if(v / (1 GiB)) \
+        else if(nbytes >= (1 GiB)) \
         { \
-            value = (T_)(v / (1 GiB)); \
-            quantifier = "GiB"; \
+            quantifier_size = (1 GiB); \
+            quantifier_name = "GiB"; \
         } \
-        else if(v / (1 MiB)) \
+        else if(nbytes >= (1 MiB)) \
         { \
-            value = (T_)(v / (1 MiB)); \
-            quantifier = "MiB"; \
+            quantifier_size = (1 MiB); \
+            quantifier_name = "MiB"; \
         } \
-        else if(v / (1 KiB)) \
+        else if(nbytes >= (1 KiB)) \
         { \
-            value = (T_)(v / (1 KiB)); \
-            quantifier = "KiB"; \
+            quantifier_size = (1 KiB); \
+            quantifier_name = "KiB"; \
         } \
         else \
         { \
-            quantifier = "B"; \
+            quantifier_name = "B"; \
         } \
+        size_t v = nbytes / quantifier_size; \
+        size_t r = nbytes % quantifier_size; \
+        if(r != 0) \
+        { \
+            size_t i = 0; \
+            /* add the factional part to the value */ \
+            for (; i <= FRAC_MAX_PRECISION && r != 0; i++) \
+            { \
+                r *= base; \
+                int d = r / quantifier_size; \
+                v *= base; \
+                v += d; \
+                r %= quantifier_size; \
+            } \
+            /* round up */ \
+            int last_digit = v % base; \
+            if(last_digit >= (base / 2)) \
+            { \
+                v += base - last_digit; \
+            } \
+            else \
+            { \
+                /* get rid of the digit */ \
+                v -= last_digit; \
+            } \
+            /* separate the whole number and fractional part */ \
+            for (size_t j = 0; j < i; j++) \
+            { \
+                int digit = v % base; \
+                quantifier_frac *= base; \
+                quantifier_frac += digit; \
+                v /= base; \
+            } \
+        } \
+        value = (T_)v; \
     } \
     size_t prefix_len = 0; \
     size_t sign_len = 0; \
@@ -163,12 +202,28 @@ static size_t NAME_(T_ value, char* dest, int base, int padding, char pad_char, 
     } \
     len += prefix_len; \
     len += sign_len; \
-    if(quantifier) \
+    if(quantifier_frac != 0) \
     { \
-        size_t quantifier_len = strlen(quantifier); \
+        if(!dry_run) *(dest++) = '.'; \
+        len++; \
+        while(quantifier_frac != 0) \
+        { \
+            if(!dry_run) \
+            { \
+                int digit = quantifier_frac % base; \
+                char c = use_uppercase ? toupper(lookup_table[digit]) : lookup_table[digit]; \
+                *(dest++) = c; \
+            } \
+            len++; \
+            quantifier_frac /= base; \
+        } \
+    } \
+    if(quantifier_name) \
+    { \
+        size_t quantifier_len = strlen(quantifier_name); \
         if(!dry_run) \
         { \
-            memcpy(dest, quantifier, quantifier_len); \
+            memcpy(dest, quantifier_name, quantifier_len); \
             dest += quantifier_len; \
         } \
         len += quantifier_len; \

@@ -4,10 +4,10 @@
 
 /* Advanced Configuration and Power Interface (ACPI)
     -> Root System Descriptor Pointer (RSDP)
-        -> System Descriptor Table (SDT)
-            -> Root System Descriptor Table (RSDT)
-                -> Multiple APIC Descriptor Table (MADT)
-                -> Fixed ACPI Description Table (FADT)
+        -> Root System Descriptor Table (RSDT)
+            -> Multiple APIC Descriptor Table (MADT)
+            -> Fixed ACPI Description Table (FADT)
+            etc...
 */
 struct ATTR_PACKED acpi_rsd_ptr
 {
@@ -26,7 +26,7 @@ struct ATTR_PACKED acpi_rsd_ptr
     } ext;
 };
 
-struct ATTR_PACKED acpi_sdt
+struct ATTR_PACKED acpi_header
 {
     uint8_t signature[4];
     uint32_t length;
@@ -41,7 +41,7 @@ struct ATTR_PACKED acpi_sdt
 
 struct ATTR_PACKED acpi_madt
 {
-    struct acpi_sdt header;
+    struct acpi_header header;
     uint32_t lapic_addr; /* Local Advanced Programmable Interrupt Controller */
     uint32_t flags;
 };
@@ -57,7 +57,7 @@ struct ATTR_PACKED acpi_generic_addr
 
 struct ATTR_PACKED acpi_fadt
 {
-    struct acpi_sdt header;
+    struct acpi_header header;
     uint32_t firmware_control;
     uint32_t dsdt;
 
@@ -124,3 +124,8 @@ struct ATTR_PACKED acpi_fadt
 };
 
 void init_acpi(void);
+
+// * Finds an ACPI header which contains a particular signature
+// * Checks the validity of the checksum
+// * Will return null if not found
+const struct acpi_header* acpi_find_header(const char* signature);

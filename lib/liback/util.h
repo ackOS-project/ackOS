@@ -18,4 +18,6 @@
 #define ABS(X_) ((X_) < 0 ? -(X_) : (X_))
 #define DIV_UP(X_, Y_) (((X_) % (Y_)) == 0 ? (X_) / (Y_) : (X_) / (Y_) + 1)
 
+#define STATIC_LEN(ARR_) (sizeof((ARR_)) / sizeof((ARR_)[0]))
+
 typedef intmax_t ssize_t;
