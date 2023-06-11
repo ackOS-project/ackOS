@@ -52,7 +52,7 @@ enum
     PRINTF_PLURAL_NO
 };
 
-#define FRAC_MAX_PRECISION 2
+#define FRAC_MAX_PRECISION 1
 
 // Using a macro here, so we can duplicate it for different interger types
 #define INT_TO_STRING_FUNC(T_, NAME_) \
@@ -71,7 +71,12 @@ static size_t NAME_(T_ value, char* dest, int base, int padding, char pad_char, 
     if(quantify) \
     { \
         size_t nbytes = (size_t)value; \
-        if(nbytes >= (1 TiB)) \
+        if(nbytes >= (1 PiB)) \
+        { \
+            quantifier_size = (1 PiB); \
+            quantifier_name = "PiB"; \
+        } \
+        else if(nbytes >= (1 TiB)) \
         { \
             quantifier_size = (1 TiB); \
             quantifier_name = "TiB"; \
@@ -101,7 +106,7 @@ static size_t NAME_(T_ value, char* dest, int base, int padding, char pad_char, 
         { \
             size_t i = 0; \
             /* add the factional part to the value */ \
-            for (; i <= FRAC_MAX_PRECISION && r != 0; i++) \
+            for (; i < FRAC_MAX_PRECISION && r != 0; i++) \
             { \
                 r *= base; \
                 int d = r / quantifier_size; \
@@ -110,15 +115,11 @@ static size_t NAME_(T_ value, char* dest, int base, int padding, char pad_char, 
                 r %= quantifier_size; \
             } \
             /* round up */ \
-            int last_digit = v % base; \
+            r *= base; \
+            int last_digit = r / quantifier_size; \
             if(last_digit >= (base / 2)) \
             { \
-                v += base - last_digit; \
-            } \
-            else \
-            { \
-                /* get rid of the digit */ \
-                v -= last_digit; \
+                v++; \
             } \
             /* separate the whole number and fractional part */ \
             for (size_t j = 0; j < i; j++) \
@@ -311,6 +312,17 @@ static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* pre
             } \
             total_len += len; \
         }
+    #define PRINTF_WRITE(__buff) \
+        size_t buff_len = strlen(__buff); \
+        size_t trunc_len = PRINTF_TRUNCATE(buff_len); \
+        PRINTF_JUSTIFYL(buff_len); \
+        if(!dry_run) \
+        { \
+            strncpy(buff, __buff, trunc_len); \
+            buff += trunc_len; \
+        } \
+        total_len += buff_len; \
+        PRINTF_JUSTIFYR(buff_len);
 
     if(prefix)
     {
@@ -481,9 +493,19 @@ static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* pre
                     {
                         char c = (char)va_arg(args, int);
 
-                        PRINTF_JUSTIFYL(1);
-                        PRINTF_APPENDCH(c);
-                        PRINTF_JUSTIFYR(1);
+                        if(c)
+                        {
+                            PRINTF_JUSTIFYL(1);
+                            PRINTF_APPENDCH(c);
+                            PRINTF_JUSTIFYR(1);
+                        }
+                        else
+                        {
+                            PRINTF_JUSTIFYL(2);
+                            PRINTF_APPENDCH('\\');
+                            PRINTF_APPENDCH('0');
+                            PRINTF_JUSTIFYR(2);
+                        }
 
                         break;
                     }
@@ -493,40 +515,13 @@ static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* pre
 
                         if(str)
                         {
-                            size_t str_len = strlen(str);
-                            size_t trunc_len = PRINTF_TRUNCATE(str_len);
-
-                            PRINTF_JUSTIFYL(str_len);
-
-                            if(!dry_run)
-                            {
-                                strncpy(buff, str, trunc_len);
-                                
-                                buff += trunc_len;
-                            }
-
-                            total_len += str_len;
-
-                            PRINTF_JUSTIFYR(str_len);
+                            PRINTF_WRITE(str);
                         }
                         else
                         {
                             const char* msg = "(null)";
-                            size_t msg_len = strlen(str);
-                            size_t trunc_len = PRINTF_TRUNCATE(msg_len);
-
-                            PRINTF_JUSTIFYL(msg_len);
-
-                            if(!dry_run)
-                            {
-                                strncpy(buff, msg, trunc_len);
-                                buff += trunc_len;
-
-                            }
-
-                            total_len += msg_len;
-
-                            PRINTF_JUSTIFYR(msg_len);
+                            
+                            PRINTF_WRITE(msg);
                         }
 
                         break;
@@ -538,13 +533,12 @@ static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* pre
 
                         break;
                     }
-                    #define PRINTF_INT_SPEC(__type, __vtype, __func, __signedness, __base, __prefix, __use_uppercase) \
-                        __type value = (__type)va_arg(args, __vtype); \
-                        size_t est_size = __func(value, NULL, (__base), width, flag & PRINTF_FLAG_PAD_ZEROES ? '0' : '\0', (__prefix), flag & PRINTF_FLAG_DIGIT_SEPARATE ? ' ' : '\0', flag & PRINTF_FLAG_SHOW_SIGN, (__use_uppercase), length == PRINTF_LEN_SIZE_TYPE && (flag & PRINTF_FLAG_DIGIT_SEPARATE), true); \
+                    #define PRINTF_INT_SPEC(__value, __func, __signedness, __base, __prefix, __use_uppercase) \
+                        size_t est_size = __func((__value), NULL, (__base), width, flag & PRINTF_FLAG_PAD_ZEROES ? '0' : '\0', (__prefix), flag & PRINTF_FLAG_DIGIT_SEPARATE ? ' ' : '\0', flag & PRINTF_FLAG_SHOW_SIGN, (__use_uppercase), length == PRINTF_LEN_SIZE_TYPE && (flag & PRINTF_FLAG_DIGIT_SEPARATE), true); \
                         PRINTF_JUSTIFYL(est_size); \
                         size_t trunc_len = PRINTF_TRUNCATE(est_size); \
                         char tmp[est_size + 1]; \
-                        __func(value, tmp, (__base), width, flag & PRINTF_FLAG_PAD_ZEROES ? '0' : '\0', (__prefix), flag & PRINTF_FLAG_DIGIT_SEPARATE ? ' ' : '\0', flag & PRINTF_FLAG_SHOW_SIGN, (__use_uppercase), length == PRINTF_LEN_SIZE_TYPE && (flag & PRINTF_FLAG_DIGIT_SEPARATE), false); \
+                        __func((__value), tmp, (__base), width, flag & PRINTF_FLAG_PAD_ZEROES ? '0' : '\0', (__prefix), flag & PRINTF_FLAG_DIGIT_SEPARATE ? ' ' : '\0', flag & PRINTF_FLAG_SHOW_SIGN, (__use_uppercase), length == PRINTF_LEN_SIZE_TYPE && (flag & PRINTF_FLAG_DIGIT_SEPARATE), false); \
                         if(!dry_run) \
                         { \
                             strncpy(buff, tmp, trunc_len); \
@@ -552,7 +546,7 @@ static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* pre
                         } \
                         total_len += est_size; \
                         PRINTF_JUSTIFYR(est_size); \
-                        if(((__signedness) && value < -1) || value == 0 || value > 1) \
+                        if(((__signedness) && (__value) < -1) || (__value) == 0 || (__value) > 1) \
                         { \
                             pluralisation = PRINTF_PLURAL_YES; \
                         } \
@@ -567,11 +561,13 @@ static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* pre
                             { \
                                 if(__signedness == true) \
                                 { \
-                                    PRINTF_INT_SPEC(signed int, signed int, int_to_string, __signedness, __base, __prefix, __use_uppercase) \
+                                    signed int value = (signed int)va_arg(args, signed int); \
+                                    PRINTF_INT_SPEC(value, int_to_string, __signedness, __base, __prefix, __use_uppercase) \
                                 } \
                                 else \
                                 { \
-                                    PRINTF_INT_SPEC(unsigned int, unsigned int, uint_to_string, __signedness, __base, __prefix, __use_uppercase) \
+                                    unsigned int value = (unsigned int)va_arg(args, unsigned int); \
+                                    PRINTF_INT_SPEC(value, uint_to_string, __signedness, __base, __prefix, __use_uppercase) \
                                 } \
                                 break; \
                             } \
@@ -579,11 +575,13 @@ static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* pre
                             { \
                                 if(__signedness == true) \
                                 { \
-                                    PRINTF_INT_SPEC(signed short, signed int, sint_to_string, __signedness, __base, __prefix, __use_uppercase) \
+                                    signed short value = (signed short)va_arg(args, signed int); \
+                                    PRINTF_INT_SPEC(value, sint_to_string, __signedness, __base, __prefix, __use_uppercase) \
                                 } \
                                 else \
                                 { \
-                                    PRINTF_INT_SPEC(unsigned short, unsigned int, usint_to_string, __signedness, __base, __prefix, __use_uppercase) \
+                                    unsigned short value = (unsigned short)va_arg(args, unsigned int); \
+                                    PRINTF_INT_SPEC(value, usint_to_string, __signedness, __base, __prefix, __use_uppercase) \
                                 } \
                                 break; \
                             } \
@@ -591,11 +589,13 @@ static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* pre
                             { \
                                 if(__signedness == true) \
                                 { \
-                                    PRINTF_INT_SPEC(signed char, signed int, char_to_string, __signedness, __base, __prefix, __use_uppercase) \
+                                    signed char value = (signed char)va_arg(args, signed int); \
+                                    PRINTF_INT_SPEC(value, char_to_string, __signedness, __base, __prefix, __use_uppercase) \
                                 } \
                                 else \
                                 { \
-                                    PRINTF_INT_SPEC(unsigned char, unsigned int, uchar_to_string, __signedness, __base, __prefix, __use_uppercase) \
+                                    unsigned char value = (unsigned char)va_arg(args, unsigned int); \
+                                    PRINTF_INT_SPEC(value, uchar_to_string, __signedness, __base, __prefix, __use_uppercase) \
                                 } \
                                 break; \
                             } \
@@ -603,11 +603,13 @@ static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* pre
                             { \
                                 if(__signedness == true) \
                                 { \
-                                    PRINTF_INT_SPEC(signed long long, signed long long, llint_to_string, __signedness, __base, __prefix, __use_uppercase) \
+                                    signed long long value = (signed long long)va_arg(args, signed long long); \
+                                    PRINTF_INT_SPEC(value, llint_to_string, __signedness, __base, __prefix, __use_uppercase) \
                                 } \
                                 else \
                                 { \
-                                    PRINTF_INT_SPEC(unsigned long long, unsigned long long, ullint_to_string, __signedness, __base, __prefix, __use_uppercase) \
+                                    unsigned long long value = (unsigned long long)va_arg(args, unsigned long long); \
+                                    PRINTF_INT_SPEC(value, ullint_to_string, __signedness, __base, __prefix, __use_uppercase) \
                                 } \
                                 break; \
                             } \
@@ -615,11 +617,13 @@ static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* pre
                             { \
                                 if(__signedness == true) \
                                 { \
-                                    PRINTF_INT_SPEC(signed long, signed long, lint_to_string, __signedness, __base, __prefix, __use_uppercase) \
+                                    signed long value = (signed long)va_arg(args, signed long); \
+                                    PRINTF_INT_SPEC(value, lint_to_string, __signedness, __base, __prefix, __use_uppercase) \
                                 } \
                                 else \
                                 { \
-                                    PRINTF_INT_SPEC(unsigned long, unsigned long, ulint_to_string, __signedness, __base, __prefix, __use_uppercase) \
+                                    unsigned long value = (unsigned long)va_arg(args, unsigned long); \
+                                    PRINTF_INT_SPEC(value, ulint_to_string, __signedness, __base, __prefix, __use_uppercase) \
                                 } \
                                 break; \
                             } \
@@ -627,11 +631,13 @@ static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* pre
                             { \
                                 if(__signedness == true) \
                                 { \
-                                    PRINTF_INT_SPEC(ssize_t, ssize_t, lint_to_string, __signedness, __base, __prefix, __use_uppercase) \
+                                    ssize_t value = (ssize_t)va_arg(args, ssize_t); \
+                                    PRINTF_INT_SPEC(value, lint_to_string, __signedness, __base, __prefix, __use_uppercase) \
                                 } \
                                 else \
                                 { \
-                                    PRINTF_INT_SPEC(size_t, size_t, ulint_to_string, __signedness, __base, __prefix, __use_uppercase) \
+                                    size_t value = (size_t)va_arg(args, size_t); \
+                                    PRINTF_INT_SPEC(value, ulint_to_string, __signedness, __base, __prefix, __use_uppercase) \
                                 } \
                                 break; \
                             } \
@@ -678,7 +684,18 @@ static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* pre
                     }
                     case 'p':
                     {
-                        PRINTF_INT_SPEC(unsigned long, unsigned long, ulint_to_string, false, 16, "0x", false);
+                        uintptr_t value = (uintptr_t)va_arg(args, void*);
+
+                        if(value == 0)
+                        {
+                            const char* msg = "NULL";
+                            
+                            PRINTF_WRITE(msg);
+
+                            break;
+                        }
+
+                        PRINTF_INT_SPEC(value, ulint_to_string, false, 16, "0x", false);
 
                         break;
                     }

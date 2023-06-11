@@ -49,6 +49,5 @@ void x86_begin(void)
     kprintf("Hello, ackOS World!\n");
 #endif
 
-
     halt();
 }

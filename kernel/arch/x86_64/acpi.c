@@ -98,7 +98,7 @@ static void print_sdt(void)
 
         for(size_t i = 0; i < sdt.entry_count; i++)
         {
-            print_header((const struct acpi_header*)physical_to_logical(entries[i]));
+            print_header((const struct acpi_header*)physical_to_io(entries[i]));
         }
     }
     else
@@ -107,7 +107,7 @@ static void print_sdt(void)
 
         for(size_t i = 0; i < sdt.entry_count; i++)
         {
-            print_header((const struct acpi_header*)physical_to_logical((uintptr_t)entries[i]));
+            print_header((const struct acpi_header*)physical_to_io((uintptr_t)entries[i]));
         }
     }
 }
@@ -120,9 +120,9 @@ const struct acpi_header* acpi_find_header(const char* signature)
 
         for(size_t i = 0; i < sdt.entry_count; i++)
         {
-            const struct acpi_header* header = (const struct acpi_header*)physical_to_logical(entries[i]);
+            const struct acpi_header* header = (const struct acpi_header*)physical_to_io(entries[i]);
 
-            if(check_signature(header->signature, signature))
+            if(header && check_signature(header->signature, signature))
             {
                 if(!check_checksum(header, 0, header->length))
                 {
@@ -139,9 +139,9 @@ const struct acpi_header* acpi_find_header(const char* signature)
 
         for(size_t i = 0; i < sdt.entry_count; i++)
         {
-            const struct acpi_header* header = (const struct acpi_header*)physical_to_logical((uintptr_t)entries[i]);
+            const struct acpi_header* header = (const struct acpi_header*)physical_to_io((uintptr_t)entries[i]);
 
-            if(check_signature(header->signature, signature))
+            if(header && check_signature(header->signature, signature))
             {
                 if(!check_checksum(header, 0, header->length))
                 {
@@ -162,11 +162,11 @@ static void parse_rsdp(const struct acpi_rsd_ptr* rsdp)
 
     if(rsdp->revision == 0)
     {
-        const struct acpi_header* header = (const struct acpi_header*)physical_to_logical(rsdp->rsdt_addr);
+        const struct acpi_header* header = (const struct acpi_header*)physical_to_io(rsdp->rsdt_addr);
 
-        if(!check_signature(header->signature, "RSDT") || !check_checksum(header, 0, header->length))
+        if(!header || !check_signature(header->signature, "RSDT") || !check_checksum(header, 0, header->length))
         {
-            kprintf(KERN_PANIC "acpi: invalid RSDT\n");
+            kprintf(KERN_PANIC "acpi: invalid RSDT @ %p\n", header);
         }
 
         print_header(header);
@@ -177,11 +177,11 @@ static void parse_rsdp(const struct acpi_rsd_ptr* rsdp)
     }
     else if(rsdp->revision == 2)
     {
-        const struct acpi_header* header = (const struct acpi_header*)physical_to_logical(rsdp->ext.xsdt_addr);
+        const struct acpi_header* header = (const struct acpi_header*)physical_to_io(rsdp->ext.xsdt_addr);
 
-        if(!check_signature(header->signature, "XSDT") || !check_checksum(header, 0, header->length))
+        if(!header || !check_signature(header->signature, "XSDT") || !check_checksum(header, 0, header->length))
         {
-            kprintf(KERN_PANIC "acpi: invalid XSDT\n");
+            kprintf(KERN_PANIC "acpi: invalid XSDT @ %p\n", header);
         }
 
         print_header(header);
@@ -205,9 +205,9 @@ void init_acpi(void)
 
     const struct acpi_rsd_ptr* rsdp = rsdp_request.response->address;
 
-    if(!check_signature(rsdp->signature, "RSD PTR ") || !check_checksum(rsdp, 0, sizeof(*rsdp) - sizeof(rsdp->ext)))
+    if(!rsdp || !check_signature(rsdp->signature, "RSD PTR ") || !check_checksum(rsdp, 0, sizeof(*rsdp) - sizeof(rsdp->ext)))
     {
-        kprintf(KERN_PANIC "acpi: invalid RSDP\n");
+        kprintf(KERN_PANIC "acpi: invalid RSDP @ %p\n", rsdp);
 
         return;
     }

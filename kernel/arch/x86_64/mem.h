@@ -21,8 +21,9 @@ enum
 typedef uintptr_t phys_addr_t;
 typedef void* virt_addr_t;
 
-virt_addr_t physical_to_logical(phys_addr_t addr);
-phys_addr_t logical_to_physical(virt_addr_t addr);
+// a direct map of up to 4GiB of physical memory
+virt_addr_t physical_to_io(phys_addr_t addr);
+phys_addr_t io_to_physical(virt_addr_t addr);
 
 phys_addr_t pmm_allocate(struct cpu_context* context, size_t size);
 void pmm_deallocate(struct cpu_context* context, phys_addr_t addr, size_t size);

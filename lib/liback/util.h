@@ -8,6 +8,7 @@
 #define MiB * 0x100000
 #define GiB * 0x40000000L
 #define TiB * 0x10000000000L
+#define PiB * 0x4000000000000L
 
 #define ATTR_PACKED __attribute__((__packed__))
 #define ATTR_ALIGN(a) __attribute__((aligned(a)))
