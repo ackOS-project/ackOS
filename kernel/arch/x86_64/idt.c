@@ -7,6 +7,8 @@
 #include "kernel/arch/x86_64/instr.h"
 #include "kernel/lib/log.h"
 
+#include "lib/liback/util.h"
+
 #define GATE_INTERRUPT 0xE
 #define GATE_TRAP 0xF
 
@@ -74,7 +76,7 @@ static const char* exception_names[] =
 
 static inline const char* get_exception_name(int index)
 {
-    return index < (sizeof(exception_names) / sizeof(const char*)) ? exception_names[index] : "(unknown exception)";
+    return index < STATIC_LEN(exception_names) ? exception_names[index] : "(unknown exception)";
 }
 
 void interrupt_handler(struct int_frame* frame)

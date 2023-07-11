@@ -240,7 +240,7 @@ An overview of the x86_64 paging structure:
     Every virtual address follows this structure:
         L5 (9 bits) | L4 (9 bits) | L3 (9 bits) | L2 (9 bits) | L1 (9 bits) | offset (12 bits)
     
-    Which corresponds to this hierarchy of page tables:
+    Which corresponds to this hierarchy of a page table trie:
         level 5 (PML - covers 128PiB of address space)
             level 4 (PML - covers 256TiB of address space)
                 level 3 (PDP - covers 512GiB of address space. Entries can optionally behave as page mapping allowing for a 1GiB mapping.)

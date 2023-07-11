@@ -17,7 +17,7 @@ struct ATTR_PACKED acpi_rsd_ptr
     uint8_t revision;
     uint32_t rsdt_addr;
 
-    struct
+    struct ATTR_PACKED
     {
         uint32_t length;
         uint64_t xsdt_addr;
@@ -39,11 +39,92 @@ struct ATTR_PACKED acpi_header
     uint32_t creator_revision;
 };
 
+enum
+{
+    ACPI_MADT_PROC_LAPIC_ENTRY,
+    ACPI_MADT_IO_APIC_ENTRY,
+    ACPI_MADT_IO_APIC_INT_SRC_OVERRIDE_ENTRY,
+    ACPI_MADT_IO_APIC_NMI_SRC_ENTRY,
+    ACPI_MADT_LAPIC_NMI_INT_ENTRY,
+    ACPI_MADT_LAPIC_ADDR_OVERRIDE_ENTRY,
+    ACPI_MADT_PROC_X2LAPIC = 9
+};
+
 struct ATTR_PACKED acpi_madt
 {
     struct acpi_header header;
     uint32_t lapic_addr; /* Local Advanced Programmable Interrupt Controller */
     uint32_t flags;
+};
+
+struct ATTR_PACKED acpi_madt_entry
+{
+    uint8_t entry_type;
+    uint8_t record_length;
+};
+
+struct ATTR_PACKED acpi_madt_proc_lapic_entry
+{
+    struct acpi_madt_entry entry_info;
+    uint8_t proc_id;
+    uint8_t apic_id;
+    uint32_t flags;
+};
+
+struct ATTR_PACKED acpi_madt_io_apic_entry
+{
+    struct acpi_madt_entry entry_info;
+    uint8_t io_apic_id;
+    uint8_t reserved;
+    uint32_t io_apic_addr;
+    uint32_t global_sys_int_base;
+};
+
+
+struct ATTR_PACKED acpi_madt_io_apic_src_override_entry
+{
+    struct acpi_madt_entry entry_info;
+    uint8_t bus_source;
+    uint8_t irq_source;
+    uint32_t global_sys_int;
+    uint16_t flags;
+};
+
+
+struct ATTR_PACKED acpi_madt_io_apic_nmi_int_src_entry
+{
+    struct acpi_madt_entry entry_info;
+    uint8_t nmi_source;
+    uint8_t reserved;
+    uint16_t flags;
+    uint32_t global_sys_int;
+};
+
+
+struct ATTR_PACKED acpi_madt_lapic_nmi_entry
+{
+    struct acpi_madt_entry entry_info;
+    uint8_t proc_id;
+    uint16_t flags;
+    uint8_t local_int_num;
+};
+
+
+struct ATTR_PACKED acpi_madt_lapic_addr_override_entry
+{
+    struct acpi_madt_entry entry_info;
+    uint16_t reserved;
+    uint64_t lapic_addr; /* 64-bit version of the LAPIC address */
+};
+
+
+struct ATTR_PACKED acpi_madt_proc_x2_lapic_entry
+{
+    struct acpi_madt_entry entry_info;
+    uint16_t reserved;
+    uint32_t proc_2x_lapic_id;
+    uint32_t flags;
+    uint32_t apci_id;
 };
 
 struct ATTR_PACKED acpi_generic_addr
@@ -129,3 +210,6 @@ void init_acpi(void);
 // * Checks the validity of the checksum
 // * Will return null if not found
 const struct acpi_header* acpi_find_header(const char* signature);
+
+uint32_t* acpi_get_lapic_address(void);
+uint32_t* acpi_get_ioapic_address(void);

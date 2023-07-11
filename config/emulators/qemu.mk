@@ -1,10 +1,12 @@
 QEMU_FLAGS += \
 			-M q35 \
+			-bios /usr/share/ovmf/x64/OVMF.fd \
 			-chardev stdio,id=char0,signal=on \
 			-chardev file,id=char1,path=$(VM_LOGFILE),signal=off \
 			-serial chardev:char0 \
 			-serial chardev:char1 \
-			-m $(VM_MEMORY)M
+			-m $(VM_MEMORY)M \
+			-smp 4
 
 qemu: all
 	@qemu-system-x86_64 $(QEMU_FLAGS) -enable-kvm -cdrom $(OS_IMAGE)
