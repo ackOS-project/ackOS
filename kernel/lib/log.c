@@ -269,7 +269,7 @@ size_t get_print_width(const char* s)
     return len;
 }
 
-static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* prefix, const char* fmt, bool dry_run, va_list args)
+static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* prefix, bool write_indent_instead, const char* fmt, bool dry_run, va_list args)
 {
     char* buff_start = buff;
     int total_len = 0;
@@ -326,18 +326,35 @@ static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* pre
 
     if(prefix)
     {
-        size_t prefix_len = strlen(prefix);
-
-        if(!dry_run)
-        {
-            size_t trunc_len = PRINTF_TRUNCATE(prefix_len);
-
-            strncpy(buff, prefix, trunc_len);
-            buff += trunc_len;
-        }
-
-        total_len += prefix_len;
         indent = get_print_width(prefix);
+
+        if(write_indent_instead)
+        {
+            if(!dry_run)
+            {
+                size_t indent_len = PRINTF_TRUNCATE(indent);
+
+                memset(buff, ' ', indent_len);
+                buff += indent_len;
+            }
+
+            total_len += indent;
+        }
+        else
+        {
+            size_t prefix_len = strlen(prefix);
+
+            if(!dry_run)
+            {
+                size_t trunc_len = PRINTF_TRUNCATE(prefix_len);
+
+                strncpy(buff, prefix, trunc_len);
+
+                buff += trunc_len;
+            }
+
+            total_len += prefix_len;
+        }
     }
 
     while(*fmt)
@@ -369,10 +386,10 @@ static int dvsnprintf(char* buff, size_t n, size_t* written_len, const char* pre
 
                     if(indent > 0 && *fmt == '\n' && *(fmt + 1))
                     {
-                        size_t indent_len = PRINTF_TRUNCATE(indent);
-
                         if(!dry_run)
                         {
+                            size_t indent_len = PRINTF_TRUNCATE(indent);
+
                             memset(buff, ' ', indent_len);
                             buff += indent_len;
                         }
@@ -744,7 +761,7 @@ int vsnprintf(char* buff, size_t n, const char* fmt, va_list args)
 {
     size_t written_len = 0;
 
-    dvsnprintf(buff, n, &written_len, (const char*)NULL, fmt, false, args);
+    dvsnprintf(buff, n, &written_len, (const char*)NULL, false, fmt, false, args);
 
     return written_len;
 }
@@ -780,11 +797,12 @@ int sprintf(char* buff, const char* fmt, ...)
 
 enum kprintf_action
 {
-    KPRINTF_ACTION_NONE,
-    KPRINTF_ACTION_INFO,
-    KPRINTF_ACTION_WARN,
-    KPRINTF_ACTION_PANIC,
-    KPRINTF_ACTION_DEBUG
+    KPRINTF_ACTION_NONE = 0,
+    KPRINTF_ACTION_INFO = 1,
+    KPRINTF_ACTION_WARN = 2,
+    KPRINTF_ACTION_PANIC = 3,
+    KPRINTF_ACTION_DEBUG = 4,
+    KPRINTF_ACTION_CONTINUATION = 5
 };
 
 static const char* action_to_string(enum kprintf_action action)
@@ -838,13 +856,20 @@ int kvprintf(const char* fmt, va_list args)
         return 0;
     }
 #endif
+    bool use_indent_instead = false;
+
+    if(fmt_len >= 3 && fmt[0] == KPRINTF_ACTION_CONTINUATION)
+    {
+        use_indent_instead = true;
+        fmt++;
+    }
 
     size_t written_len = 0;
-    size_t est_len = dvsnprintf((char*)NULL, 0, (size_t*)NULL, status_msg, fmt, true, args_clone);
+    size_t est_len = dvsnprintf((char*)NULL, 0, (size_t*)NULL, status_msg, use_indent_instead, fmt, true, args_clone);
 
     char buff[est_len + 1];
 
-    dvsnprintf(buff, est_len, &written_len, status_msg, fmt, false, args);
+    dvsnprintf(buff, est_len, &written_len, status_msg, use_indent_instead, fmt, false, args);
     kputs(buff);
 
     if(action == KPRINTF_ACTION_PANIC)

@@ -9,6 +9,12 @@
 #define KERN_PANIC "\e\x03"
 #define KERN_DEBUG "\e\x04"
 
+/* continuation sequences */
+#define KERN_INFO_CONT "\e\x01\x05"
+#define KERN_WARN_CONT "\e\x02\x05"
+#define KERN_PANIC_CONT "\e\x03\x05"
+#define KERN_DEBUG_CONT "\e\x04\x05"
+
 #define TERM_RESET_COLOUR "\e[0m"
 #define TERM_RED "\e[0;31m"
 #define TERM_GREEN "\e[0;32m"

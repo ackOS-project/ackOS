@@ -1,6 +1,5 @@
 QEMU_FLAGS += \
 			-M q35 \
-			-bios /usr/share/ovmf/x64/OVMF.fd \
 			-chardev stdio,id=char0,signal=on \
 			-chardev file,id=char1,path=$(VM_LOGFILE),signal=off \
 			-serial chardev:char0 \
