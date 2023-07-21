@@ -8,9 +8,11 @@
 #include "kernel/lib/pointless.h"
 
 // enable five level paging if available
-static volatile struct limine_5_level_paging_request five_level_request =
+static volatile struct limine_paging_mode_request five_level_request =
 {
-    .id = LIMINE_5_LEVEL_PAGING_REQUEST,
+    .id = LIMINE_PAGING_MODE_REQUEST,
+    .mode = LIMINE_PAGING_MODE_X86_64_5LVL,
+    .flags = 0,
     .revision = 0
 };
 
@@ -1313,7 +1315,7 @@ void init_memory()
         kprintf(KERN_PANIC "NX bit not supported by the CPU\n");
     }
 
-    five_level_paging_enabled = five_level_request.response != NULL;
+    five_level_paging_enabled = five_level_request.response != NULL && five_level_request.response->mode == LIMINE_PAGING_MODE_X86_64_5LVL;
     phys_address_bits_num = (size_t)(cpuid_eax(0x80000008) & 0x7f);
 
     kprintf(KERN_INFO "Total virtual address space: %'zu\n", vmm_get_address_space());

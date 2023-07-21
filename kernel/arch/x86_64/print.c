@@ -3,6 +3,9 @@
 
 #include "kernel/arch/x86_64/com.h"
 
+// we shouldn't be using the limine terminal because it is deprecated (who knows why)
+// TODO: write our own terminal implementation.
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 static volatile struct limine_terminal_request terminal_request = {
     .id = LIMINE_TERMINAL_REQUEST,
     .revision = 0
