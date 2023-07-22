@@ -1,0 +1,23 @@
+{
+    "configurations": [
+        {
+            "name": "ackOS",
+            "includePath": [
+                "${workspaceFolder}",
+                "${workspaceFolder}/submodules",
+                "${workspaceFolder}/lib"
+            ],
+            "defines": [
+                "BUILD_TIME=\"Thur 1 Jan 1970\"",
+                "BUILD_BOOTLOADER_LIMINE",
+                "BUILD_ARCH_x86_64"
+            ],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c11",
+            "cppStandard": "c++20",
+            "intelliSenseMode": "linux-clang-x64",
+            "configurationProvider": "ms-vscode.makefile-tools"
+        }
+    ],
+    "version": 4
+}

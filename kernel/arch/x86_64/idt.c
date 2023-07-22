@@ -5,6 +5,7 @@
 #include "kernel/arch/x86_64/gdt.h"
 #include "kernel/arch/x86_64/mem.h"
 #include "kernel/arch/x86_64/instr.h"
+#include "kernel/arch/x86_64/acpi.h"
 #include "kernel/lib/log.h"
 
 #include "lib/liback/util.h"
@@ -60,7 +61,6 @@ static const char* exception_names[] =
     "machine check",
     "SIMD floating point error",
     "virtualisation error",
-    "(reserved)",
     "control protection exception",
     "(reserved)",
     "(reserved)",
@@ -68,9 +68,9 @@ static const char* exception_names[] =
     "(reserved)",
     "(reserved)",
     "(reserved)",
-    "(reserved)",
-    "(reserved)",
-    "(reserved)",
+    "hypervisor injection exception ",
+    "VMM communication exception",
+    "security exception",
     "(reserved)"
 };
 
@@ -81,6 +81,22 @@ static inline const char* get_exception_name(int index)
 
 void interrupt_handler(struct int_frame* frame)
 {
+    if(frame->int_num >= 32) /* external interrupt */
+    {
+        kprintf(KERN_DEBUG "received external interrupt %lu\n", frame->int_num);
+
+        if(frame->int_num == 33)
+        {
+            uint8_t key = inb(0x60);
+
+            kprintf(KERN_DEBUG_CONT "which is a key %s interrupt with the scancode: %hhu\n", (key & (1 << 7)) ? "release" : "press", (key & 0x7f));
+        }
+
+        lapic_eoi();
+
+        return;
+    }
+
     if(frame->int_num == 14) /* page fault */
     {
         if(obtain_kernel_context()->vmm_table)
@@ -115,7 +131,8 @@ void interrupt_handler(struct int_frame* frame)
                        "    r14:      %#lx\n"
                        "    r15:      %#lx\n"
                        "    int_num:  %lu\n"
-                       "    err_code: %#lx\n", 
+                       "    err_code: %#lx\n"
+                       "    rip:      %#lx\n", 
                             get_exception_name(frame->int_num),
                             frame->rax,
                             frame->rbx,
@@ -133,7 +150,8 @@ void interrupt_handler(struct int_frame* frame)
                             frame->r14,
                             frame->r15,
                             frame->int_num,
-                            frame->err);
+                            frame->err,
+                            frame->rip);
 }
 
 static void print_idt_entry(size_t i)

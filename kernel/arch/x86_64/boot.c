@@ -246,5 +246,7 @@ void x86_begin(void)
         kprintf(KERN_PANIC "kernel quitted with error code %d\n", res);
     }
 
-    halt();
+    int_enable();
+
+    while(true) halt();
 }

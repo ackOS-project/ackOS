@@ -1,0 +1,11 @@
+{
+    "tasks": [
+        {
+            "label": "Launch QEMU debugging instance",
+            "type": "shell",
+            "command": "make qemu-debug",
+            "isBackground": true
+        }
+    ],
+    "version": "2.0.0"
+}

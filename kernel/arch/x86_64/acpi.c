@@ -130,7 +130,7 @@ static void print_madt(const struct acpi_madt* madt)
         const struct acpi_madt_entry* entry = (const struct acpi_madt_entry*)((uintptr_t)madt + offset);
         const char* type_str = entry->entry_type < STATIC_LEN(entry_type_strings) && entry_type_strings[entry->entry_type] ? entry_type_strings[entry->entry_type] : "unknown";
 
-        kprintf(KERN_DEBUG "struct acpi_madt_entry(entry_type: '%s' (%hhu), record_length: %hhu)\n",
+        kprintf(KERN_DEBUG "struct acpi_madt_entry(entry_type: '%s' (%hhu), record_length: %hhu):\n",
                            type_str,
                            entry->entry_type,
                            entry->record_length);
@@ -141,14 +141,14 @@ static void print_madt(const struct acpi_madt* madt)
             {
                 const struct acpi_madt_proc_lapic_entry* proc_lapic_entry = (const struct acpi_madt_proc_lapic_entry*)entry;
 
-                kprintf(KERN_DEBUG "struct acpi_madt_proc_lapic_entry {\n"
-                                   "    proc_id: %hhu\n"
-                                   "    apic_id: %hhu\n"
-                                   "    flags:   %u\n"
-                                   "}\n",
-                                   proc_lapic_entry->proc_id,
-                                   proc_lapic_entry->apic_id,
-                                   proc_lapic_entry->flags);
+                kprintf(KERN_DEBUG_CONT "    struct acpi_madt_proc_lapic_entry {\n"
+                                        "        proc_id: %hhu\n"
+                                        "        apic_id: %hhu\n"
+                                        "        flags:   %u\n"
+                                        "    }\n",
+                                        proc_lapic_entry->proc_id,
+                                        proc_lapic_entry->apic_id,
+                                        proc_lapic_entry->flags);
 
                 if(proc_lapic_entry->flags & 1) proc_count++;
                 
@@ -158,14 +158,14 @@ static void print_madt(const struct acpi_madt* madt)
             {
                 const struct acpi_madt_io_apic_entry* io_apic_entry = (const struct acpi_madt_io_apic_entry*)entry;
 
-                kprintf(KERN_DEBUG "struct acpi_madt_io_apic_entry {\n"
-                                   "    io_apic_id:          %hhu\n"
-                                   "    io_apic_addr:        %#x\n"
-                                   "    global_sys_int_base: %#x\n"
-                                   "}\n",
-                                   io_apic_entry->io_apic_id,
-                                   io_apic_entry->io_apic_addr,
-                                   io_apic_entry->global_sys_int_base);
+                kprintf(KERN_DEBUG_CONT "    struct acpi_madt_io_apic_entry {\n"
+                                        "        io_apic_id:          %hhu\n"
+                                        "        io_apic_addr:        %#x\n"
+                                        "        global_sys_int_base: %#x\n"
+                                        "    }\n",
+                                        io_apic_entry->io_apic_id,
+                                        io_apic_entry->io_apic_addr,
+                                        io_apic_entry->global_sys_int_base);
 
                 io_apic_addr = io_apic_entry->io_apic_addr;
 
@@ -175,16 +175,16 @@ static void print_madt(const struct acpi_madt* madt)
             {
                 const struct acpi_madt_io_apic_src_override_entry* io_apic_src_override = (const struct acpi_madt_io_apic_src_override_entry*)entry;
 
-                kprintf(KERN_DEBUG "struct acpi_madt_io_apic_src_override_entry {\n"
-                                   "    bus_source:     %hhu\n"
-                                   "    irq_source:     %hhu\n"
-                                   "    global_sys_int: %u\n"
-                                   "    flags:          %hu\n"
-                                   "}\n",
-                                   io_apic_src_override->bus_source,
-                                   io_apic_src_override->irq_source,
-                                   io_apic_src_override->global_sys_int,
-                                   io_apic_src_override->flags);
+                kprintf(KERN_DEBUG_CONT "    struct acpi_madt_io_apic_src_override_entry {\n"
+                                        "        bus_source:     %hhu\n"
+                                        "        irq_source:     %hhu\n"
+                                        "        global_sys_int: %u\n"
+                                        "        flags:          %hu\n"
+                                        "    }\n",
+                                        io_apic_src_override->bus_source,
+                                        io_apic_src_override->irq_source,
+                                        io_apic_src_override->global_sys_int,
+                                        io_apic_src_override->flags);
 
                 break;
             }
@@ -192,14 +192,14 @@ static void print_madt(const struct acpi_madt* madt)
             {
                 const struct acpi_madt_io_apic_nmi_int_src_entry* io_apic_nmi_src_entry = (const struct acpi_madt_io_apic_nmi_int_src_entry*)entry;
 
-                kprintf(KERN_DEBUG "struct acpi_madt_io_apic_nmi_int_src_entry {"
-                                   "    nmi_source:     %hhu\n"
-                                   "    flags:          %hu\n"
-                                   "    global_sys_int: %u\n"
-                                   "}\n",
-                                   io_apic_nmi_src_entry->nmi_source,
-                                   io_apic_nmi_src_entry->flags,
-                                   io_apic_nmi_src_entry->global_sys_int);
+                kprintf(KERN_DEBUG_CONT "    struct acpi_madt_io_apic_nmi_int_src_entry {"
+                                        "        nmi_source:     %hhu\n"
+                                        "        flags:          %hu\n"
+                                        "        global_sys_int: %u\n"
+                                        "    }\n",
+                                        io_apic_nmi_src_entry->nmi_source,
+                                        io_apic_nmi_src_entry->flags,
+                                        io_apic_nmi_src_entry->global_sys_int);
 
                 break;
             }
@@ -207,14 +207,14 @@ static void print_madt(const struct acpi_madt* madt)
             {
                 const struct acpi_madt_lapic_nmi_entry* nmi_entry = (const struct acpi_madt_lapic_nmi_entry*)entry;
 
-                kprintf(KERN_DEBUG "struct acpi_madt_lapic_nmi_entry {\n"
-                                   "    proc_id:  %hhu\n"
-                                   "    flags:    %hu\n"
-                                   "    lint_num: %hhu\n"
-                                   "}\n",
-                                   nmi_entry->proc_id,
-                                   nmi_entry->flags,
-                                   nmi_entry->local_int_num);
+                kprintf(KERN_DEBUG_CONT "    struct acpi_madt_lapic_nmi_entry {\n"
+                                        "        proc_id:  %hhu\n"
+                                        "        flags:    %hu\n"
+                                        "        lint_num: %hhu\n"
+                                        "    }\n",
+                                        nmi_entry->proc_id,
+                                        nmi_entry->flags,
+                                        nmi_entry->local_int_num);
 
                 break;
             }
@@ -222,10 +222,10 @@ static void print_madt(const struct acpi_madt* madt)
             {
                 const struct acpi_madt_lapic_addr_override_entry* addr_override_entry = (const struct acpi_madt_lapic_addr_override_entry*)entry;
 
-                kprintf(KERN_DEBUG "struct acpi_madt_lapic_addr_override_entry {\n"
-                                   "    lapic_addr: %#lx\n"
-                                   "}\n",
-                                   addr_override_entry->lapic_addr);
+                kprintf(KERN_DEBUG_CONT "    struct acpi_madt_lapic_addr_override_entry {\n"
+                                        "        lapic_addr: %#lx\n"
+                                        "    }\n",
+                                        addr_override_entry->lapic_addr);
                 
                 lapic_addr = addr_override_entry->lapic_addr;
 
@@ -235,14 +235,14 @@ static void print_madt(const struct acpi_madt* madt)
             {
                 const struct acpi_madt_proc_x2_lapic_entry* proc_x2_lapic_entry = (const struct acpi_madt_proc_x2_lapic_entry*)entry;
 
-                kprintf(KERN_DEBUG "struct acpi_madt_proc_x2_lapic_entry {\n"
-                                   "    proc_x2_lapic_id: %u\n"
-                                   "    flags:            %u\n"
-                                   "    acpi_id:          %u\n"
-                                   "}\n",
-                                   proc_x2_lapic_entry->proc_2x_lapic_id,
-                                   proc_x2_lapic_entry->flags,
-                                   proc_x2_lapic_entry->apci_id);
+                kprintf(KERN_DEBUG_CONT "    struct acpi_madt_proc_x2_lapic_entry {\n"
+                                        "        proc_x2_lapic_id: %u\n"
+                                        "        flags:            %u\n"
+                                        "        acpi_id:          %u\n"
+                                        "    }\n",
+                                        proc_x2_lapic_entry->proc_2x_lapic_id,
+                                        proc_x2_lapic_entry->flags,
+                                        proc_x2_lapic_entry->apci_id);
                 
                 break;
             }
@@ -259,6 +259,30 @@ static void print_madt(const struct acpi_madt* madt)
                        lapic_addr);
 }
 
+// https://blog.wesleyac.com/posts/ioapic-interrupts
+static inline void disable_pic(void)
+{
+    // initialisation command
+    outb(0x20, 0x11);
+    outb(0xa0, 0x11);
+
+    // remap PIC interrupts to start at 0x20, to prevent spurious interrupts
+    outb(0x21, 0x20); /* master PIC starts at 0x20 */
+    outb(0xa1, 0x28); /* slave starts at 0x28 */
+
+    // setup PIC cascading
+    outb(0x21, 0x4); /* PIC1 is master, PIC2 is slave */
+    outb(0xa1, 0x2); /* PIC2 is cascade identity */
+
+    // set the 8086/88 (MCS-80/85) mode
+    outb(0x21, 0x1);
+    outb(0xa1, 0x1);
+
+    // disable all IRQs
+    outb(0x21, 0xff);
+    outb(0xa1, 0xff);
+}
+
 static void parse_madt(const struct acpi_madt* madt)
 {
     uintptr_t lapic_addr = (uintptr_t)madt->lapic_addr;
@@ -267,8 +291,7 @@ static void parse_madt(const struct acpi_madt* madt)
     if(madt->flags & 1 /* Dual 8259 legacy PICS installed */)
     {
         // disable - we don't need it
-        outb(0xa1, 0xff);
-        outb(0x21, 0xff);
+        disable_pic();
     }
 
     for(size_t offset = sizeof(struct acpi_madt); offset < madt->header.length;)
@@ -348,16 +371,6 @@ void acpi_madt_enumerate(uint8_t entry_type, bool(*callback)(const struct acpi_m
     }
 }
 
-uint32_t* acpi_get_lapic_address(void)
-{
-    return (uint32_t*)madt_info.lapic_addr;
-}
-
-uint32_t* acpi_get_ioapic_address(void)
-{
-    return (uint32_t*)madt_info.io_apic_addr;
-}
-
 static void print_sdt(void)
 {
     if(sdt.use_long_addresses)
@@ -379,7 +392,6 @@ static void print_sdt(void)
         }
     }
 }
-
 
 const struct acpi_header* acpi_find_header(const char* signature)
 {
@@ -479,55 +491,62 @@ static void parse_rsdp(const struct acpi_rsd_ptr* rsdp)
     }
 }
 
-uint32_t io_apic_read(void* ioapic_addr, uint32_t reg)
+uint32_t io_apic_read(uint32_t reg)
 {
-    uint32_t volatile *ioapic = (uint32_t volatile*)ioapic_addr;
+    uint32_t volatile* ioapic = (uint32_t volatile*)madt_info.io_apic_addr;
+
     ioapic[0] = (reg & 0xff);
 
     return ioapic[4];
 }
  
-void io_apic_write(void* ioapic_addr, uint32_t reg, uint32_t value)
+void io_apic_write(uint32_t reg, uint32_t value)
 {
-    uint32_t volatile *ioapic = (uint32_t volatile *)ioapic_addr;
+    uint32_t volatile* ioapic = (uint32_t volatile*)madt_info.io_apic_addr;
 
     ioapic[0] = (reg & 0xff);
     ioapic[4] = value;
 }
 
-void init_acpi(void)
+uint32_t lapic_read(uint32_t reg)
 {
-    if(!rsdp_request.response)
-    {
-        kprintf(KERN_PANIC "response to `limine_rsdp_request` was null\n");
-    }
+    return *(volatile uint32_t*)(madt_info.lapic_addr + reg);
+}
 
-    parse_rsdp((const struct acpi_rsd_ptr*)rsdp_request.response->address);
+void lapic_write(uint32_t reg, uint32_t value)
+{
+    *(volatile uint32_t*)(madt_info.lapic_addr + reg) = value;
+}
 
-    const struct acpi_madt* madt = (const struct acpi_madt*)acpi_find_header("APIC");
+void lapic_eoi(void)
+{
+    lapic_write(LAPIC_REG_EOI, 0);
+}
 
-    if(!madt)
-    {
-        kprintf(KERN_PANIC "No MADT!\n");
-        
-        return;
-    }
+static inline struct io_apic_interrupt_redirect io_apic_redirect_read(size_t index)
+{
+    struct io_apic_interrupt_redirect redirect;
+    uint32_t offset = IO_APIC_REG_REDIRECTION_ENTRIES_BASE + (index * 2);
 
-    //print_madt(madt);
-    parse_madt(madt);
+    redirect._data.reg1 = io_apic_read(offset);
+    redirect._data.reg2 = io_apic_read(offset + 1);
 
-    kprintf(KERN_DEBUG "IO APIC: %p\n"
-                       "LAPIC:   %p\n",
-                       madt_info.io_apic_addr,
-                       madt_info.lapic_addr);
+    return redirect;
+}
 
-    // External interrupts such as keyboard and device interrupts are handled by the IO/APIC.
-    // Each CPU "core" then has a local APIC, responsible for despatching interrupts generated
-    // by the IO/APIC and interrupts generated by the CPU itself, for example timer interrupts and exceptions.
-    // Access to each local APIC is done through the same address, so you can only address a single local APIC at a time.
-    uint32_t id_reg = io_apic_read(madt_info.io_apic_addr, IO_APIC_REG_ID);
-    uint32_t version_reg = io_apic_read(madt_info.io_apic_addr, IO_APIC_REG_VERSION);
-    uint32_t priority_reg = io_apic_read(madt_info.io_apic_addr, IO_APIC_REG_PRIORITY);
+static inline void io_apic_redirect_write(size_t index, struct io_apic_interrupt_redirect redirect)
+{
+    uint32_t offset = IO_APIC_REG_REDIRECTION_ENTRIES_BASE + (index * 2);
+
+    io_apic_write(offset, redirect._data.reg1);
+    io_apic_write(offset + 1, redirect._data.reg2);
+}
+
+static void print_ioapic(void)
+{
+    uint32_t id_reg = io_apic_read(IO_APIC_REG_ID);
+    uint32_t version_reg = io_apic_read(IO_APIC_REG_VERSION);
+    uint32_t priority_reg = io_apic_read(IO_APIC_REG_PRIORITY);
     size_t max_redirects = (version_reg >> 16) & 0xff;
 
     kprintf(KERN_DEBUG "IOAPIC {\n"
@@ -543,11 +562,7 @@ void init_acpi(void)
 
     for(size_t i = 0; i < max_redirects; i++)
     {
-        struct io_apic_interrupt_redirect redirect;
-        uint32_t offset = IO_APIC_REG_REDIRECTION_ENTRIES_BASE + (i * 2);
-
-        redirect._data.reg1 = io_apic_read(madt_info.io_apic_addr, offset);
-        redirect._data.reg2 = io_apic_read(madt_info.io_apic_addr, offset + 1);
+        struct io_apic_interrupt_redirect redirect = io_apic_redirect_read(i);
 
         kprintf(KERN_DEBUG_CONT
                 "        {\n"
@@ -574,4 +589,128 @@ void init_acpi(void)
 
     kprintf(KERN_DEBUG_CONT "    ]\n"
                             "}\n");
+}
+
+static void print_lapic(void)
+{
+    kprintf(KERN_DEBUG
+            "Local APIC {\n"
+            "    id:                    %u\n"
+            "    version:               %u\n"
+            "    task_priority:         %u\n"
+            "    arbitration_priority:  %u\n"
+            "    processor_priority:    %u\n"
+            "    remote_read:           %u\n"
+            "    logical_destination:   %u\n"
+            "    destination_format:    %#x\n"
+            "    spurious_int_vector:   %u\n"
+            "    in_service:            %#x %#x %#x %#x %#x %#x %#x %#x\n"
+            "    trigger_mode:          %#x %#x %#x %#x %#x %#x %#x %#x\n"
+            "    int_request:           %#x %#x %#x %#x %#x %#x %#x %#x\n"
+            "    error_status:          %u\n"
+            "    lvt_check_int:         %#x\n"
+            "    int_command:           %#x %#x\n"
+            "    lvt_timer:             %#x\n"
+            "    lvt_thermal_sensor:    %#x\n"
+            "    lvt_performance_count: %#x\n"
+            "    lvt_lint0:             %#x\n"
+            "    lvt_lint1:             %#x\n"
+            "    lvt_error:             %#x\n"
+            "    initial_count:         %u\n"
+            "    current_count:         %u\n"
+            "    divide_configuration:  %u\n"
+            "}\n",
+            lapic_read(LAPIC_REG_ID),
+            lapic_read(LAPIC_REG_VERSION),
+            lapic_read(LAPIC_REG_TASK_PRIORITY),
+            lapic_read(LAPIC_REG_ARBITRATION_PRIORITY),
+            lapic_read(LAPIC_REG_PROCESSOR_PRIORITY),
+            lapic_read(LAPIC_REG_REMOTE_READ),
+            lapic_read(LAPIC_REG_LOGICAL_DESTINATION),
+            lapic_read(LAPIC_REG_DESTINATION_FORMAT),
+            lapic_read(LAPIC_REG_SPURIOUS_INTERRUPT_VECTOR),
+            lapic_read(LAPIC_REG_IN_SERVICE_BASE),
+            lapic_read(LAPIC_REG_IN_SERVICE_BASE + 0x10),
+            lapic_read(LAPIC_REG_IN_SERVICE_BASE + 0x20),
+            lapic_read(LAPIC_REG_IN_SERVICE_BASE + 0x30),
+            lapic_read(LAPIC_REG_IN_SERVICE_BASE + 0x40),
+            lapic_read(LAPIC_REG_IN_SERVICE_BASE + 0x50),
+            lapic_read(LAPIC_REG_IN_SERVICE_BASE + 0x60),
+            lapic_read(LAPIC_REG_IN_SERVICE_BASE + 0x70),
+            lapic_read(LAPIC_REG_TRIGGER_MODE_BASE),
+            lapic_read(LAPIC_REG_TRIGGER_MODE_BASE + 0x10),
+            lapic_read(LAPIC_REG_TRIGGER_MODE_BASE + 0x20),
+            lapic_read(LAPIC_REG_TRIGGER_MODE_BASE + 0x30),
+            lapic_read(LAPIC_REG_TRIGGER_MODE_BASE + 0x40),
+            lapic_read(LAPIC_REG_TRIGGER_MODE_BASE + 0x50),
+            lapic_read(LAPIC_REG_TRIGGER_MODE_BASE + 0x60),
+            lapic_read(LAPIC_REG_TRIGGER_MODE_BASE + 0x70),
+            lapic_read(LAPIC_REG_INTERRUPT_REQUEST_BASE),
+            lapic_read(LAPIC_REG_INTERRUPT_REQUEST_BASE + 0x10),
+            lapic_read(LAPIC_REG_INTERRUPT_REQUEST_BASE + 0x20),
+            lapic_read(LAPIC_REG_INTERRUPT_REQUEST_BASE + 0x30),
+            lapic_read(LAPIC_REG_INTERRUPT_REQUEST_BASE + 0x40),
+            lapic_read(LAPIC_REG_INTERRUPT_REQUEST_BASE + 0x50),
+            lapic_read(LAPIC_REG_INTERRUPT_REQUEST_BASE + 0x60),
+            lapic_read(LAPIC_REG_INTERRUPT_REQUEST_BASE + 0x70),
+            lapic_read(LAPIC_REG_ERROR_STATUS),
+            lapic_read(LAPIC_REG_LVT_CORRECTED_MACHINE_CHECK_INTERRUPT),
+            lapic_read(LAPIC_REG_INTERRUPT_COMMAND_BASE),
+            lapic_read(LAPIC_REG_INTERRUPT_COMMAND_BASE + 0x10),
+            lapic_read(LAPIC_REG_LVT_TIMER),
+            lapic_read(LAPIC_REG_LVT_THERMAL_SENSOR),
+            lapic_read(LAPIC_REG_LVT_PERFORMANCE_COUNTER),
+            lapic_read(LAPIC_REG_LVT_LINT0),
+            lapic_read(LAPIC_REG_LVT_LINT1),
+            lapic_read(LAPIC_REG_LVT_ERROR),
+            lapic_read(LAPIC_REG_INITIAL_COUNT),
+            lapic_read(LAPIC_REG_CURRENT_COUNT),
+            lapic_read(LAPIC_REG_DIVIDE_CONFIGURATION));
+}
+
+void init_acpi(void)
+{
+    if(!rsdp_request.response)
+    {
+        kprintf(KERN_PANIC "response to `limine_rsdp_request` was null\n");
+    }
+
+    parse_rsdp((const struct acpi_rsd_ptr*)rsdp_request.response->address);
+
+    const struct acpi_madt* madt = (const struct acpi_madt*)acpi_find_header("APIC");
+
+    if(!madt)
+    {
+        kprintf(KERN_PANIC "No MADT!\n");
+        
+        return;
+    }
+
+    print_madt(madt);
+    parse_madt(madt);
+
+    // External interrupts such as keyboard and device interrupts are handled by the IO/APIC.
+    // Each CPU "core" then has a local APIC, responsible for despatching interrupts generated
+    // by the IO/APIC and interrupts generated by the CPU itself, for example timer interrupts and exceptions.
+    // Access to each local APIC is done through the same address, so you can only address a single local APIC at a time.
+    print_ioapic();
+    print_lapic();
+
+    // 0xff is the spurious vector with APIC Software Enabled in bit 8
+    lapic_write(LAPIC_REG_SPURIOUS_INTERRUPT_VECTOR, 0xff | (1 << 8));
+
+    struct io_apic_interrupt_redirect redirect = io_apic_redirect_read(1);
+
+    redirect.vector = 0x21;
+    redirect.delivery_mode = 0b000; // fixed
+    redirect.dest_mode = 0; // physical
+    redirect.polarity = 0; // active high
+    redirect.trigger_mode = 0; // edge
+    redirect.ignore_interrupt = 0;
+    redirect.destination = lapic_read(LAPIC_REG_ID);
+
+    io_apic_redirect_write(1, redirect);
+
+    // enable APIC
+    msr_set(0x1b, msr_get(0x1b) | (1 << 11));
 }

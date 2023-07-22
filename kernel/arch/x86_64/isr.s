@@ -45,9 +45,8 @@ isr_handler:
 
     movq %rsp, %rdi /* load register frame pointer into the first argument (rdi) */
     callq interrupt_handler
-    movq %rax, %rsp
-    popa
 
+    popa
     add $16, %rsp /* pop error code and int code (8 bytes each) */
 
     iretq
@@ -88,7 +87,7 @@ DEF_ERR_ISR 17
 DEF_INT_ISR 18
 DEF_INT_ISR 19
 DEF_INT_ISR 20
-DEF_INT_ISR 21
+DEF_ERR_ISR 21
 DEF_INT_ISR 22
 DEF_INT_ISR 23
 DEF_INT_ISR 24
@@ -96,7 +95,7 @@ DEF_INT_ISR 25
 DEF_INT_ISR 26
 DEF_INT_ISR 27
 DEF_INT_ISR 28
-DEF_INT_ISR 29
+DEF_ERR_ISR 29
 DEF_ERR_ISR 30
 
 .altmacro

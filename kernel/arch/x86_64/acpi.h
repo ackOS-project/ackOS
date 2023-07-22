@@ -211,5 +211,9 @@ void init_acpi(void);
 // * Will return null if not found
 const struct acpi_header* acpi_find_header(const char* signature);
 
-uint32_t* acpi_get_lapic_address(void);
-uint32_t* acpi_get_ioapic_address(void);
+uint32_t io_apic_read(uint32_t reg);
+void io_apic_write(uint32_t reg, uint32_t value);
+
+uint32_t lapic_read(uint32_t reg);
+void lapic_write(uint32_t reg, uint32_t value);
+void lapic_eoi(void);

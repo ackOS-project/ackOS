@@ -565,4 +565,21 @@ inline static void io_wait(void)
                  "2:");
 }
 
+inline static uint64_t msr_get(uint32_t reg)
+{
+    uint32_t low, high;
+
+    __asm__ volatile("rdmsr" : "=a"(low), "=d"(high) : "c"(reg));
+
+    return (uint64_t)high << 32L | low;
+}
+
+inline static void msr_set(uint32_t reg, uint64_t value)
+{
+    uint32_t low = value & 0xffffffffL;
+    uint32_t high = (value >> 32) & 0xffffffffL;
+
+    __asm__ volatile("wrmsr" : : "a"(low), "d"(high), "c"(reg));
+}
+
 void print_registers(void);
