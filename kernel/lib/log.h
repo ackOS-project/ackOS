@@ -30,7 +30,7 @@
 #define TERM_MAGENTA_BG "\e[0;45m"
 #define TERM_CYAN_BG "\e[0;46m"
 
-void kputs(const char* msg);
+void write_string_to_screen(const char* msg, size_t msg_len);
 
 int kvprintf(const char* fmt, va_list args);
 
@@ -49,10 +49,10 @@ int kvprintf(const char* fmt, va_list args);
 *
 * supported size modifiers:
 *
-* ll - changes the type to long long int (uint64_t)
-* l  - changes the type to long int (uint64_t)
-* h  - changes the type to short (uint16_t)
-* hh - changes the type to char (uint8_t)
+* ll - changes the type to long long int (int64_t)
+* l  - changes the type to long int (int64_t)
+* h  - changes the type to short (int16_t)
+* hh - changes the type to char (int8_t)
 * z  - changes the type to size_t
 *
 * supported format modifiers:

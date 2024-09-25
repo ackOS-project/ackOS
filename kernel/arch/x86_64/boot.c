@@ -1,4 +1,5 @@
 #include <limine/limine.h>
+#include <liback/util.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -17,10 +18,12 @@
 #include "kernel/arch/x86_64/mem.h"
 
 #include "kernel/logo.h"
-#include "lib/liback/util.h"
+#include "kernel/arch/x86_64/fb.h"
 
 void kpanic(void)
 {
+    int_disable();
+
     while(true) halt();
 }
 
@@ -208,9 +211,18 @@ void write_image(const void* image, size_t size, struct limine_framebuffer* fb, 
     }
 }
 
+bool init_terminal_functionality(void);
+
+extern struct terminal_context terminal_context;
+
 void x86_begin(void)
 {
     init_com(COM_PORT1, 115200);
+        
+    if (!init_terminal_functionality()) 
+    {
+        kprintf(KERN_WARN "no terminal will be displayed on screen as the device or driver is non functional\n");
+    }
 
     init_gdt();
     init_idt();
@@ -226,16 +238,14 @@ void x86_begin(void)
 
     kprintf(KERN_INFO "CPUID brand string: \033[0;33m%s\033[0m\n", cpuid_get_brand_string(brand_str));
 
-#ifdef __ackos__
-    kprintf("Hello, ackOS World!\n");
-#endif
-
     if(fb_request.response && fb_request.response->framebuffer_count > 0)
     {
-        struct limine_framebuffer* fb = fb_request.response->framebuffers[0]; 
+        struct limine_framebuffer* fb = fb_request.response->framebuffers[0];
 
-        write_image((const void*)logo_qoi, logo_qoi_len, fb, 200, 0, 0);
+        write_image((const void*)logo_qoi, logo_qoi_len, fb, 200, fb->width / 2, 0);
     }
+
+    int_enable();
 
     int main(void);
 
@@ -245,8 +255,6 @@ void x86_begin(void)
     {
         kprintf(KERN_PANIC "kernel quitted with error code %d\n", res);
     }
-
-    int_enable();
 
     while(true) halt();
 }

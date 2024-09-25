@@ -23,7 +23,9 @@
     "editor.detectIndentation": true,
     "editor.insertSpaces": true,
     "makefile.configurations": [
-        
+        {
+            "name": "Default"
+        }
     ],
     "makefile.launchConfigurations": [
         {
@@ -36,5 +38,6 @@
             "binaryPath": "/usr/bin/make",
             "binaryArgs": [ "qemu-debug" ]
         }
-    ]
+    ],
+    "C_Cpp.default.mergeConfigurations": true
 }

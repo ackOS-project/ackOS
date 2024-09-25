@@ -4,11 +4,18 @@
 
 /* Advanced Configuration and Power Interface (ACPI)
     -> Root System Descriptor Pointer (RSDP)
-        -> Root System Descriptor Table (RSDT)
-            -> Multiple APIC Descriptor Table (MADT)
+        -> Root System Descriptor Table (RSDT) | Extended System Descriptor Table (XSDT)
             -> Fixed ACPI Description Table (FADT)
+            -> Multiple APIC Descriptor Table (MADT)
             etc...
 */
+
+#define ACPI_SIGNATURE_RSDP "RSD PTR "
+#define ACPI_SIGNATURE_RSDT "RSDT"
+#define ACPI_SIGNATURE_XSDT "XSDT"
+#define ACPI_SIGNATURE_MADT "APIC"
+#define ACPI_SIGNATURE_FADT "FACP"
+
 struct ATTR_PACKED acpi_rsd_ptr
 {
     uint8_t signature[8];
@@ -35,11 +42,11 @@ struct ATTR_PACKED acpi_header
     uint8_t oem_id[6];
     uint8_t oem_table_id[8];
     uint32_t oem_revision;
-    uint32_t creator_id;
+    uint8_t creator_id[4];
     uint32_t creator_revision;
 };
 
-enum
+enum acpi_madt_entry_type
 {
     ACPI_MADT_PROC_LAPIC_ENTRY,
     ACPI_MADT_IO_APIC_ENTRY,
@@ -90,6 +97,19 @@ struct ATTR_PACKED acpi_madt_io_apic_src_override_entry
     uint16_t flags;
 };
 
+// https://wiki.osdev.org/File:Edge_vs_level.png
+// with simpler names :)
+enum
+{
+    IO_APIC_ACTIVE_ON_HIGH = 0b01,
+    IO_APIC_ACTIVE_ON_LOW = 0b11
+};
+
+enum
+{
+    IO_APIC_TRIGGER_ONCE = 0b0100,
+    IO_APIC_TRIGGER_PULSE = 0b1100
+};
 
 struct ATTR_PACKED acpi_madt_io_apic_nmi_int_src_entry
 {
@@ -136,6 +156,8 @@ struct ATTR_PACKED acpi_generic_addr
     uint64_t addr;
 };
 
+// 57 member variables totalling to 244 bytes!?
+// wwwwwhy?
 struct ATTR_PACKED acpi_fadt
 {
     struct acpi_header header;
@@ -204,6 +226,20 @@ struct ATTR_PACKED acpi_fadt
     struct acpi_generic_addr gpe1_block64;
 };
 
+struct ATTR_PACKED acpi_hpet
+{
+    uint8_t hardware_rev_id;
+    uint8_t comparator_count : 5;
+    uint8_t counter_size : 1;
+    uint8_t reserved : 1;
+    uint8_t legacy_replacement : 1;
+    uint16_t pci_vendor_id;
+    struct acpi_generic_addr address;
+    uint8_t hpet_number;
+    uint16_t minimum_tick;
+    uint8_t page_protection;
+};
+
 void init_acpi(void);
 
 // * Finds an ACPI header which contains a particular signature
@@ -211,8 +247,9 @@ void init_acpi(void);
 // * Will return null if not found
 const struct acpi_header* acpi_find_header(const char* signature);
 
-uint32_t io_apic_read(uint32_t reg);
-void io_apic_write(uint32_t reg, uint32_t value);
+void* io_apic_which_handles(uint32_t irq);
+uint32_t io_apic_read(void* io_apic_addr, uint32_t reg);
+void io_apic_write(void* io_apic_addr, uint32_t reg, uint32_t value);
 
 uint32_t lapic_read(uint32_t reg);
 void lapic_write(uint32_t reg, uint32_t value);

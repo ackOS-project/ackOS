@@ -13,6 +13,10 @@ KERNEL_SYMS := $(BIN_DIR)/$(OS_DIST).sym
 CFLAGS += -I . -I submodules -I kernel/lib/libc
 LDFLAGS += -L$(LIB_ARCHIVE_DIR) -lack -lc
 
+ifneq ($(wildcard kernel/arch/$(ARCH)/common.h),)
+	CFLAGS += -D ARCH_COMMON_INC=\"kernel/arch/$(ARCH)/common.h\"
+endif
+
 include kernel/arch/$(ARCH)/build.mk
 
 $(KERNEL_BIN): $(KERNEL_TARGETS) $(LIB_TARGETS)

@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-
 #include "kernel/lib/log.h"
 
 enum
@@ -870,7 +869,7 @@ int kvprintf(const char* fmt, va_list args)
     char buff[est_len + 1];
 
     dvsnprintf(buff, est_len, &written_len, status_msg, use_indent_instead, fmt, false, args);
-    kputs(buff);
+    write_string_to_screen(buff, est_len);
 
     if(action == KPRINTF_ACTION_PANIC)
     {

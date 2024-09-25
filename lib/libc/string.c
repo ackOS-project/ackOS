@@ -254,7 +254,7 @@ int strncmp(const char* str1, const char* str2, size_t size)
 
     return (*(char*)str1 - *(char*)str2);
 }
-
+/*
 char* strdup(const char* s)
 {
     size_t len = strlen(s) + 1;
@@ -281,3 +281,4 @@ char* strndup(const char* s, size_t size)
 
     return (char*)memcpy(mem, s, len);
 }
+*/

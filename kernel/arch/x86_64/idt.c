@@ -74,6 +74,8 @@ static const char* exception_names[] =
     "(reserved)"
 };
 
+extern const struct vmm_context kernel_vmm_context;
+
 static inline const char* get_exception_name(int index)
 {
     return index < STATIC_LEN(exception_names) ? exception_names[index] : "(unknown exception)";
@@ -83,14 +85,7 @@ void interrupt_handler(struct int_frame* frame)
 {
     if(frame->int_num >= 32) /* external interrupt */
     {
-        kprintf(KERN_DEBUG "received external interrupt %lu\n", frame->int_num);
-
-        if(frame->int_num == 33)
-        {
-            uint8_t key = inb(0x60);
-
-            kprintf(KERN_DEBUG_CONT "which is a key %s interrupt with the scancode: %hhu\n", (key & (1 << 7)) ? "release" : "press", (key & 0x7f));
-        }
+        kprintf(KERN_DEBUG "received interrupt %lu (IRQ=%lu)\n", frame->int_num, frame->int_num - 32);
 
         lapic_eoi();
 
@@ -99,9 +94,9 @@ void interrupt_handler(struct int_frame* frame)
 
     if(frame->int_num == 14) /* page fault */
     {
-        if(obtain_kernel_context()->vmm_table)
+        if(kernel_vmm_context.vmm_table)
         {
-            vmm_print_mapping(obtain_kernel_context(), (virt_addr_t)reg_get_cr2());
+            vmm_print_mapping(&kernel_vmm_context, (virt_addr_t)reg_get_cr2());
         }
 
         kprintf(KERN_WARN "%#lx: page %s %s%s %s %s %s\n",

@@ -7,94 +7,180 @@
 #include <ctype.h>
 #include <string.h>
 
-// A simple stack based heap with a free list
-
+/*
+// a static block-based heap
 #define HEAP_SIZE 10 KiB
 
-static uint8_t heap_data[HEAP_SIZE];
-static void* heap_ptr = heap_data;
+static uint8_t heap_memory[HEAP_SIZE];
+struct block_node* heap_head_block = NULL;
 
-
-#define FREE_LIST_ENTRY_COUNT 30
-
-static void* free_list[FREE_LIST_ENTRY_COUNT] = {NULL};
-static size_t free_list_size = 0;
-
-void* malloc(size_t size)
+struct block_node
 {
-    if(((size_t)heap_ptr + sizeof(size_t) + size) >= (size_t)heap_data + HEAP_SIZE)
+    size_t size;
+    size_t capacity;
+    struct block_node* previous;
+    uint8_t is_tail : 1;
+};
+
+inline static struct block_node* get_next_block(struct block_node* node)
+{
+    return (struct block_node*)((uintptr_t)node + sizeof(struct block_node) + node->capacity);
+}
+
+inline static const struct block_node* get_next_block_const(const struct block_node* node)
+{
+    return (const struct block_node*)((uintptr_t)node + sizeof(struct block_node) + node->capacity);
+}
+
+inline static void* get_block_data(struct block_node* node)
+{
+    return (void*)((uintptr_t)node + sizeof(struct block_node));
+}
+
+inline static struct block_node* data_to_block_node(void* data)
+{
+    return (struct block_node*)((uintptr_t)data - sizeof(struct block_node));
+}
+
+static void create_heap_if_not_already(void)
+{
+    if(heap_head_block) return;
+
+    heap_head_block = (struct block_node*)heap_memory;
+
+    heap_head_block->size = 0;
+    heap_head_block->capacity = HEAP_SIZE - sizeof(struct block_node);
+    heap_head_block->previous = NULL;
+    heap_head_block->is_tail = true;
+}
+
+static struct block_node* allocate_block(struct block_node* head_block, size_t size)
+{
+    for (struct block_node* node = head_block; ; node = get_next_block(node))
     {
-        // if the heap pointer exceeds the heap size (i.e the heap has reached its limit), then we will
-        // tediously iterate through the free list for a suitable place for the memory allocation
-        for(size_t i = 0; i < free_list_size; i++)
+        size_t usable_space = node->capacity - node->size;
+
+        if (usable_space >= size)
         {
-            if(free_list[i] == NULL)
+            if (node->size == 0)
             {
-                continue;
+                node->size = size;
+
+                return node;
+            }
+            else if (usable_space >= (sizeof(struct block_node) + size))
+            {
+                node->capacity = node->size;
+
+                struct block_node* new_node = get_next_block(node);
+
+                new_node->size = size;
+                new_node->capacity = usable_space - sizeof(struct block_node);
+                new_node->previous = node;
+                new_node->is_tail = node->is_tail;
+                node->is_tail = false;
+
+                return new_node;
+            }
+        }
+
+        if (node->is_tail) break;
+    }
+
+    return NULL;
+}
+
+static void deallocate_block(struct block_node* node)
+{
+    if (node->size == 0 || node->capacity == 0)
+    {
+        // puts("DOUBLE FREE or CORRUPTION!");
+
+        return;
+    }
+
+    node->size = 0;
+
+    if (!node->is_tail)
+    {
+        struct block_node* next_node = get_next_block(node);
+
+        if (next_node->size == 0)
+        {
+            if (!next_node->is_tail)
+            {
+                struct block_node* next_next_node = get_next_block(next_node);
+
+                next_next_node->previous = node;
             }
 
-            size_t sz = *(size_t*)free_list[i];
-
-            if(sz >= size)
-            {
-                free_list[i] = NULL;
-
-                return free_list[i] + sizeof(size_t);
-            }
+            node->capacity += sizeof(struct block_node) + next_node->capacity;
+            node->is_tail = next_node->is_tail;
         }
     }
 
-    void* addr = heap_ptr;
-    size_t* sz = (size_t*)addr;
+    if (node->previous)
+    {
+        struct block_node* previous_node = node->previous;
 
-    heap_ptr = (void*)(uintptr_t)heap_ptr + sizeof(size_t) + size;
+        if (!node->is_tail)
+        {
+            struct block_node* next_node = get_next_block(node);
 
-    *sz = size;
-    
-    return (void*)(uintptr_t)addr + sizeof(size_t);
+            next_node->previous = previous_node;
+        }
+
+        previous_node->is_tail = node->is_tail;
+        previous_node->capacity += sizeof(struct block_node) + node->capacity;
+    }
 }
 
-void* realloc(void* ptr, size_t size)
+static struct block_node* reallocate_block(struct block_node* head_block, struct block_node* node, size_t size)
 {
-    size_t old_size = *(size_t*)(uintptr_t)ptr - sizeof(size_t);
-
-    if(old_size <= size)
+    if (size <= node->capacity)
     {
-        return ptr;
+        node->size = size;
+
+        return node;
     }
 
-    void* mem = malloc(size);
+    struct block_node* new_node = allocate_block(head_block, size);
 
-    memcpy(mem, (void*)(uintptr_t)ptr + sizeof(size_t), old_size);
+    if (!new_node) return NULL;
 
-    free(ptr);
+    memcpy(get_block_data(new_node), get_block_data(node), size);
 
-    return mem;
+    deallocate_block(node);
+
+    return new_node;
+}
+
+void* malloc(size_t size)
+{
+    create_heap_if_not_already();
+
+    struct block_node* node = allocate_block(heap_head_block, size);
+
+    if(!node) return NULL;
+
+    return get_block_data(node);
+}
+
+void* realloc(void* mem, size_t new_size)
+{
+    struct block_node* node = reallocate_block(heap_head_block, data_to_block_node(mem), new_size);
+
+    if(!node) return NULL;
+
+    return get_block_data(node);
 }
 
 void free(void* ptr)
 {
-    if(ptr < (void*)heap_data || ptr > (void*)(heap_data + HEAP_SIZE))
-    {
-        // error double free/corruption
-
-        return;
-    }
-    if(free_list_size + 1 >= FREE_LIST_ENTRY_COUNT)
-    {
-        for(size_t i = 0; i < FREE_LIST_ENTRY_COUNT; i++)
-        {
-            if(free_list[i] == NULL)
-            {
-                free_list[i] = ptr - sizeof(size_t);
-            }
-        }
-
-        // error: cannot free
-    }
-
-    free_list[free_list_size++] = ptr - sizeof(size_t);
+    deallocate_block(data_to_block_node(ptr));
 }
+
+*/
 
 //////////////////
 static const char strtoint_lookup_table[] = "0123456789abcdefghijklmnopqrstuvwxyz";

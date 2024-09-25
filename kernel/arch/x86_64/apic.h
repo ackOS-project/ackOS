@@ -1,6 +1,6 @@
 #pragma once
 
-#include "liback/util.h"
+#include <liback/util.h>
 
 struct ATTR_PACKED io_apic_interrupt_redirect
 {
@@ -18,14 +18,14 @@ struct ATTR_PACKED io_apic_interrupt_redirect
                      dest_mode : 1, /* Affects how the destination field is read, 0 is physical mode, 1 is logical.
                                        If the Destination Mode of this entry is Physical Mode, bits 56-59 contain an APIC ID. */
                      will_be_sent : 1, /* Set if this interrupt is going to be sent, but the APIC is busy. Read only. */
-                     polarity : 1, /* 0 = High is active, 1 = Low is active. */
+                     polarity : 1, /* 0 = Activates when the signal is high, 1 = Activates when the signal is low. */
                      is_received : 1, /* Used for level triggered interrupts only to show if a local APIC has received the interrupt (= 1),
                                          or has sent an EOI (= 0). Read only. */
-                     trigger_mode : 1, /* 0 = Edge sensitive, 1 = Level sensitive. */
+                     trigger_mode : 1, /* 0 = Triggers once, 1 = Triggers until the signal has changed polarities. */
                      ignore_interrupt : 1, /* Stops the interrupt from reaching the processor if set.  */
                      : 39,
                      destination : 8; /* If the destination mode bit was clear,
-                                         then the lower 4 bits contain the bit APIC ID to sent the interrupt to.
+                                         then the lower 4 bits contain the bit APIC ID to send the interrupt to.
                                          If the bit was set, the upper 4 bits also contain a set of processors. */
         };
         struct ATTR_PACKED
@@ -66,5 +66,7 @@ struct ATTR_PACKED io_apic_interrupt_redirect
 #define LAPIC_REG_INITIAL_COUNT 0x380
 #define LAPIC_REG_CURRENT_COUNT 0x390
 #define LAPIC_REG_DIVIDE_CONFIGURATION 0x3e0
+
+#define APIC_LVT_TIMER_MODE_PERIODIC 0x20000
 
 void init_apic(void);

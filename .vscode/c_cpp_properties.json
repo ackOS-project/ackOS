@@ -10,13 +10,15 @@
             "defines": [
                 "BUILD_TIME=\"Thur 1 Jan 1970\"",
                 "BUILD_BOOTLOADER_LIMINE",
-                "BUILD_ARCH_x86_64"
+                "BUILD_ARCH_x86_64",
+                "ARCH_COMMON_INC=\"kernel/arch/x86_64/common.h\"",
+                "__ackos__"
             ],
             "compilerPath": "/usr/bin/gcc",
             "cStandard": "c11",
             "cppStandard": "c++20",
             "intelliSenseMode": "linux-clang-x64",
-            "configurationProvider": "ms-vscode.makefile-tools"
+            //"configurationProvider": "ms-vscode.makefile-tools"
         }
     ],
     "version": 4
