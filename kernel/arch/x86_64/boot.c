@@ -19,6 +19,7 @@
 
 #include "kernel/logo.h"
 #include "kernel/arch/x86_64/fb.h"
+#include "kernel/arch/x86_64/char_display.h"
 
 void kpanic(void)
 {
@@ -26,12 +27,6 @@ void kpanic(void)
 
     while(true) halt();
 }
-
-volatile struct limine_framebuffer_request fb_request =
-{
-    .id = LIMINE_FRAMEBUFFER_REQUEST,
-    .revision = 0
-};
 
 // https://github.com/phoboslab/qoi/blob/master/qoi.h
 struct ATTR_PACKED qoi_header
@@ -80,7 +75,7 @@ static uint32_t qoi_convert_be_endian32(uint32_t value)
            ((value << 24) & 0xFF000000);
 }
 
-void write_image(const void* image, size_t size, struct limine_framebuffer* fb, uint8_t opacity, size_t start_x, size_t start_y)
+void write_image(const void* image, size_t size, struct framebuffer* fb, uint8_t opacity, size_t start_x, size_t start_y)
 {
     const struct qoi_header* header = (const struct qoi_header*)image;
 
@@ -197,7 +192,7 @@ void write_image(const void* image, size_t size, struct limine_framebuffer* fb, 
             uint8_t alpha = pixel.a * opacity / 255;
             uint8_t inverted_alpha = 255 - alpha;
 
-            uint32_t fb_pixel = ((uint32_t*)fb->address)[px_pos];
+            uint32_t fb_pixel = fb->backbuffer[px_pos];
             uint8_t fb_r = (fb_pixel & (0xff << fb->red_mask_shift)) >> fb->red_mask_shift;
             uint8_t fb_g = (fb_pixel & (0xff << fb->green_mask_shift)) >> fb->green_mask_shift; 
             uint8_t fb_b = (fb_pixel & (0xff << fb->blue_mask_shift)) >> fb->blue_mask_shift;
@@ -206,7 +201,7 @@ void write_image(const void* image, size_t size, struct limine_framebuffer* fb, 
             uint8_t new_g = (fb_g * inverted_alpha + (pixel.g * alpha)) / 255;
             uint8_t new_b = (fb_b * inverted_alpha + (pixel.b * alpha)) / 255;
 
-            ((uint32_t*)fb->address)[px_pos] = new_r << fb->red_mask_shift | new_g << fb->green_mask_shift | new_b << fb->blue_mask_shift;
+            fb->backbuffer[px_pos] = new_r << fb->red_mask_shift | new_g << fb->green_mask_shift | new_b << fb->blue_mask_shift;
         }
     }
 }
@@ -218,10 +213,14 @@ extern struct terminal_context terminal_context;
 void x86_begin(void)
 {
     init_com(COM_PORT1, 115200);
-        
-    if (!init_terminal_functionality()) 
+
+    if (!framebuffer_init())
     {
-        kprintf(KERN_WARN "no terminal will be displayed on screen as the device or driver is non functional\n");
+        kprintf(KERN_WARN "was unable to initialise framebuffer\n");
+    }
+    else if (!init_terminal_functionality()) 
+    {
+        kprintf(KERN_WARN "was unable to initialise on-screen terminal\n");
     }
 
     init_gdt();
@@ -232,18 +231,28 @@ void x86_begin(void)
         (void)i; */
 
     init_memory();
+
+    if (!framebuffer_allocate_backbuffer(framebuffer_get()))
+    {
+        kprintf(KERN_WARN "framebuffer double buffer allocation failed, so graphics may be slower\n");
+    }
+
     init_acpi();
 
     char brand_str[49];
 
     kprintf(KERN_INFO "CPUID brand string: \033[0;33m%s\033[0m\n", cpuid_get_brand_string(brand_str));
 
-    if(fb_request.response && fb_request.response->framebuffer_count > 0)
+    if (framebuffer_get())
     {
-        struct limine_framebuffer* fb = fb_request.response->framebuffers[0];
+        struct framebuffer* fb = framebuffer_get();
 
-        write_image((const void*)logo_qoi, logo_qoi_len, fb, 200, fb->width / 2, 0);
+        write_image((const void*)logo_qoi, logo_qoi_len, fb, 200, fb->width / 2, fb->height / 2);
+
+        framebuffer_flush(fb);
     }
+
+    //kprintf(KERN_INFO "Clearing screen\033[2J\033[1;1H");
 
     int_enable();
 

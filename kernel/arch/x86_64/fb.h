@@ -17,8 +17,9 @@ struct framebuffer
     size_t blue_mask_shift;
 };
 
-size_t framebuffer_count(void);
-struct framebuffer framebuffer_allocate(size_t fb_index);
+bool framebuffer_init(void);
+struct framebuffer* framebuffer_get(void);
+bool framebuffer_allocate_backbuffer(struct framebuffer* framebuffer);
 
 // pixels are in ARGB format where each channel is one byte
 void framebuffer_composite(struct framebuffer* framebuffer, const uint32_t* pixels, size_t width, size_t height, size_t start_x, size_t start_y);

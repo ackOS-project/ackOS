@@ -20,6 +20,7 @@ struct terminal_config
     void (*disable_cursor)(struct terminal_context*);
     void (*update_cursor)(struct terminal_context*);
     void (*scroll)(struct terminal_context*, size_t n_lines);
+    void (*clear)(struct terminal_context*, size_t x, size_t y, size_t width, size_t height);
     void (*flush)(struct terminal_context*);
 };
 
@@ -45,6 +46,8 @@ static inline struct terminal_context terminal_create(struct terminal_config* co
     context.cursor_x = 0;
     context.cursor_y = 0;
     context.renderer_context = renderer_context;
+
+    config->clear(&context, 0, 0, config->width, config->height);
 
     return context;
 }

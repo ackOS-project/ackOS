@@ -37,6 +37,11 @@ static void scroll(struct terminal_context* context, size_t n_lines)
     //kprintf(KERN_DEBUG "scrolled %zu lines, context: { .fg_colour = %#x, .bg_colour = %#x, is_bright: %s, cursor_xy: (%zu, %zu) }, config { width: %zu, height: %zu }\n", n_lines, context->fg_colour, context->bg_colour, context->is_bright ? "yes" : "no", context->cursor_x, context->cursor_y, context->config->width, context->config->height);
 }
 
+static void clear(struct terminal_context* context, size_t x, size_t y, size_t width, size_t height)
+{
+    char_display_clear(context->bg_colour, x, y, width, height);
+}
+
 static void enable_cursor(struct terminal_context* context)
 {
     char_display_enable_cursor();
@@ -54,7 +59,7 @@ static void update_cursor(struct terminal_context* context)
 
 bool init_terminal_functionality(void)
 {
-    if (!init_char_display()) return false;
+    if (!init_char_display(framebuffer_get())) return false;
 
     terminal_config = (struct terminal_config) {
         .tab_size = 4,
@@ -79,10 +84,11 @@ bool init_terminal_functionality(void)
             0xffe5e5e5
         },
         .default_fg_colour = 0xffffffff,
-        .default_bg_colour = 0xff000000,
+        .default_bg_colour = 0xff080810,
         .cursor_colour = 0x77ffffff,
         .write_char = write_char,
         .scroll = scroll,
+        .clear = clear,
         .enable_cursor = enable_cursor,
         .disable_cursor = disable_cursor,
         .update_cursor = update_cursor,

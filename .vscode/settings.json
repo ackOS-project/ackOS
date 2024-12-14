@@ -11,7 +11,8 @@
     {
         "**/toolchain": true,
         "**/bin": true,
-        "**/obj": true
+        "**/obj": true,
+        "submodules": true
     },
 
     "files.watcherExclude":

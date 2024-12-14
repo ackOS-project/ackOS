@@ -3,9 +3,11 @@
 #include "kernel/arch/x86_64/simple_alloc.h"
 #include "kernel/psf.h"
 
+#include <string.h>
+
 struct char_display_context
 {
-    struct framebuffer fb;
+    struct framebuffer* fb;
     struct psf_font_metrics font;
     size_t cursor_x, cursor_y;
     uint32_t cursor_colour;
@@ -15,11 +17,11 @@ struct char_display_context
 
 static struct char_display_context char_display;
 
-bool init_char_display(void)
+bool init_char_display(struct framebuffer* fb)
 {
-    if (framebuffer_count() == 0 || !psf_is_text_rendering_available()) return false;
+    if (fb && !psf_is_text_rendering_available()) return false;
 
-    char_display.fb = framebuffer_allocate(0);
+    char_display.fb = fb;
     char_display.font = psf_get_font_metrics();
     char_display.cursor_x = 0;
     char_display.cursor_y = 0;
@@ -32,8 +34,8 @@ bool init_char_display(void)
 
 void char_display_get_width_and_height(size_t* width, size_t* height)
 {
-    *width = char_display.fb.width / char_display.font.glyph_width;
-    *height = char_display.fb.height / char_display.font.glyph_height;
+    *width = char_display.fb->width / char_display.font.glyph_width;
+    *height = char_display.fb->height / char_display.font.glyph_height;
 }
 
 static void char_display_remove_cursor(void);
@@ -46,7 +48,7 @@ void char_display_draw_char(size_t x, size_t y, char c, uint32_t bg, uint32_t fg
     uint32_t pixels[metrics.width * metrics.height];
     psf_render_glyph(metrics, fg, bg, pixels, metrics.width, 0, 0);
 
-    framebuffer_composite(&char_display.fb, pixels, metrics.width, metrics.height, char_display.font.glyph_width * x, char_display.font.glyph_height * y);
+    framebuffer_composite(char_display.fb, pixels, metrics.width, metrics.height, char_display.font.glyph_width * x, char_display.font.glyph_height * y);
 
     if (char_display.cursor_enabled && x == char_display.cursor_x && y == char_display.cursor_y)
     {
@@ -70,27 +72,28 @@ void char_display_scroll(size_t line_n, uint32_t bg)
     char_display_remove_cursor();
 
     size_t main_sec_y = char_display.font.glyph_height * line_n;
-    size_t main_sec_width = char_display.fb.width;
-    size_t main_sec_height = char_display.fb.height - char_display.font.glyph_height * line_n;
+    size_t main_sec_width = char_display.fb->width;
+    size_t main_sec_height = char_display.fb->height - char_display.font.glyph_height * line_n;
 
     for (size_t y = 0; y < main_sec_height; y++)
     {
-        for (size_t x = 0; x < main_sec_width; x++)
-        {
-            uint32_t pixel = char_display.fb.backbuffer[(main_sec_y + y) * char_display.fb.width + x];
+        uint32_t* src = &char_display.fb->backbuffer[(main_sec_y + y) * char_display.fb->width];
+        uint32_t* dest = &char_display.fb->backbuffer[y * char_display.fb->width];
 
-            char_display.fb.backbuffer[y * char_display.fb.width + x] = pixel;
-        }
+        memcpy(dest, src, main_sec_height * sizeof(uint32_t));
     }
 
-    framebuffer_fill(&char_display.fb, bg, char_display.fb.width, char_display.font.glyph_height * line_n, 0, char_display.fb.height - char_display.font.glyph_height * line_n);
+    framebuffer_fill(char_display.fb, bg, char_display.fb->width, char_display.font.glyph_height * line_n, 0, char_display.fb->height - char_display.font.glyph_height * line_n);
 
     char_display_add_cursor();
 }
 
-void char_display_clear(uint32_t bg)
+void char_display_clear(uint32_t bg, size_t col, size_t row, size_t width, size_t height)
 {
-    framebuffer_fill(&char_display.fb, bg, char_display.fb.width, char_display.fb.height, 0, 0);
+    size_t start_x = char_display.font.glyph_width * col;
+    size_t start_y = char_display.font.glyph_height * row;
+
+    framebuffer_fill(char_display.fb, bg, width * char_display.font.glyph_width, height * char_display.font.glyph_height, start_x, start_y);
 
     char_display_add_cursor();
 }
@@ -106,7 +109,7 @@ static void char_display_remove_cursor(void)
     {
         for (size_t x = 0; x < char_display.font.glyph_width; x++)
         {
-            char_display.fb.backbuffer[(start_y + y) * char_display.fb.width + (start_x + x)] = char_display.pixels_under_cursor[y * char_display.font.glyph_width + x];
+            char_display.fb->backbuffer[(start_y + y) * char_display.fb->width + (start_x + x)] = char_display.pixels_under_cursor[y * char_display.font.glyph_width + x];
         }
     }
 }
@@ -122,14 +125,12 @@ static void char_display_add_cursor(void)
     {
         for (size_t x = 0; x < char_display.font.glyph_width; x++)
         {
-            char_display.pixels_under_cursor[y * char_display.font.glyph_width + x] = char_display.fb.backbuffer[(start_y + y) * char_display.fb.width + (start_x + x)];
+            char_display.pixels_under_cursor[y * char_display.font.glyph_width + x] = char_display.fb->backbuffer[(start_y + y) * char_display.fb->width + (start_x + x)];
         }
     }
 
-    framebuffer_fill(&char_display.fb, char_display.cursor_colour, char_display.font.glyph_width, char_display.font.glyph_height, start_x, start_y);
+    framebuffer_fill(char_display.fb, char_display.cursor_colour, char_display.font.glyph_width, char_display.font.glyph_height, start_x, start_y);
 }
-
-#include "kernel/lib/log.h"
 
 void char_display_enable_cursor()
 {
@@ -162,5 +163,5 @@ void char_display_update_cursor(size_t x, size_t y, uint32_t colour)
 
 void char_display_flush(void)
 {
-    framebuffer_flush(&char_display.fb);
+    framebuffer_flush(char_display.fb);
 }

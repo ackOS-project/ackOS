@@ -57,14 +57,45 @@ void terminal_move_cursor_back(struct terminal_context* context, size_t n)
     context->cursor_x -= n;
 }
 
-void terminal_move_cursor_to_next_line(struct terminal_context* context, size_t n)
+void terminal_move_cursor(struct terminal_context* context, size_t n, size_t m)
 {
+    size_t x = n == 0 ? n : n - 1;
+    size_t y = m == 0 ? n : n - 1;
 
+    if (x >= context->config->width || y >= context->config->height) return;
+
+    context->cursor_x = x;
+    context->cursor_y = y;
 }
 
-void terminal_move_cursor_to_previous_line(struct terminal_context* context, size_t n)
+void terminal_clear(struct terminal_context* context, size_t n)
 {
+    if (n == 0) /* Erase everything between cursor and bottom */
+    {
+        context->config->clear(context, context->cursor_x, context->cursor_y, context->config->width - context->cursor_x, 1);
 
+        size_t remaining_height = context->config->height - 1 - context->cursor_y;
+
+        if (remaining_height)
+        {
+            context->config->clear(context, 0, context->cursor_y + 1, context->config->width, remaining_height);
+        }
+    }
+    else if (n == 1) /* erase everything before cursor */
+    {
+        context->config->clear(context, 0, context->cursor_y, context->cursor_x, 1);
+
+        size_t remaining_height = context->cursor_y;
+
+        if (remaining_height)
+        {
+            context->config->clear(context, 0, 0, context->config->width, remaining_height);
+        }
+    }
+    else if (n == 2) /* erase entire screen */
+    {
+        context->config->clear(context, 0, 0, context->config->width, context->config->height);
+    }
 }
 
 static void terminal_parse_sgr(struct terminal_context* context, size_t escape_params[], size_t escape_param_n)
@@ -200,6 +231,14 @@ void terminal_write(struct terminal_context* context, const char* msg, size_t ms
                     else if (action == 'D')
                     {
                         terminal_move_cursor_back(context, escape_param_n > 0 ? escape_params[0] : 1);
+                    }
+                    else if (action == 'J')
+                    {
+                        terminal_clear(context, escape_param_n > 0 ? escape_params[0] : 0);
+                    }
+                    else if (action == 'H')
+                    {
+                        terminal_move_cursor(context, escape_param_n > 0 ? escape_params[0] : 1, escape_param_n > 1 ? escape_params[1] : 1);
                     }
                     else if (action == 'm')
                     {

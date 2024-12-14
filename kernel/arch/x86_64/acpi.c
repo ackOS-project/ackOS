@@ -860,42 +860,55 @@ static void print_fadt(const struct acpi_fadt* fadt_table)
 {
     kprintf(KERN_DEBUG "struct acpi_fadt {\n");
 
-    kprintf(KERN_DEBUG_CONT "    firmware_control:          %#x\n", fadt_table->firmware_control);
-    kprintf(KERN_DEBUG_CONT "    dsdt:                      %#x\n", fadt_table->dsdt);
-    kprintf(KERN_DEBUG_CONT "    power_preferrence:         %u\n", fadt_table->power_preferrence);
-    kprintf(KERN_DEBUG_CONT "    sci_interrupt:             %#x\n", fadt_table->sci_interrupt);
-    kprintf(KERN_DEBUG_CONT "    smi_command_port:          %#x\n", fadt_table->smi_command_port);
-    kprintf(KERN_DEBUG_CONT "    acpi_enable:               %u\n", fadt_table->acpi_enable);
-    kprintf(KERN_DEBUG_CONT "    acpi_disable:              %u\n", fadt_table->acpi_disable);
-    kprintf(KERN_DEBUG_CONT "    s4bios_req:                %u\n", fadt_table->s4bios_req);
-    kprintf(KERN_DEBUG_CONT "    pstate_control:            %u\n", fadt_table->pstate_control);
-    kprintf(KERN_DEBUG_CONT "    pm1a_event_block:          %#x\n", fadt_table->pm1a_event_block);
-    kprintf(KERN_DEBUG_CONT "    pm1b_event_block:          %#x\n", fadt_table->pm1b_event_block);
-    kprintf(KERN_DEBUG_CONT "    pm1a_control_block:        %#x\n", fadt_table->pm1a_control_block);
-    kprintf(KERN_DEBUG_CONT "    pm1b_control_block:        %#x\n", fadt_table->pm1b_control_block);
-    kprintf(KERN_DEBUG_CONT "    pm2_control_block:         %#x\n", fadt_table->pm2_control_block);
-    kprintf(KERN_DEBUG_CONT "    pm_timer_block:            %#x\n", fadt_table->pm_timer_block);
-    kprintf(KERN_DEBUG_CONT "    gpe0_block:                %#x\n", fadt_table->gpe0_block);
-    kprintf(KERN_DEBUG_CONT "    gpe1_block:                %#x\n", fadt_table->gpe1_block);
-    kprintf(KERN_DEBUG_CONT "    pm1_event_length:          %u\n", fadt_table->pm1_event_length);
-    kprintf(KERN_DEBUG_CONT "    pm1_control_length:        %u\n", fadt_table->pm1_control_length);
-    kprintf(KERN_DEBUG_CONT "    pm2_control_length:        %u\n", fadt_table->pm2_control_length);
-    kprintf(KERN_DEBUG_CONT "    pm_timer_length:           %u\n", fadt_table->pm_timer_length);
-    kprintf(KERN_DEBUG_CONT "    gpe0_length:               %u\n", fadt_table->gpe0_length);
-    kprintf(KERN_DEBUG_CONT "    gpe1_length:               %u\n", fadt_table->gpe1_length);
-    kprintf(KERN_DEBUG_CONT "    gpe1_base:                 %u\n", fadt_table->gpe1_base);
-    kprintf(KERN_DEBUG_CONT "    c_state_control:           %u\n", fadt_table->c_state_control);
-    kprintf(KERN_DEBUG_CONT "    worst_c2_latency:          %#x\n", fadt_table->worst_c2_latency);
-    kprintf(KERN_DEBUG_CONT "    worst_c3_latency:          %#x\n", fadt_table->worst_c3_latency);
-    kprintf(KERN_DEBUG_CONT "    flush_size:                %#x\n", fadt_table->flush_size);
-    kprintf(KERN_DEBUG_CONT "    flush_stride:              %#x\n", fadt_table->flush_stride);
-    kprintf(KERN_DEBUG_CONT "    duty_offset:               %u\n", fadt_table->duty_offset);
-    kprintf(KERN_DEBUG_CONT "    duty_width:                %u\n", fadt_table->duty_width);
-    kprintf(KERN_DEBUG_CONT "    day_alarm:                 %u\n", fadt_table->day_alarm);
-    kprintf(KERN_DEBUG_CONT "    month_alarm:               %u\n", fadt_table->month_alarm);
-    kprintf(KERN_DEBUG_CONT "    century:                   %u\n", fadt_table->century);
-    kprintf(KERN_DEBUG_CONT "    boot_arch_flags:           %#x\n", fadt_table->boot_arch_flags);
-    kprintf(KERN_DEBUG_CONT "    flags:                     %#x\n", fadt_table->flags);
+    kprintf(KERN_DEBUG_CONT
+            "    firmware_control:          %#x\n"
+            "    dsdt:                      %#x\n"
+            "    power_preferrence:         %u\n"
+            "    sci_interrupt:             %#x\n"
+            "    smi_command_port:          %#x\n"
+            "    acpi_enable:               %u\n"
+            "    acpi_disable:              %u\n"
+            "    s4bios_req:                %u\n"
+            "    pstate_control:            %u\n"
+            "    pm1a_event_block:          %#x\n"
+            "    pm1b_event_block:          %#x\n"
+            "    pm1a_control_block:        %#x\n"
+            "    pm1b_control_block:        %#x\n"
+            "    pm2_control_block:         %#x\n"
+            "    pm_timer_block:            %#x\n"
+            "    gpe0_block:                %#x\n"
+            "    gpe1_block:                %#x\n"
+            "    pm1_event_length:          %u\n"
+            "    pm1_control_length:        %u\n"
+            "    pm2_control_length:        %u\n"
+            "    pm_timer_length:           %u\n"
+            "    gpe0_length:               %u\n"
+            "    gpe1_length:               %u\n"
+            "    gpe1_base:                 %u\n"
+            "    c_state_control:           %u\n"
+            "    worst_c2_latency:          %#x\n"
+            "    worst_c3_latency:          %#x\n"
+            "    flush_size:                %#x\n"
+            "    flush_stride:              %#x\n"
+            "    duty_offset:               %u\n"
+            "    duty_width:                %u\n"
+            "    day_alarm:                 %u\n"
+            "    month_alarm:               %u\n"
+            "    century:                   %u\n"
+            "    boot_arch_flags:           %#x\n"
+            "    flags:                     %#x\n",
+            fadt_table->firmware_control, fadt_table->dsdt, fadt_table->power_preferrence,
+            fadt_table->sci_interrupt, fadt_table->smi_command_port, fadt_table->acpi_enable,
+            fadt_table->acpi_disable, fadt_table->s4bios_req, fadt_table->pstate_control,
+            fadt_table->pm1a_event_block, fadt_table->pm1b_event_block, fadt_table->pm1a_control_block,
+            fadt_table->pm1b_control_block, fadt_table->pm2_control_block, fadt_table->pm_timer_block,
+            fadt_table->gpe0_block, fadt_table->gpe1_block, fadt_table->pm1_event_length,
+            fadt_table->pm1_control_length, fadt_table->pm2_control_length, fadt_table->pm_timer_length,
+            fadt_table->gpe0_length, fadt_table->gpe1_length, fadt_table->gpe1_base,
+            fadt_table->c_state_control, fadt_table->worst_c2_latency, fadt_table->worst_c3_latency,
+            fadt_table->flush_size, fadt_table->flush_stride, fadt_table->duty_offset,
+            fadt_table->duty_width, fadt_table->day_alarm, fadt_table->month_alarm,
+            fadt_table->century, fadt_table->boot_arch_flags, fadt_table->flags);
     kprintf(KERN_DEBUG_CONT "    reset_reg:\n"
                             "        .addr_space:           %u\n"
                             "        .bit_width:            %u\n"
